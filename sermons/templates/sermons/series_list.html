@@ -1,0 +1,815 @@
+{% extends 'base.html' %}
+{% load i18n_church %}
+
+{% block title %}{% church_t 'sermon_series' %} - PHM-ARCC Iyumbu Church Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    background: #0f1e2e;
+    font-family: 'Lato', sans-serif;
+    color: #e0e6ed;
+}
+
+.layout {
+    display: flex;
+    flex-direction: row;
+    min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 240px;
+    min-width: 240px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    background: linear-gradient(180deg, #0d2340 0%, #0a1a2e 100%);
+    border-right: 3px solid #c8a84b;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.35s cubic-bezier(.4,0,.2,1), min-width 0.35s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+    z-index: 100;
+}
+
+.sidebar.collapsed {
+    width: 64px;
+    min-width: 64px;
+}
+
+.sidebar-header {
+    padding: 1.2rem 1rem;
+    border-bottom: 1px solid rgba(200,168,75,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 68px;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+}
+
+.brand-logo {
+    height: 32px;
+    width: auto;
+    max-width: 32px;
+    border-radius: 4px;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-width: 160px;
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+    white-space: nowrap;
+}
+
+.sidebar.collapsed .brand-text {
+    opacity: 0;
+    max-width: 0;
+    transform: translateX(-10px);
+    pointer-events: none;
+}
+
+.church-name {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #c8a84b;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.church-sub {
+    font-size: 9px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.toggle-btn {
+    background: rgba(200,168,75,0.1);
+    border: 1px solid rgba(200,168,75,0.3);
+    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+.toggle-btn:hover {
+    background: rgba(200,168,75,0.25);
+}
+
+.toggle-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: #c8a84b;
+    fill: none;
+    stroke-width: 2;
+    transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+}
+
+.sidebar.collapsed .toggle-btn svg {
+    transform: rotate(180deg);
+}
+
+.user-area {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#1a3a5c,#c8a84b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.user-info {
+    overflow: hidden;
+    max-width: 160px;
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+    white-space: nowrap;
+}
+
+.sidebar.collapsed .user-info {
+    opacity: 0;
+    max-width: 0;
+    transform: translateX(-10px);
+    pointer-events: none;
+}
+
+.user-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.user-role {
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.nav-menu {
+    flex: 1;
+    padding: 1rem 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.nav-section-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.2);
+    padding: 0.6rem 1.1rem 0.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    opacity: 1;
+    max-width: 200px;
+    transition: opacity 0.2s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+}
+
+.sidebar.collapsed .nav-section-label {
+    opacity: 0;
+    max-width: 0;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 1.1rem;
+    margin: 2px 8px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.55);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+}
+
+.nav-item:hover {
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.9);
+}
+
+.nav-item.active {
+    background: rgba(200,168,75,0.12);
+    color: #c8a84b;
+    border-left: 3px solid #c8a84b;
+    margin-left: 5px;
+    padding-left: calc(1.1rem - 3px);
+}
+
+.nav-item i {
+    width: 22px;
+    font-size: 1.1rem;
+}
+
+.nav-tooltip {
+    position: absolute;
+    left: 56px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #1a3a5c;
+    border: 1px solid rgba(200,168,75,0.4);
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: #c8a84b;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 1000;
+}
+
+.sidebar.collapsed .nav-item:hover .nav-tooltip {
+    opacity: 1;
+    transform: translateY(-50%) translateX(-8px);
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 1rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.btn-logout {
+    background: rgba(220,53,69,0.15);
+    border: 1px solid rgba(220,53,69,0.3);
+    color: #dc3545;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 100%;
+    text-align: center;
+}
+
+.btn-logout:hover {
+    background: rgba(220,53,69,0.25);
+}
+
+/* MAIN CONTENT */
+.main-content {
+    margin-left: 280px;
+    transition: margin-left 0.3s ease;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.sidebar.collapsed + .main-content {
+    margin-left: 64px;
+}
+
+.topbar {
+    background: rgba(15,30,60,0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(200,168,75,0.2);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.topbar-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #c8a84b;
+    margin: 0;
+}
+
+.topbar-subtitle {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.7);
+    margin-top: 0.25rem;
+}
+
+.page-body {
+    padding: 2rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* SERIES LIST STYLES */
+.series-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(200,168,75,0.2);
+}
+
+.series-title {
+    font-family: 'Cinzel', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    color: #c8a84b;
+    margin: 0;
+}
+
+.series-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.btn-create {
+    background: linear-gradient(135deg, #c8a84b 0%, #b3943f 100%);
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-create:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(200,168,75,0.3);
+}
+
+.series-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.series-card {
+    background: rgba(15,30,60,0.6);
+    border: 1px solid rgba(200,168,75,0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.series-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(200,168,75,0.3);
+    border-color: rgba(200,168,75,0.4);
+}
+
+.series-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.series-date-range {
+    background: linear-gradient(135deg, #c8a84b 0%, #b3943f 100%);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Cinzel', serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.series-type {
+    background: rgba(200,168,75,0.2);
+    color: #c8a84b;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.series-title-text {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #c8a84b;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.series-speaker {
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.speaker-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a3a5c, #c8a84b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.series-description {
+    color: rgba(255,255,255,0.8);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.series-stats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stat-icon {
+    width: 16px;
+    height: 16px;
+    color: #c8a84b;
+}
+
+.series-actions-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.action-btn {
+    background: rgba(200,168,75,0.1);
+    border: 1px solid rgba(200,168,75,0.3);
+    color: #c8a84b;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.action-btn:hover {
+    background: rgba(200,168,75,0.2);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 3rem;
+}
+
+.pagination-btn {
+    background: rgba(200,168,75,0.1);
+    border: 1px solid rgba(200,168,75,0.3);
+    color: #c8a84b;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.pagination-btn:hover {
+    background: rgba(200,168,75,0.2);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.pagination-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.current-page {
+    background: #c8a84b;
+    color: #fff;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: rgba(255,255,255,0.6);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+}
+
+.empty-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 0.5rem;
+}
+
+.empty-text {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.6);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .layout {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        margin-top: 0;
+    }
+    
+    .series-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .series-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .series-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-create {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">
+                <img src="/media/church-logo.jpeg" alt="Church Logo" class="brand-logo" onerror="this.style.display='none'">
+                <div class="brand-text">
+                    <span class="church-name">PHM-ARCC</span>
+                    <span class="church-sub">Iyumbu · Dodoma</span>
+                </div>
+            </div>
+            <button class="toggle-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+                <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+        </div>
+
+        <div class="user-area">
+            <div class="avatar">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</div>
+            <div class="user-info">
+                <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
+                <div class="user-role">{{ user.get_role_display }}</div>
+            </div>
+        </div>
+
+        <nav class="nav-menu">
+            <div class="nav-section-label">{% church_t 'sermon_series' %}</div>
+            <a href="{% url 'sermons:series_list' %}" class="nav-item active">
+                <i class="fas fa-book"></i> <span>{% church_t 'all_series' %}</span>
+            </a>
+            <a href="{% url 'sermons:sermon_list' %}" class="nav-item">
+                <i class="fas fa-microphone"></i> <span>{% church_t 'all_sermons' %}</span>
+            </a>
+            <a href="{% url 'sermons:sermon_create' %}" class="nav-item">
+                <i class="fas fa-plus"></i> <span>{% church_t 'create_sermon' %}</span>
+            </a>
+            <a href="{% url 'sermons:series_create' %}" class="nav-item">
+                <i class="fas fa-folder-plus"></i> <span>{% church_t 'create_series' %}</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <form method="POST" action="{% url 'members:logout' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">{% church_t 'logout' %}</button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="topbar">
+            <h1 class="topbar-title">{% church_t 'sermon_series' %}</h1>
+            <p class="topbar-subtitle">{% church_t 'series_subtitle' %}</p>
+        </div>
+
+        <div class="page-body">
+            <!-- Header with Create -->
+            <div class="series-header">
+                <h2 class="series-title">{% church_t 'sermon_series' %}</h2>
+                <div class="series-actions">
+                    <a href="{% url 'sermons:series_create' %}" class="btn-create">
+                        <i class="fas fa-plus"></i> {% church_t 'create_new_series' %}
+                    </a>
+                </div>
+            </div>
+
+            <!-- Series Grid -->
+            {% if series_list %}
+                <div class="series-grid">
+                    {% for series in series_list %}
+                        <div class="series-card">
+                            <div class="series-header-info">
+                                <div>
+                                    {% if series.start_date %}
+                                        <div class="series-date-range">{{ series.start_date|date:"M d" }} - 
+                                        {% if series.end_date %}{{ series.end_date|date:"M d, Y" }}{% endif %}</div>
+                                    {% endif %}
+                                    <div class="series-type">{{ series.get_type_display }}</div>
+                                </div>
+                                <div class="series-speaker">
+                                    {% if series.speaker %}
+                                        <div class="speaker-avatar">{{ series.speaker.first_name|slice:":1" }}{{ series.speaker.last_name|slice:":1" }}</div>
+                                        <span>{{ series.speaker.first_name }} {{ series.speaker.last_name }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <h3 class="series-title-text">{{ series.title }}</h3>
+                            
+                            {% if series.description %}
+                                <p class="series-description">{{ series.description|truncatewords:30 }}</p>
+                            {% endif %}
+                            
+                            <div class="series-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-microphone stat-icon"></i>
+                                    <span>{{ series.sermon_count }} {% church_t 'sermons_count_suffix' %}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-calendar stat-icon"></i>
+                                    <span>{{ series.start_date|date:"F Y" }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="series-actions-row">
+                                <a href="{% url 'sermons:sermon_list' %}?series={{ series.id }}" class="action-btn">
+                                    <i class="fas fa-list"></i> {% church_t 'view_sermons' %}
+                                </a>
+                                <a href="{% url 'sermons:series_update' series.id %}" class="action-btn">
+                                    <i class="fas fa-edit"></i> {% church_t 'edit_series' %}
+                                </a>
+                                <a href="{% url 'sermons:series_delete' series.id %}" class="action-btn">
+                                    <i class="fas fa-trash"></i> {% church_t 'delete_series' %}
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <div class="pagination">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" class="pagination-btn">
+                                <i class="fas fa-chevron-left"></i> {% church_t 'previous' %}
+                            </a>
+                        {% endif %}
+                        
+                        <span class="pagination-btn current-page">{% church_t 'page_word' %} {{ page_obj.number }} {% church_t 'of_word' %} {{ page_obj.paginator.num_pages }}</span>
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}" class="pagination-btn">
+                                {% church_t 'next_label' %} <i class="fas fa-chevron-right"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📚</div>
+                    <h3 class="empty-title">{% church_t 'no_series_title' %}</h3>
+                    <p class="empty-text">{% church_t 'no_series_text' %}</p>
+                    <a href="{% url 'sermons:series_create' %}" class="btn-create">
+                        <i class="fas fa-plus"></i> {% church_t 'create_first_series' %}
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('collapsed');
+}
+
+// Auto-hide sidebar on mobile
+if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.add('collapsed');
+}
+</script>
+{% endblock %}

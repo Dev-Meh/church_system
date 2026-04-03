@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="{{ current_language|default:'en' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Pastor Dashboard | PHM-ARCC Iyumbu CMS</title>
+    <!-- Font Awesome 6 (free icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ---------- GLOBAL RESET & VARIABLES ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a1628;
+            --bg-secondary: #152333;
+            --bg-tertiary: #1a2f4a;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255,255,255,0.75);
+            --text-muted: rgba(255,255,255,0.45);
+            --accent: #c8a84b;
+            --accent-hover: #dbb95e;
+            --border: rgba(255,255,255,0.08);
+            --shadow: rgba(0,0,0,0.4);
+            --danger: #e74c3c;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* ---------- VERTICAL NAVIGATION (SIDEBAR) - MINIMIZED STATE ---------- */
+        .vertical-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #0b1428 0%, #121f2f 100%);
+            border-right: 2px solid var(--accent);
+            box-shadow: 6px 0 28px rgba(0,0,0,0.5);
+            z-index: 1100;
+            overflow-y: auto;
+            transition: width 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), transform 0.3s ease;
+            transform: translateX(0);
+        }
+        
+        /* MINIMIZED STATE - width reduces to 72px */
+        .vertical-nav.minimized {
+            width: 72px;
+        }
+        
+        /* When minimized, hide text and adjust content */
+        .vertical-nav.minimized .brand-text h3,
+        .vertical-nav.minimized .brand-text p,
+        .vertical-nav.minimized .user-info,
+        .vertical-nav.minimized .nav-item span,
+        .vertical-nav.minimized .nav-header .nav-close-btn {
+            display: none;
+        }
+        
+        .vertical-nav.minimized .nav-brand {
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .vertical-nav.minimized .nav-user {
+            justify-content: center;
+            padding: 20px 0;
+        }
+        
+        .vertical-nav.minimized .user-avatar {
+            margin: 0 auto;
+        }
+        
+        .vertical-nav.minimized .nav-item {
+            justify-content: center;
+            padding: 12px 0;
+        }
+        
+        .vertical-nav.minimized .nav-item i {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+        
+        .vertical-nav.minimized .nav-menu {
+            align-items: center;
+        }
+        
+        .vertical-nav.minimized .nav-header {
+            justify-content: center;
+            padding: 24px 0;
+        }
+        
+        .vertical-nav.minimized .nav-close-btn {
+            display: none;
+        }
+        
+        /* Logo image styling */
+        .church-logo-img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 12px;
+            border: 1px solid rgba(200,168,75,0.3);
+        }
+        
+        .vertical-nav.minimized .church-logo-img {
+            width: 36px;
+            height: 36px;
+        }
+        
+        /* Church logo icon styling */
+        .church-logo {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--accent) 0%, #b3943f 100%);
+            border-radius: 8px;
+            margin-right: 12px;
+            border: 1px solid rgba(200,168,75,0.3);
+            box-shadow: 0 2px 8px rgba(200,168,75,0.2);
+        }
+        
+        .church-logo i {
+            color: var(--primary);
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .vertical-nav.minimized .church-logo {
+            width: 36px;
+            height: 36px;
+            margin-right: 0;
+        }
+        
+        .vertical-nav.minimized .church-logo i {
+            font-size: 18px;
+        }
+        
+        /* THREE-LINE TOGGLE BUTTON - moves with navigation */
+        .nav-toggle-btn {
+            position: fixed;
+            top: 20px;
+            z-index: 1150;
+            background: rgba(200,168,75,0.15);
+            border: 1px solid rgba(200,168,75,0.4);
+            color: var(--accent);
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            backdrop-filter: blur(4px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        /* Three lines styling */
+        .hamburger-line {
+            width: 22px;
+            height: 2px;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        /* Button position based on sidebar state */
+        .nav-toggle-btn {
+            left: 300px;
+        }
+        
+        .vertical-nav.minimized ~ .nav-toggle-btn,
+        .nav-toggle-btn.sidebar-minimized {
+            left: 92px;
+        }
+        
+        /* For mobile, adjust position */
+        @media (max-width: 780px) {
+            .nav-toggle-btn {
+                left: 20px !important;
+                top: 16px;
+            }
+        }
+        
+        .nav-toggle-btn:hover {
+            background: rgba(200,168,75,0.3);
+            transform: scale(1.02);
+        }
+        
+        /* Add a special toggle button inside sidebar for minimize/expand */
+        .minimize-toggle-inside {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(200,168,75,0.2);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 1200;
+        }
+        
+        .vertical-nav.minimized .minimize-toggle-inside {
+            position: relative;
+            bottom: auto;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .vertical-nav:not(.minimized) .minimize-toggle-inside {
+            display: flex;
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .nav-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(200,168,75,0.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-text h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .brand-text p {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .nav-close-btn {
+            background: rgba(255,255,255,0.05);
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .nav-close-btn:hover { background: rgba(231,76,60,0.2); color: var(--danger); }
+
+        /* User block */
+        .nav-user {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 60px;
+            background: linear-gradient(135deg, #1e3a5f, var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.3rem;
+            font-family: 'Cinzel', serif;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-avatar-logo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.3;
+            border-radius: 60px;
+        }
+
+        .user-avatar span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .user-info .user-name {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .user-role {
+            font-size: 0.7rem;
+            color: var(--accent);
+            background: rgba(200,168,75,0.2);
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-top: 4px;
+        }
+
+        /* Navigation menu */
+        .nav-menu {
+            padding: 20px 0 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 24px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: 0.2s;
+            border-left: 3px solid transparent;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .nav-item i { width: 22px; font-size: 1.1rem; }
+        .nav-item:hover {
+            background: rgba(200,168,75,0.08);
+            color: var(--accent);
+            border-left-color: var(--accent);
+        }
+        .nav-item.active{background:rgba(200,168,75,0.12);color:#c8a84b;border-left:3px solid #c8a84b;margin-left:5px;padding-left:calc(1.1rem - 3px);}
+        .nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9);}
+        .nav-item.logout-btn{background:rgba(220,53,69,0.15);color:#dc3545;border:none;}
+        .nav-item.logout-btn:hover{background:rgba(220,53,69,0.25);}
+        
+        .nav-section-divider {
+            height: 1px;
+            background: rgba(200,168,75,0.2);
+            margin: 15px 0;
+        }
+        
+        .nav-section-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.2);
+            padding: 0.6rem 1.1rem 0.3rem;
+            white-space: nowrap;
+            overflow: hidden;
+            opacity: 1;
+            max-width: 200px;
+            transition: opacity 0.2s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+        }
+        
+        .vertical-nav.minimized .nav-section-label {
+            opacity: 0;
+            max-width: 0;
+        }
+
+        /* MAIN CONTENT - adjusts based on sidebar width */
+        .main-content {
+            margin-left: 280px;
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        /* When sidebar is minimized (width 72px), main content margin adjusts */
+        .main-content.sidebar-minimized {
+            margin-left: 72px;
+        }
+
+        .dashboard-content {
+            flex: 1;
+            padding: 1rem 1.8rem 2rem;
+        }
+
+        /* stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(2px);
+        }
+        .stat-number {
+            font-family: 'Cinzel', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+        }
+
+        /* panels */
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            margin-bottom: 1.8rem;
+            overflow: hidden;
+        }
+        .panel-hdr {
+            padding: 1rem 1.5rem;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+        }
+        .panel-hdr i { font-size: 1rem; }
+        .panel-body {
+            padding: 1.2rem 1.5rem;
+        }
+
+        /* member / donation rows */
+        .member-item, .donation-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .member-avatar {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(145deg, #1e3f5f, #b58f3a);
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .member-name { font-weight: 600; }
+        .member-email, .member-date { font-size: 0.7rem; color: var(--text-muted); }
+        .donation-amount { font-weight: 700; color: var(--accent); }
+
+        /* campaign card */
+        .campaign-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: 14px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .campaign-progress {
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px;
+            height: 8px;
+            margin: 0.7rem 0;
+        }
+        .campaign-progress-bar {
+            background: var(--accent);
+            width: 0%;
+            height: 100%;
+            border-radius: 8px;
+        }
+        .campaign-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+        }
+
+        /* action buttons */
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 0.7rem;
+            transition: 0.2s;
+        }
+        .action-btn:hover {
+            background: rgba(200,168,75,0.1);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .action-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .action-group {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .action-group:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(200, 168, 75, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .action-group h4 {
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .action-group h4 i {
+            font-size: 16px;
+        }
+
+        .action-group .action-btn {
+            margin-bottom: 10px;
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .action-group .action-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .action-btn i {
+            width: 16px;
+            text-align: center;
+            color: var(--accent);
+        }
+
+        /* responsive */
+        @media (max-width: 780px) {
+            .vertical-nav {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            .vertical-nav.mobile-open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .main-content.sidebar-minimized {
+                margin-left: 0;
+            }
+            .dashboard-content {
+                padding: 1rem;
+            }
+            /* Mobile: hide minimize inside button when closed */
+            .vertical-nav .minimize-toggle-inside {
+                display: none;
+            }
+            .vertical-nav.mobile-open .minimize-toggle-inside {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- THREE-LINE HAMBURGER TOGGLE BUTTON - moves with navigation -->
+    <button class="nav-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle Menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+    </button>
+
+    <!-- VERTICAL NAVIGATION (SIDEBAR) with ALL IMPORTANT LINKS -->
+    <nav class="vertical-nav" id="verticalNav">
+        <div class="nav-header">
+            <div class="nav-brand">
+                <!-- CHURCH LOGO IMAGE - using actual image from media folder -->
+                <img src="/media/church-logo.jpeg" alt="Church Logo" class="church-logo-img" onerror="this.onerror=null; this.style.display='none';">
+                <div class="brand-text">
+                    <h3>PHM-ARCC</h3>
+                    <p>Iyumbu Dodoma</p>
+                </div>
+            </div>
+            <button class="nav-close-btn" id="closeSidebarBtn"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="nav-user">
+            <div class="user-avatar">
+                <!-- Church logo behind pastor initials -->
+                <img src="/media/church-logo.jpeg" alt="Church Logo" class="user-avatar-logo" onerror="this.onerror=null; this.style.display='none';">
+                <span>PW</span>
+            </div>
+            <div class="user-info">
+                <div class="user-name">Pastor Wilson</div>
+                <div class="user-role">Senior Pastor</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">Welcome back ✝️</div>
+                <!-- Language Selector -->
+                <div style="margin-top: 8px;">
+                    {% include 'members/language_selector.html' %}
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-menu">
+            <!-- All important links as per original design -->
+            <a href="#" class="nav-item active">
+                <i class="fas fa-tachometer-alt"></i> <span>Main Dashboard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-microphone"></i> <span>Sermons</span>
+            </a>
+            
+            <!-- PASTORAL QUICK ACTIONS -->
+            <div class="nav-section-divider"></div>
+            <div class="nav-section-label">Quick Actions</div>
+            
+            <!-- Communication -->
+            <a href="{% url 'members:message_create' %}" class="nav-item">
+                <i class="fas fa-envelope"></i> <span>Create Message</span>
+            </a>
+            <a href="{% url 'members:member_messages' %}" class="nav-item">
+                <i class="fas fa-inbox"></i> <span>View Messages</span>
+            </a>
+            
+            <!-- Member Management -->
+            <a href="{% url 'members:member_list' %}" class="nav-item">
+                <i class="fas fa-user-friends"></i> <span>All Members</span>
+            </a>
+            <a href="{% url 'profile' %}" class="nav-item">
+                <i class="fas fa-user-edit"></i> <span>Edit Profile</span>
+            </a>
+            
+            <!-- Sermons -->
+            <a href="{% url 'sermons:sermon_list' %}" class="nav-item">
+                <i class="fas fa-microphone"></i> <span>All Sermons</span>
+            </a>
+            <a href="{% url 'sermons:sermon_create' %}" class="nav-item">
+                <i class="fas fa-plus"></i> <span>Create Sermon</span>
+            </a>
+            <a href="{% url 'sermons:series_list' %}" class="nav-item">
+                <i class="fas fa-book"></i> <span>Sermon Series</span>
+            </a>
+            
+            <!-- Administration -->
+            <a href="/admin/" class="nav-item">
+                <i class="fas fa-shield-alt"></i> <span>Admin Panel</span>
+            </a>
+            
+            <form method="post" action="{% url 'members:logout' %}" style="display: contents;">
+                {% csrf_token %}
+                <button type="submit" class="nav-item logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                </button>
+            </form>
+        </div>
+        
+        <!-- MINIMIZE / EXPAND BUTTON INSIDE SIDEBAR -->
+        <button class="minimize-toggle-inside" id="minimizeSidebarBtn" title="Minimize / Expand">
+            <i class="fas fa-chevron-left" id="minimizeIcon"></i>
+        </button>
+    </nav>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="main-content" id="mainContent">
+        <div class="dashboard-content">
+            <!-- Language Selector - Top Right -->
+            <div style="position: absolute; top: 20px; right: 20px; z-index: 100;">
+                {% include 'members/language_selector.html' %}
+            </div>
+            
+            <!-- STATISTICS CARDS -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_members }}</div>
+                    <div class="stat-label">Total Members</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ active_members }}</div>
+                    <div class="stat-label">Active Members</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ new_members_this_month }}</div>
+                    <div class="stat-label">New This Month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${{ total_donations|default:0 }}</div>
+                    <div class="stat-label">Total Donations</div>
+                </div>
+            </div>
+
+            <!-- ACTIVE MEMBERS -->
+            <div class="panel">
+                <div class="panel-hdr">
+                    <i class="fas fa-users"></i> <span>Active Members</span>
+                </div>
+                <div class="panel-body">
+                    {% if active_members_list %}
+                        {% for member in active_members_list %}
+                            <div class="member-item">
+                                <div class="member-avatar">{{ member.first_name|slice:":1" }}{{ member.last_name|slice:":1" }}</div>
+                                <div class="member-info">
+                                    <div class="member-name">{{ member.first_name }} {{ member.last_name }}</div>
+                                    <div class="member-email">{{ member.email }}</div>
+                                    <div class="member-meta">
+                                        <span class="member-joined">Joined: {{ member.date_joined|date:"M d, Y" }}</span>
+                                        <span class="member-status active">✅ Active</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="text-align:center;color:var(--text-muted);padding:1rem;">👥 No active members found</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            
+                    </div>
+    </div>
+
+    <script>
+        // ---------- MOCK DATA ----------
+        const dashboardData = {
+            totalMembers: 487,
+            activeMembers: 412,
+            newMembersThisMonth: 24,
+            totalDonations: 14320,
+            activeMembersList: [
+                { firstName: "Grace", lastName: "Mkono", email: "grace.m@phm.org", joined: "2025-02-18", status: "active" },
+                { firstName: "Emmanuel", lastName: "Juma", email: "emma.j@phm.org", joined: "2025-02-10", status: "active" },
+                { firstName: "Sarah", lastName: "Lukas", email: "sarah.l@phm.org", joined: "2025-02-05", status: "active" },
+                { firstName: "David", lastName: "Mushi", email: "david.m@phm.org", joined: "2025-01-28", status: "active" },
+                { firstName: "Esther", lastName: "Mwinyi", email: "esther.m@phm.org", joined: "2025-01-22", status: "active" },
+                { firstName: "John", lastName: "Makasi", email: "john.m@phm.org", joined: "2024-12-15", status: "active" },
+                { firstName: "Lydia", lastName: "Charles", email: "lydia.c@phm.org", joined: "2024-11-20", status: "active" },
+                { firstName: "Peter", lastName: "Mwita", email: "peter.m@phm.org", joined: "2024-10-08", status: "active" }
+            ],
+            recentDonations: [
+                { donor: "John Makasi", campaign: "Building Fund", amount: 250, date: "2025-02-20 10:30" },
+                { donor: "Lydia Charles", campaign: "Youth Outreach", amount: 120, date: "2025-02-19 14:15" },
+                { donor: "Peter Mwita", campaign: "Tithe", amount: 500, date: "2025-02-18 09:45" },
+                { donor: "Anna Ndege", campaign: "Missions", amount: 80, date: "2025-02-17 18:20" },
+                { donor: "Samuel Kipanga", campaign: "Building Fund", amount: 320, date: "2025-02-16 11:00" }
+            ],
+            campaigns: [
+                { title: "New Sanctuary Construction", description: "Expanding worship space", raised: 24800, goal: 50000, donors: 124 },
+                { title: "Youth Discipleship Program", description: "Equipping young believers", raised: 12500, goal: 20000, donors: 89 },
+                { title: "Community Food Bank", description: "Supporting families in Dodoma", raised: 8750, goal: 15000, donors: 56 }
+            ]
+        };
+
+        function formatDate(isoString) {
+            const d = new Date(isoString);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function renderStats() {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card"><div class="stat-number">${dashboardData.totalMembers}</div><div class="stat-label">Total Members</div></div>
+                <div class="stat-card"><div class="stat-number">${dashboardData.activeMembers}</div><div class="stat-label">Active Members</div></div>
+                <div class="stat-card"><div class="stat-number">${dashboardData.newMembersThisMonth}</div><div class="stat-label">New This Month</div></div>
+                <div class="stat-card"><div class="stat-number">$${dashboardData.totalDonations.toLocaleString()}</div><div class="stat-label">Total Donations</div></div>
+            `;
+        }
+
+        function renderActiveMembers() {
+            const container = document.getElementById('activeMembersList');
+            if(!dashboardData.activeMembersList.length){
+                container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">👥 No active members found</p>';
+                return;
+            }
+            let html = '';
+            dashboardData.activeMembersList.forEach(m => {
+                const initials = m.firstName.charAt(0) + m.lastName.charAt(0);
+                html += `
+                    <div class="member-item">
+                        <div class="member-avatar">${initials}</div>
+                        <div class="member-info">
+                            <div class="member-name">${m.firstName} ${m.lastName}</div>
+                            <div class="member-email">${m.email}</div>
+                            <div class="member-meta">
+                                <span class="member-joined">Joined: ${formatDate(m.joined)}</span>
+                                <span class="member-status active">✅ Active</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderRecentDonations() {
+            const container = document.getElementById('recentDonationsList');
+            if(!dashboardData.recentDonations.length){
+                container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">💸 No donations recorded yet</p>';
+                return;
+            }
+            let html = '';
+            dashboardData.recentDonations.forEach(d => {
+                const parsedDate = new Date(d.date);
+                const dateStr = parsedDate.toLocaleDateString() + ' ' + parsedDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                html += `
+                    <div class="donation-item">
+                        <div style="flex:1">
+                            <div class="member-name">${d.donor}</div>
+                            <div style="font-size:0.7rem;color:var(--text-secondary)">${d.campaign}</div>
+                            <div style="font-size:0.65rem;color:var(--text-muted)">${dateStr}</div>
+                        </div>
+                        <div class="donation-amount">$${d.amount.toLocaleString()}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderCampaigns() {
+            const container = document.getElementById('campaignsList');
+            if(!dashboardData.campaigns.length){
+                container.innerHTML = '<p style="padding:1rem;text-align:center;color:var(--text-muted)">📢 No active campaigns</p>';
+                return;
+            }
+            let html = '';
+            dashboardData.campaigns.forEach(c => {
+                const percent = Math.min(100, Math.floor((c.raised / c.goal) * 100));
+                html += `
+                    <div class="campaign-item">
+                        <div style="font-weight:700; margin-bottom:6px;">${c.title}</div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">${c.description}</div>
+                        <div class="campaign-progress"><div class="campaign-progress-bar" style="width: ${percent}%;"></div></div>
+                        <div class="campaign-stats">
+                            <span>💰 Raised: $${c.raised.toLocaleString()}</span>
+                            <span>🎯 Goal: $${c.goal.toLocaleString()}</span>
+                            <span>👥 ${c.donors} donors</span>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderQuickActions() {
+            const container = document.getElementById('actionButtons');
+            container.innerHTML = `
+                <a href="#" class="action-btn"><i class="fas fa-envelope-open-text"></i> Create Message to Congregation</a>
+                <a href="#" class="action-btn"><i class="fas fa-bullhorn"></i> Create Announcement</a>
+                <a href="#" class="action-btn"><i class="fas fa-users"></i> View All Members Directory</a>
+                <a href="#" class="action-btn"><i class="fas fa-chart-pie"></i> Financial Reports & Overview</a>
+                <a href="#" class="action-btn"><i class="fas fa-calendar-plus"></i> Schedule Event / Service</a>
+                <a href="#" class="action-btn"><i class="fas fa-hand-sparkles"></i> Prayer Request Follow-up</a>
+                <a href="#" class="action-btn"><i class="fas fa-church"></i> View All Campaigns</a>
+            `;
+        }
+
+        // ---------- SIDEBAR MINIMIZE/EXPAND LOGIC with MOVING TOGGLE BUTTON ----------
+        const verticalNav = document.getElementById('verticalNav');
+        const mainContent = document.getElementById('mainContent');
+        const toggleBtn = document.getElementById('sidebarToggleBtn');
+        const minimizeBtn = document.getElementById('minimizeSidebarBtn');
+        const minimizeIcon = document.getElementById('minimizeIcon');
+        const closeBtn = document.getElementById('closeSidebarBtn');
+
+        let isMinimized = false;
+
+        function updateToggleButtonPosition() {
+            if (window.innerWidth > 780) {
+                if (isMinimized) {
+                    toggleBtn.style.left = '92px';
+                    toggleBtn.classList.add('sidebar-minimized');
+                } else {
+                    toggleBtn.style.left = '300px';
+                    toggleBtn.classList.remove('sidebar-minimized');
+                }
+            } else {
+                toggleBtn.style.left = '20px';
+            }
+        }
+
+        function setMinimized(minimized) {
+            isMinimized = minimized;
+            if (window.innerWidth > 780) {
+                if (minimized) {
+                    verticalNav.classList.add('minimized');
+                    mainContent.classList.add('sidebar-minimized');
+                    minimizeIcon.classList.remove('fa-chevron-left');
+                    minimizeIcon.classList.add('fa-chevron-right');
+                } else {
+                    verticalNav.classList.remove('minimized');
+                    mainContent.classList.remove('sidebar-minimized');
+                    minimizeIcon.classList.remove('fa-chevron-right');
+                    minimizeIcon.classList.add('fa-chevron-left');
+                }
+                updateToggleButtonPosition();
+            } else {
+                if (minimized) {
+                    verticalNav.classList.add('minimized');
+                    minimizeIcon.classList.remove('fa-chevron-left');
+                    minimizeIcon.classList.add('fa-chevron-right');
+                } else {
+                    verticalNav.classList.remove('minimized');
+                    minimizeIcon.classList.remove('fa-chevron-right');
+                    minimizeIcon.classList.add('fa-chevron-left');
+                }
+            }
+        }
+
+        function toggleMinimize() {
+            setMinimized(!isMinimized);
+        }
+
+        function toggleSidebarVisibility() {
+            if (window.innerWidth <= 780) {
+                if (verticalNav.classList.contains('mobile-open')) {
+                    verticalNav.classList.remove('mobile-open');
+                } else {
+                    verticalNav.classList.add('mobile-open');
+                }
+            } else {
+                toggleMinimize();
+            }
+        }
+
+        function closeSidebarMobile() {
+            if (window.innerWidth <= 780) {
+                verticalNav.classList.remove('mobile-open');
+            } else {
+                if (!isMinimized) {
+                    setMinimized(true);
+                } else {
+                    setMinimized(false);
+                }
+            }
+        }
+
+        minimizeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMinimize();
+        });
+        
+        toggleBtn.addEventListener('click', toggleSidebarVisibility);
+        closeBtn.addEventListener('click', closeSidebarMobile);
+        
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 780) {
+                verticalNav.classList.remove('mobile-open');
+                if (isMinimized) {
+                    verticalNav.classList.add('minimized');
+                    mainContent.classList.add('sidebar-minimized');
+                } else {
+                    verticalNav.classList.remove('minimized');
+                    mainContent.classList.remove('sidebar-minimized');
+                }
+                updateToggleButtonPosition();
+            } else {
+                mainContent.classList.remove('sidebar-minimized');
+                if (isMinimized) {
+                    verticalNav.classList.add('minimized');
+                    minimizeIcon.classList.remove('fa-chevron-left');
+                    minimizeIcon.classList.add('fa-chevron-right');
+                } else {
+                    verticalNav.classList.remove('minimized');
+                    minimizeIcon.classList.remove('fa-chevron-right');
+                    minimizeIcon.classList.add('fa-chevron-left');
+                }
+                toggleBtn.style.left = '20px';
+            }
+        });
+        
+        function initDashboard() {
+            renderQuickActions();
+            if (window.innerWidth > 780) {
+                setMinimized(false);
+            } else {
+                verticalNav.classList.remove('mobile-open');
+            }
+        }
+        
+        initDashboard();
+    </script>
+    
+    <!-- Navigation Labels with Language Support -->
+    {% include 'members/navigation_labels.html' %}
+</body>
+</html>

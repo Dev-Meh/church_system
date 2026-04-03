@@ -1,0 +1,551 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - PHM-ARCC Iyumbu Church Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+
+html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; margin:0; padding:0; }
+
+.layout{
+  display:flex;
+  flex-direction:row;
+  min-height:100vh;
+  height:100%;
+}
+
+/* ─── SIDEBAR ─────────────────────────────────────────── */
+.sidebar{
+  width:240px;
+  min-width:240px;
+  height:100vh;
+  position:sticky;
+  top:0;
+  background:linear-gradient(180deg,#0d2340 0%,#0a1a2e 100%);
+  border-right:3px solid #c8a84b;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  transition:width 0.35s cubic-bezier(.4,0,.2,1), min-width 0.35s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+  z-index:100;
+}
+.sidebar.collapsed{width:64px;min-width:64px;}
+
+.sidebar-header{
+  padding:1.2rem 1rem;
+  border-bottom:1px solid rgba(200,168,75,0.2);
+  display:flex;align-items:center;
+  justify-content:space-between;
+  min-height:68px;gap:8px;flex-shrink:0;
+}
+.brand-logo{height:32px;width:auto;max-width:32px;border-radius:4px;}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1;overflow:hidden;}
+
+/* Church logo icon styling */
+.church-logo {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #c8a84b 0%, #b3943f 100%);
+  border-radius: 6px;
+  border: 1px solid rgba(200,168,75,0.3);
+  box-shadow: 0 2px 6px rgba(200,168,75,0.2);
+}
+
+.church-logo i {
+  color: #0a1628;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.sidebar.collapsed .church-logo {
+  width: 28px;
+  height: 28px;
+}
+
+.sidebar.collapsed .church-logo i {
+  font-size: 14px;
+}
+.brand-text{
+  display:flex;flex-direction:column;overflow:hidden;
+  max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .brand-text{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+.church-name{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:#c8a84b;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.church-sub{font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap;}
+
+.toggle-btn{
+  background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);
+  border-radius:6px;width:30px;height:30px;min-width:30px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:background 0.2s;
+}
+.toggle-btn:hover{background:rgba(200,168,75,0.25);}
+.toggle-btn svg{width:16px;height:16px;stroke:#c8a84b;fill:none;stroke-width:2;transition:transform 0.35s cubic-bezier(.4,0,.2,1);}
+.sidebar.collapsed .toggle-btn svg{transform:rotate(180deg);}
+
+.user-area{
+  padding:1rem;border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:10px;overflow:hidden;flex-shrink:0;
+}
+.avatar{width:36px;height:36px;min-width:36px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#c8a84b);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;position:relative;overflow:hidden;}
+.avatar-logo{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.3;border-radius:50%;}
+.avatar span{position:relative;z-index:1;}
+.user-info{overflow:hidden;max-width:160px;opacity:1;transform:translateX(0);transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;white-space:nowrap;}
+.sidebar.collapsed .user-info{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+.user-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;}
+.user-role{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;display:flex;align-items:center;gap:6px;}
+.role-logo{width:16px;height:16px;object-fit:cover;border-radius:3px;border:1px solid rgba(200,168,75,0.2);}
+
+.nav-menu{flex:1;padding:1rem 0;overflow-y:auto;overflow-x:hidden;}
+.nav-section-label{
+  font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.2);padding:0.6rem 1.1rem 0.3rem;
+  white-space:nowrap;overflow:hidden;opacity:1;max-width:200px;
+  transition:opacity 0.2s ease, max-width 0.35s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed .nav-section-label{opacity:0;max-width:0;}
+
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 1.1rem;margin:2px 8px;border-radius:8px;
+  color:rgba(255,255,255,0.55);font-size:12px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:background 0.2s, color 0.2s;white-space:nowrap;overflow:hidden;
+  cursor:pointer;position:relative;
+}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9);}
+.nav-item.active{background:rgba(200,168,75,0.12);color:#c8a84b;border-left:3px solid #c8a84b;margin-left:5px;padding-left:calc(1.1rem - 3px);}
+.nav-item svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+.nav-tooltip{
+  position:absolute;left:56px;top:50%;transform:translateY(-50%);
+  background:#1a3a5c;border:1px solid rgba(200,168,75,0.4);
+  color:#c8a84b;font-size:11px;font-weight:700;letter-spacing:0.5px;
+  text-transform:uppercase;padding:5px 10px;border-radius:6px;
+  white-space:nowrap;pointer-events:none;opacity:0;
+  transition:opacity 0.15s ease;z-index:200;
+}
+.nav-tooltip::before{content:'';position:absolute;right:100%;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:#1a3a5c;}
+.sidebar.collapsed .nav-item:hover .nav-tooltip{opacity:1;}
+
+.nav-label{overflow:hidden;opacity:1;max-width:160px;transform:translateX(0);transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;white-space:nowrap;}
+.sidebar.collapsed .nav-label{opacity:0;max-width:0;transform:translateX(-8px);}
+
+.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;}
+.btn-logout{
+  display:flex;align-items:center;gap:12px;width:100%;padding:9px 1rem;
+  border-radius:8px;border:1px solid rgba(192,57,43,0.3);
+  background:rgba(192,57,43,0.08);color:rgba(231,76,60,0.8);
+  font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;
+  text-decoration:none;cursor:pointer;transition:all 0.2s;overflow:hidden;white-space:nowrap;
+}
+.btn-logout:hover{background:rgba(192,57,43,0.18);color:#e74c3c;border-color:rgba(231,76,60,0.5);}
+.btn-logout svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+/* ─── MAIN ────────────────────────────────────────────── */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow-y:auto;}
+
+/* ─── TOPNAV (merged: title + nav + welcome) ─────────── */
+.topnav{
+  background:linear-gradient(90deg,#0d2340 0%,#152333 100%);
+  border-bottom:2px solid rgba(200,168,75,0.35);
+  padding:0 1.8rem;
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+  gap:1.2rem;
+  position:relative;
+}
+
+/* Logo slot */
+.topnav-logo{
+  display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;
+}
+.topnav-logo-img{
+  height:38px;width:38px;border-radius:8px;
+  object-fit:contain;
+  border:1px solid rgba(200,168,75,0.3);
+  background:rgba(200,168,75,0.06);
+  padding:3px;
+}
+.topnav-logo-placeholder{
+  height:38px;width:38px;border-radius:8px;
+  border:1.5px dashed rgba(200,168,75,0.4);
+  background:rgba(200,168,75,0.05);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.topnav-logo-placeholder svg{width:18px;height:18px;stroke:rgba(200,168,75,0.5);fill:none;stroke-width:1.5;}
+.topnav-title-block{display:flex;flex-direction:column;justify-content:center;}
+.topnav-title{font-family:'Cinzel',serif;font-size:15px;font-weight:600;color:#fff;white-space:nowrap;line-height:1.2;}
+.topnav-subtitle{font-size:10px;color:rgba(255,255,255,0.35);white-space:nowrap;margin-top:1px;letter-spacing:0.3px;}
+
+/* Nav links (center) */
+.topnav-links{
+  display:flex;align-items:center;gap:2px;flex:1;justify-content:center;
+  list-style:none;margin:0;padding:0;
+}
+.topnav-links a{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 10px;border-radius:6px;
+  color:rgba(255,255,255,0.5);font-size:11px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:background 0.18s,color 0.18s;white-space:nowrap;
+}
+.topnav-links a:hover{background:rgba(200,168,75,0.1);color:rgba(255,255,255,0.9);}
+.topnav-links a.active{background:rgba(200,168,75,0.15);color:#c8a84b;border-bottom:2px solid #c8a84b;border-radius:6px 6px 0 0;}
+.topnav-links a svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+/* Dropdown */
+.topnav-dropdown{position:relative;}
+.topnav-dropdown-toggle{cursor:pointer;}
+.topnav-dropdown-toggle .caret{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.5;transition:transform 0.2s;margin-left:2px;}
+.topnav-dropdown:hover .caret{transform:rotate(180deg);}
+.topnav-dropdown-menu{
+  display:none;position:absolute;top:calc(100% + 8px);right:0;
+  background:#0d2340;border:1px solid rgba(200,168,75,0.3);
+  border-radius:8px;min-width:170px;z-index:300;overflow:hidden;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+.topnav-dropdown:hover .topnav-dropdown-menu{display:block;}
+.topnav-dropdown-menu a{
+  display:flex;align-items:center;gap:8px;padding:9px 14px;
+  color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:background 0.15s,color 0.15s;
+}
+.topnav-dropdown-menu a:hover{background:rgba(200,168,75,0.1);color:#c8a84b;}
+.topnav-dropdown-menu a svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;}
+.topnav-divider{border:none;border-top:1px solid rgba(255,255,255,0.07);margin:2px 0;}
+
+/* Right side: welcome pill + avatar */
+.topnav-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.welcome-pill{
+  background:rgba(200,168,75,0.12);border:1px solid rgba(200,168,75,0.3);
+  color:#c8a84b;font-size:11px;font-weight:700;padding:5px 12px;
+  border-radius:20px;white-space:nowrap;
+}
+.topnav-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,#1a3a5c,#c8a84b);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;font-size:11px;font-weight:600;color:#fff;
+  position:relative;overflow:hidden;
+}
+.topnav-avatar-logo{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.3;border-radius:50%;}
+.topnav-avatar span{position:relative;z-index:1;}
+
+/* Hamburger */
+.topnav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px;}
+.topnav-hamburger span{display:block;width:20px;height:2px;background:#c8a84b;border-radius:2px;transition:all 0.25s;}
+
+@media(max-width:960px){
+  .topnav-links{display:none;}
+  .topnav-subtitle{display:none;}
+  .topnav-hamburger{display:flex;}
+  .welcome-pill{display:none;}
+  .topnav-links.open{
+    display:flex;flex-direction:column;position:absolute;
+    top:64px;left:0;right:0;
+    background:#0d2340;border-bottom:2px solid rgba(200,168,75,0.35);
+    padding:0.5rem 1rem;z-index:300;gap:2px;
+  }
+  .topnav-links.open a{justify-content:flex-start;}
+  .topnav-dropdown-menu{position:static;box-shadow:none;border:none;border-left:2px solid rgba(200,168,75,0.2);border-radius:0;background:transparent;display:block;}
+}
+
+/* ─── PAGE BODY ───────────────────────────────────────── */
+.page-body{padding:1.6rem 1.8rem 3rem;flex:1;}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin-bottom:2rem;}
+.stat-card{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1.5rem;text-align:center;}
+.stat-number{font-size:2rem;font-weight:700;color:#c8a84b;margin-bottom:0.5rem;}
+.stat-label{font-size:12px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;}
+
+.panel{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:12px;margin-bottom:1.5rem;overflow:hidden;}
+.panel-hdr{padding:1rem 1.5rem;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:0.5rem;font-size:13px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:1px;}
+.panel-hdr svg{width:16px;height:16px;stroke:#c8a84b;fill:none;stroke-width:2;}
+.panel-body{padding:1.5rem;}
+
+.donation-item{display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.donation-item:last-child{border-bottom:none;}
+.donation-amount{font-weight:600;color:#c8a84b;}
+.donation-date{font-size:11px;color:rgba(255,255,255,0.5);}
+
+.campaign-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:1rem;margin-bottom:1rem;}
+.campaign-title{font-weight:600;color:#fff;margin-bottom:0.5rem;}
+.campaign-progress{background:rgba(255,255,255,0.1);border-radius:4px;height:6px;margin:0.5rem 0;}
+.campaign-progress-bar{background:#c8a84b;height:100%;border-radius:4px;}
+.campaign-stats{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.6);}
+
+.action-btn{display:flex;align-items:center;gap:8px;width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;transition:all 0.2s;margin-bottom:0.5rem;}
+.action-btn:hover{background:rgba(255,255,255,0.1);color:#c8a84b;}
+.action-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="layout">
+
+  <!-- ═══════════ SIDEBAR ═══════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <!-- CHURCH LOGO IMAGE - using actual image from media folder -->
+        <img src="/media/church-logo.jpeg" alt="Church Logo" class="brand-logo" onerror="this.style.display='none'">
+        <div class="brand-text">
+          <span class="church-name">PHM-ARCC</span>
+          <span class="church-sub">Iyumbu · Dodoma</span>
+        </div>
+      </div>
+      <button class="toggle-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <div class="user-area">
+      <div class="avatar">
+      <!-- Church logo behind user initials -->
+      <img src="/media/church-logo.jpeg" alt="Church Logo" class="avatar-logo" onerror="this.onerror=null; this.style.display='none';">
+      <span>{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</span>
+    </div>
+      <div class="user-info">
+        <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
+        <div class="user-role">
+          <!-- Church logo behind "Church Member" text -->
+          <img src="/media/church-logo.jpeg" alt="Church Logo" class="role-logo" onerror="this.onerror=null; this.style.display='none';">
+          <span>Church Member</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-lang" style="padding:0 1rem 0.75rem;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div class="nav-user">{% include 'members/language_selector.html' %}</div>
+    </div>
+
+    <nav class="nav-menu">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item active" href="{% url 'dashboard' %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="nav-label">Dashboard</span>
+        <span class="nav-tooltip">Dashboard</span>
+      </a>
+      <a class="nav-item" href="{% url 'player:dashboard' %}">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        <span class="nav-label">Content Player</span>
+        <span class="nav-tooltip">Content Player</span>
+      </a>
+
+      <div class="nav-section-label">Community</div>
+      <a class="nav-item" href="{% url 'events:event_list' %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="nav-label">Events</span>
+        <span class="nav-tooltip">Events</span>
+      </a>
+      <a class="nav-item" href="{% url 'sermons:sermon_list' %}">
+        <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        <span class="nav-label">Sermons</span>
+        <span class="nav-tooltip">Sermons</span>
+      </a>
+      <a class="nav-item" href="{% url 'members:member_messages' %}">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span class="nav-label">Messages</span>
+        <span class="nav-tooltip">Messages</span>
+      </a>
+
+      <div class="nav-section-label">Giving</div>
+      <a class="nav-item" href="{% url 'donations:home' %}">
+        <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span class="nav-label">Donate</span>
+        <span class="nav-tooltip">Donate</span>
+      </a>
+      <a class="nav-item" href="{% url 'donations:history' %}">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span class="nav-label">Donation History</span>
+        <span class="nav-tooltip">History</span>
+      </a>
+
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" href="{% url 'profile' %}">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="nav-label">Profile</span>
+        <span class="nav-tooltip">Profile</span>
+      </a>
+      <a class="nav-item" href="{% url 'profile_edit' %}">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span class="nav-label">Edit Profile</span>
+        <span class="nav-tooltip">Edit Profile</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <form method="post" action="{% url 'members:logout' %}" style="margin:0;">
+        {% csrf_token %}
+        <button type="submit" class="btn-logout" style="width:100%;border:none;background:none;padding:0;cursor:pointer;">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span class="nav-label">Sign Out</span>
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <div class="main">
+
+    <!-- TOPNAV: logo + title + links + welcome pill -->
+    <header class="topnav">
+
+      <!-- LEFT: Logo + page title -->
+      <a class="topnav-logo" href="{% url 'home' %}">
+        {% if church_logo %}
+          <img src="{{ church_logo.url }}" alt="Church Logo" class="topnav-logo-img">
+        {% else %}
+          <!-- Logo placeholder — replace src with your actual logo path -->
+          <img src="/media/church-logo.svg" alt="Church Logo" class="topnav-logo-img"
+               onerror="this.replaceWith(document.getElementById('logo-placeholder').content.cloneNode(true))">
+          <template id="logo-placeholder">
+            <div class="topnav-logo-placeholder">
+              <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+          </template>
+        {% endif %}
+        <div class="topnav-title-block">
+          <span class="topnav-title">Member Dashboard</span>
+          <span class="topnav-subtitle">PHM-ARCC Iyumbu Dodoma &mdash; Your Personal Church Hub</span>
+        </div>
+      </a>
+
+
+      <!-- RIGHT: Welcome pill + avatar + hamburger -->
+      <div class="topnav-right">
+        <span class="welcome-pill">Welcome, {{ user.first_name }} {{ user.last_name }}!</span>
+        <div class="topnav-avatar">
+        <!-- Church logo behind topnav initials -->
+        <img src="/media/church-logo.jpeg" alt="Church Logo" class="topnav-avatar-logo" onerror="this.onerror=null; this.style.display='none';">
+        <span>{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</span>
+      </div>
+        <button class="topnav-hamburger" onclick="toggleTopnav()" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <div class="page-body">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">{{ total_user_donations|default:0|floatformat:0 }}</div>
+          <div class="stat-label">Total Donations</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ user_donations|length }}</div>
+          <div class="stat-label">Donations Made</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ available_campaigns|length }}</div>
+          <div class="stat-label">Active Campaigns</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ user.membership_date|date:"M Y" }}</div>
+          <div class="stat-label">Member Since</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hdr">
+          <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          <span>Recent Donations</span>
+        </div>
+        <div class="panel-body">
+          {% if user_donations %}
+            {% for donation in user_donations %}
+              <div class="donation-item">
+                <div>
+                  <div>{{ donation.campaign.title|default:donation.get_donation_type_display }}</div>
+                  <div class="donation-date">{{ donation.donation_date|date:"M d, Y" }}</div>
+                </div>
+                <div class="donation-amount">${{ donation.amount|floatformat:2 }}</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p style="text-align:center;color:rgba(255,255,255,0.5);padding:2rem 0;">No donations yet. Make your first donation to support our church!</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hdr">
+          <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          <span>Active Campaigns</span>
+        </div>
+        <div class="panel-body">
+          {% if available_campaigns %}
+            {% for campaign in available_campaigns %}
+              <div class="campaign-item">
+                <div class="campaign-title">{{ campaign.title }}</div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:0.5rem;">{{ campaign.description|truncatechars:100 }}</div>
+                <div class="campaign-progress">
+                  <div class="campaign-progress-bar" style="width:60%;"></div>
+                </div>
+                <div class="campaign-stats">
+                  <span>Goal: ${{ campaign.target_amount|floatformat:0 }}</span>
+                  <span>Ends: {{ campaign.end_date|date:"M d" }}</span>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p style="text-align:center;color:rgba(255,255,255,0.5);padding:2rem 0;">No active campaigns at the moment.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hdr">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3"/></svg>
+          <span>Quick Actions</span>
+        </div>
+        <div class="panel-body">
+          <a class="action-btn" href="{% url 'profile_edit' %}">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Profile
+          </a>
+          <a class="action-btn" href="{% url 'donations:home' %}">
+            <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            Make Donation
+          </a>
+          <a class="action-btn" href="#">
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            Submit Prayer
+          </a>
+          <a class="action-btn" href="#">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Send Message
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% include 'members/navigation_labels.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+function toggleTopnav(){
+  document.getElementById('topnav-links').classList.toggle('open');
+}
+</script>
+{% endblock %}

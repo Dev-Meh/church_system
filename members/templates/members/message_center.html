@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block title %}Message Center - PHM-ARCC Iyumbu Church Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+
+html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; margin:0; padding:0; }
+
+.layout{
+  display:flex;
+  flex-direction:row;
+  min-height:100vh;
+  height:100%;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:240px;
+  min-width:240px;
+  height:100vh;
+  position:sticky;
+  top:0;
+  background:linear-gradient(180deg,#0d2340 0%,#0a1a2e 100%);
+  border-right:3px solid #c8a84b;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  transition:width 0.35s cubic-bezier(.4,0,.2,1), min-width 0.35s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+  z-index:100;
+}
+.sidebar.collapsed{width:64px;min-width:64px;}
+
+.sidebar-header{
+  padding:1.2rem 1rem;
+  border-bottom:1px solid rgba(200,168,75,0.2);
+  display:flex;align-items:center;
+  justify-content:space-between;
+  min-height:68px;gap:8px;flex-shrink:0;
+}
+
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1;overflow:hidden;}
+
+.brand-text{
+  display:flex;flex-direction:column;overflow:hidden;
+  max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .brand-text{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+
+.church-name{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:#c8a84b;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.church-sub{font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap;}
+
+.toggle-btn{
+  background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);
+  border-radius:6px;width:30px;height:30px;min-width:30px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:background 0.2s;
+}
+.toggle-btn:hover{background:rgba(200,168,75,0.25);}
+.toggle-btn svg{width:16px;height:16px;stroke:#c8a84b;fill:none;stroke-width:2;transition:transform 0.35s cubic-bezier(.4,0,.2,1);}
+.sidebar.collapsed .toggle-btn svg{transform:rotate(180deg);}
+
+.user-area{
+  padding:1rem;border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:10px;overflow:hidden;flex-shrink:0;
+}
+.avatar{width:36px;height:36px;min-width:36px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#c8a84b);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;}
+
+.user-info{
+  overflow:hidden;max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .user-info{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+.user-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;}
+.user-role{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+
+.nav-menu{flex:1;padding:1rem 0;overflow-y:auto;overflow-x:hidden;}
+
+.nav-section-label{
+  font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.2);padding:0.6rem 1.1rem 0.3rem;
+  white-space:nowrap;overflow:hidden;opacity:1;max-width:200px;
+  transition:opacity 0.2s ease, max-width 0.35s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed .nav-section-label{opacity:0;max-width:0;}
+
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 1.1rem;margin:2px 8px;border-radius:8px;
+  color:rgba(255,255,255,0.55);font-size:12px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:background 0.2s, color 0.2s;white-space:nowrap;overflow:hidden;
+}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9);}
+.nav-item.active{background:rgba(200,168,75,0.12);color:#c8a84b;border-left:3px solid #c8a84b;margin-left:5px;padding-left:calc(1.1rem - 3px);}
+.nav-item svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+.nav-label{
+  overflow:hidden;opacity:1;max-width:160px;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .nav-label{opacity:0;max-width:0;transform:translateX(-8px);}
+
+.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;}
+.btn-logout{
+  display:flex;align-items:center;gap:12px;width:100%;padding:9px 1rem;
+  border-radius:8px;border:1px solid rgba(192,57,43,0.3);
+  background:rgba(192,57,43,0.08);color:rgba(231,76,60,0.8);
+  font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;
+  text-decoration:none;cursor:pointer;transition:all 0.2s;overflow:hidden;white-space:nowrap;
+}
+.btn-logout:hover{background:rgba(192,57,43,0.18);color:#e74c3c;border-color:rgba(231,76,60,0.5);}
+.btn-logout svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+/* MAIN */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow-y:auto;}
+
+.topbar{background:#152333;border-bottom:1px solid rgba(255,255,255,0.07);padding:0 1.8rem;height:58px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar h2{font-family:'Cinzel',serif;font-size:16px;font-weight:600;color:#fff;}
+.topbar p{font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px;}
+.welcome-pill{background:rgba(200,168,75,0.12);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;white-space:nowrap;}
+
+.page-body{padding:1.6rem 1.8rem 3rem;flex:1;}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin-bottom:2rem;}
+.stat-card{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1.5rem;text-align:center;}
+.stat-number{font-size:2rem;font-weight:700;color:#c8a84b;margin-bottom:0.5rem;}
+.stat-label{font-size:12px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;}
+
+.panel{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:12px;margin-bottom:1.5rem;overflow:hidden;}
+.panel-hdr{padding:1rem 1.5rem;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:0.5rem;font-size:13px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:1px;}
+.panel-hdr svg{width:16px;height:16px;stroke:#c8a84b;}
+.panel-body{padding:1.5rem;}
+
+.message-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:1rem;margin-bottom:1rem;}
+.message-title{font-weight:600;color:#fff;margin-bottom:0.5rem;}
+.message-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;font-size:11px;color:rgba(255,255,255,0.5);}
+.message-priority{padding:2px 8px;border-radius:12px;font-weight:700;text-transform:uppercase;}
+.priority-low{background:rgba(76,175,80,0.2);color:#4caf50;}
+.priority-medium{background:rgba(255,193,7,0.2);color:#ffc107;}
+.priority-high{background:rgba(255,152,0,0.2);color:#ff9800;}
+.priority-urgent{background:rgba(244,67,54,0.2);color:#f44336;}
+.message-content{color:rgba(255,255,255,0.8);line-height:1.5;margin-bottom:1rem;}
+.message-stats{display:flex;gap:2rem;font-size:11px;color:rgba(255,255,255,0.6);}
+.message-stat{display:flex;align-items:center;gap:0.5rem;}
+
+.action-btn{display:flex;align-items:center;gap:8px;width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;transition:all 0.2s;margin-bottom:0.5rem;}
+.action-btn:hover{background:rgba(255,255,255,0.1);color:#c8a84b;}
+.action-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <svg width="26" height="26" viewBox="0 0 48 48" fill="none" style="flex-shrink:0;">
+          <rect x="20" y="4" width="8" height="40" rx="2" fill="#c8a84b"/>
+          <rect x="6" y="16" width="36" height="8" rx="2" fill="#c8a84b"/>
+        </svg>
+        <div class="brand-text">
+          <div class="church-name">PHM-ARCC</div>
+          <div class="church-sub">Iyumbu Dodoma</div>
+        </div>
+      </div>
+      <button class="toggle-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <div class="user-area">
+      <div class="avatar">👨‍⚕️</div>
+      <div class="user-info">
+        <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
+        <div class="user-role">Pastor</div>
+      </div>
+    </div>
+
+    <div class="nav-menu">
+      <div class="nav-section-label">Communication</div>
+      <a class="nav-item active" href="{% url 'members:message_center' %}">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span class="nav-label">Message Center</span>
+      </a>
+      <a class="nav-item" href="{% url 'members:message_create' %}">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 9.5-9.5z"/></svg>
+        <span class="nav-label">New Message</span>
+      </a>
+      <a class="nav-item" href="{% url 'members:message_list' %}">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6l3-3"/></svg>
+        <span class="nav-label">Sent Messages</span>
+      </a>
+      <a class="nav-item" href="{% url 'members:announcement_create' %}">
+        <svg viewBox="0 0 24 24"><path d="M22 17H2l3.29 3.29c.63.63 1.71 0 2.34 0l3.58-3.59c.63-.63.18-1.71 0-2.34L22 17zM20 11a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v3"/></svg>
+        <span class="nav-label">Announcements</span>
+      </a>
+      
+      <div class="nav-section-label">Pastoral Dashboard</div>
+      <a class="nav-item" href="{% url 'dashboard' %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item" href="{% url 'members:member_list' %}">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="nav-label">All Members</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <form method="POST" action="{% url 'members:logout' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn-logout">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          <span class="nav-label">Logout</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h2>Message Center</h2>
+        <p>PHM-ARCC Iyumbu Dodoma &mdash; Church Communication Hub</p>
+      </div>
+      <span class="welcome-pill">Welcome, Pastor {{ user.first_name }} {{ user.last_name }}!</span>
+    </div>
+
+    <div class="page-body">
+      <!-- Message Statistics -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">{{ total_messages }}</div>
+          <div class="stat-label">Messages Sent</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ total_recipients }}</div>
+          <div class="stat-label">Total Recipients</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ total_reads }}</div>
+          <div class="stat-label">Messages Read</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{% if total_recipients > 0 %}{{ total_reads|mul:100|div:total_recipients|floatformat:0 }}%{% else %}0%{% endif %}</div>
+          <div class="stat-label">Read Rate</div>
+        </div>
+      </div>
+
+      <!-- Recent Messages -->
+      <div class="panel">
+        <div class="panel-hdr">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span>Recent Messages</span>
+        </div>
+        <div class="panel-body">
+          {% if recent_messages %}
+            {% for message in recent_messages %}
+              <div class="message-item">
+                <div class="message-title">{{ message.title }}</div>
+                <div class="message-meta">
+                  <span>Priority: <span class="message-priority priority-{{ message.priority }}">{{ message.get_priority_display }}</span></span>
+                  <span>{{ message.created_at|date:"M d, Y h:i A" }}</span>
+                </div>
+                <div class="message-content">{{ message.content|truncatechars:150 }}</div>
+                <div class="message-stats">
+                  <div class="message-stat">
+                    <svg viewBox="0 0 24 24" width="14" height="14"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    {{ message.recipient_count }} recipients
+                  </div>
+                  <div class="message-stat">
+                    <svg viewBox="0 0 24 24" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11-8-4-8-11 8z"/></svg>
+                    {{ message.read_count }} read
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p style="text-align:center;color:rgba(255,255,255,0.5);padding:2rem 0;">No messages sent yet. Create your first message to communicate with members!</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="panel">
+        <div class="panel-hdr">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3"/></svg>
+          <span>Quick Actions</span>
+        </div>
+        <div class="panel-body">
+          <a class="action-btn" href="{% url 'members:message_create' %}">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 9.5-9.5z"/></svg>
+            Send New Message
+          </a>
+          <a class="action-btn" href="{% url 'members:message_list' %}">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6l3-3"/></svg>
+            View All Messages
+          </a>
+          <a class="action-btn" href="{% url 'members:announcement_create' %}">
+            <svg viewBox="0 0 24 24"><path d="M22 17H2l3.29 3.29c.63.63 1.71 0 2.34 0l3.58-3.59c.63-.63.18-1.71 0-2.34L22 17zM20 11a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v3"/></svg>
+            Create Announcement
+          </a>
+          <a class="action-btn" href="{% url 'members:member_list' %}">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            View Members
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - PHM-ARCC Iyumbu Church Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+
+html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; margin:0; padding:0; }
+
+.layout{
+  display:flex;
+  flex-direction:row;
+  min-height:100vh;
+  height:100%;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:240px;
+  min-width:240px;
+  height:100vh;
+  position:sticky;
+  top:0;
+  background:linear-gradient(180deg,#0d2340 0%,#0a1a2e 100%);
+  border-right:3px solid #c8a84b;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  transition:width 0.35s cubic-bezier(.4,0,.2,1), min-width 0.35s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+  z-index:100;
+}
+.sidebar.collapsed{width:64px;min-width:64px;}
+
+.sidebar-header{
+  padding:1.2rem 1rem;
+  border-bottom:1px solid rgba(200,168,75,0.2);
+  display:flex;align-items:center;
+  justify-content:space-between;
+  min-height:68px;gap:8px;flex-shrink:0;
+}
+
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1;overflow:hidden;}
+
+.brand-text{
+  display:flex;flex-direction:column;overflow:hidden;
+  max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .brand-text{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+
+.church-name{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:#c8a84b;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.church-sub{font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap;}
+
+.toggle-btn{
+  background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);
+  border-radius:6px;width:30px;height:30px;min-width:30px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:background 0.2s;
+}
+.toggle-btn:hover{background:rgba(200,168,75,0.25);}
+.toggle-btn svg{width:16px;height:16px;stroke:#c8a84b;fill:none;stroke-width:2;transition:transform 0.35s cubic-bezier(.4,0,.2,1);}
+.sidebar.collapsed .toggle-btn svg{transform:rotate(180deg);}
+
+.user-area{
+  padding:1rem;border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:10px;overflow:hidden;flex-shrink:0;
+}
+.avatar{width:36px;height:36px;min-width:36px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#c8a84b);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;}
+
+.user-info{
+  overflow:hidden;max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .user-info{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+.user-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;}
+.user-role{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+
+.nav-menu{flex:1;padding:1rem 0;overflow-y:auto;overflow-x:hidden;}
+
+.nav-section-label{
+  font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.2);padding:0.6rem 1.1rem 0.3rem;
+  white-space:nowrap;overflow:hidden;opacity:1;max-width:200px;
+  transition:opacity 0.2s ease, max-width 0.35s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed .nav-section-label{opacity:0;max-width:0;}
+
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 1.1rem;margin:2px 8px;border-radius:8px;
+  color:rgba(255,255,255,0.55);font-size:12px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:background 0.2s, color 0.2s;white-space:nowrap;overflow:hidden;
+}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9);}
+.nav-item.active{background:rgba(200,168,75,0.12);color:#c8a84b;border-left:3px solid #c8a84b;margin-left:5px;padding-left:calc(1.1rem - 3px);}
+.nav-item svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+.nav-label{
+  overflow:hidden;opacity:1;max-width:160px;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .nav-label{opacity:0;max-width:0;transform:translateX(-8px);}
+
+.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;}
+.btn-logout{
+  display:flex;align-items:center;gap:12px;width:100%;padding:9px 1rem;
+  border-radius:8px;border:1px solid rgba(192,57,43,0.3);
+  background:rgba(192,57,43,0.08);color:rgba(231,76,60,0.8);
+  font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;
+  text-decoration:none;cursor:pointer;transition:all 0.2s;overflow:hidden;white-space:nowrap;
+}
+.btn-logout:hover{background:rgba(192,57,43,0.18);color:#e74c3c;border-color:rgba(231,76,60,0.5);}
+.btn-logout svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+/* MAIN */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow-y:auto;}
+
+.topbar{background:#152333;border-bottom:1px solid rgba(255,255,255,0.07);padding:0 1.8rem;height:58px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar h2{font-family:'Cinzel',serif;font-size:16px;font-weight:600;color:#fff;}
+.topbar p{font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px;}
+.welcome-pill{background:rgba(200,168,75,0.12);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;white-space:nowrap;}
+
+.page-body{padding:1.6rem 1.8rem 3rem;flex:1;}
+
+.profile-card{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:2rem;margin-bottom:1.5rem;}
+.profile-header{display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem;}
+.profile-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#c8a84b);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:28px;font-weight:600;color:#fff;}
+.profile-info h1{font-family:'Cinzel',serif;font-size:24px;font-weight:600;color:#c8a84b;margin-bottom:0.5rem;}
+.profile-info p{color:rgba(255,255,255,0.6);font-size:14px;}
+
+.info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;}
+.info-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:1rem;}
+.info-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:0.5rem;}
+.info-value{font-size:14px;color:#fff;font-weight:400;}
+
+.btn-edit{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(200,168,75,0.12);border:1px solid rgba(200,168,75,0.3);border-radius:6px;color:#c8a84b;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;transition:all 0.2s;}
+.btn-edit:hover{background:rgba(200,168,75,0.2);color:#c8a84b;}
+
+@media(max-width:768px){
+  .info-grid{grid-template-columns:1fr;}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <svg width="26" height="26" viewBox="0 0 48 48" fill="none" style="flex-shrink:0;">
+          <rect x="20" y="4" width="8" height="40" rx="2" fill="#c8a84b"/>
+          <rect x="6" y="16" width="36" height="8" rx="2" fill="#c8a84b"/>
+        </svg>
+        <div class="brand-text">
+          <div class="church-name">PHM-ARCC</div>
+          <div class="church-sub">Iyumbu Dodoma</div>
+        </div>
+      </div>
+      <button class="toggle-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <div class="user-area">
+      <div class="avatar">{{ member.first_name|slice:":1" }}{{ member.last_name|slice:":1" }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ member.first_name }} {{ member.last_name }}</div>
+        <div class="user-role">Church Member</div>
+      </div>
+    </div>
+
+    <div class="nav-menu">
+      <div class="nav-section-label">Main Menu</div>
+      <a class="nav-item" href="{% url 'dashboard' %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item active" href="{% url 'profile' %}">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span class="nav-label">My Profile</span>
+      </a>
+      <div class="nav-section-label">Church</div>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <span class="nav-label">Events</span><span class="nav-badge">12</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span class="nav-label">Sermons</span><span class="nav-badge">8</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        <span class="nav-label">Prayers</span><span class="nav-badge">25</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span class="nav-label">Messages</span>
+      </a>
+      <div class="nav-section-label">Finance</div>
+      <a class="nav-item" href="{% url 'donations:home' %}">
+        <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span class="nav-label">Donations</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8"/></svg>
+        <span class="nav-label">Financials</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <form method="POST" action="{% url 'members:logout' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn-logout">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          <span class="nav-label">Logout</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h2>My Profile</h2>
+        <p>PHM-ARCC Iyumbu Dodoma &mdash; Church Management System</p>
+      </div>
+      <span class="welcome-pill">Welcome, {{ member.first_name }} {{ member.last_name }}!</span>
+    </div>
+
+    <div class="page-body">
+      <div class="profile-card">
+        <div class="profile-header">
+          <div class="profile-avatar">{{ member.first_name|slice:":1" }}{{ member.last_name|slice:":1" }}</div>
+          <div class="profile-info">
+            <h1>{{ member.first_name }} {{ member.last_name }}</h1>
+            <p>Member since {{ member.date_joined|date:"F Y" }}</p>
+          </div>
+          <a href="{% url 'profile_edit' %}" class="btn-edit">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Profile
+          </a>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Email Address</div>
+            <div class="info-value">{{ member.email }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Phone Number</div>
+            <div class="info-value">{{ member.phone_number|default:"Not provided" }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Date of Birth</div>
+            <div class="info-value">{{ member.date_of_birth|date:"F d, Y"|default:"Not provided" }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Gender</div>
+            <div class="info-value">{{ member.get_gender_display|default:"Not provided" }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Address</div>
+            <div class="info-value">{{ member.address|default:"Not provided" }}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Membership Status</div>
+            <div class="info-value">Active</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+</script>
+{% endblock %}

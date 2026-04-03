@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+
+{% block title %}My Content - PHM-ARCC Iyumbu Church Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+
+html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; margin:0; padding:0; }
+
+.layout{
+  display:flex;
+  flex-direction:row;
+  min-height:100vh;
+  height:100%;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:240px;
+  min-width:240px;
+  height:100vh;
+  position:sticky;
+  top:0;
+  background:linear-gradient(180deg,#0d2340 0%,#0a1a2e 100%);
+  border-right:3px solid #c8a84b;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  transition:width 0.35s cubic-bezier(.4,0,.2,1), min-width 0.35s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+  z-index:100;
+}
+.sidebar.collapsed{width:64px;min-width:64px;}
+
+.sidebar-header{
+  padding:1.2rem 1rem;
+  border-bottom:1px solid rgba(200,168,75,0.2);
+  display:flex;align-items:center;
+  justify-content:space-between;
+  min-height:68px;gap:8px;flex-shrink:0;
+}
+
+.brand-logo {
+  height: 32px;
+  width: auto;
+  max-width: 32px;
+  border-radius: 4px;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1;overflow:hidden;}
+
+.brand-text{
+  display:flex;flex-direction:column;overflow:hidden;
+  max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .brand-text{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+
+.church-name{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:#c8a84b;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.church-sub{font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap;}
+
+.toggle-btn{
+  background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);
+  border-radius:6px;width:30px;height:30px;min-width:30px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:background 0.2s;
+}
+.toggle-btn:hover{background:rgba(200,168,75,0.25);}
+.toggle-btn svg{width:16px;height:16px;stroke:#c8a84b;fill:none;stroke-width:2;transition:transform 0.35s cubic-bezier(.4,0,.2,1);}
+.sidebar.collapsed .toggle-btn svg{transform:rotate(180deg);}
+
+.user-area{
+  padding:1rem;border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:10px;overflow:hidden;flex-shrink:0;
+}
+.avatar{width:36px;height:36px;min-width:36px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#c8a84b);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;}
+
+.user-info{
+  overflow:hidden;max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .user-info{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+.user-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;}
+.user-role{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+
+.nav-menu{flex:1;padding:1rem 0;overflow-y:auto;overflow-x:hidden;}
+
+.nav-section-label{
+  font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.2);padding:0.6rem 1.1rem 0.3rem;
+  white-space:nowrap;overflow:hidden;opacity:1;max-width:200px;
+  transition:opacity 0.2s ease, max-width 0.35s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed .nav-section-label{opacity:0;max-width:0;}
+
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 1.1rem;margin:2px 8px;border-radius:8px;
+  color:rgba(255,255,255,0.55);font-size:12px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:background 0.2s, color 0.2s;white-space:nowrap;overflow:hidden;
+}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9);}
+.nav-item.active{background:rgba(200,168,75,0.12);color:#c8a84b;border-left:3px solid #c8a84b;margin-left:5px;padding-left:calc(1.1rem - 3px);}
+.nav-item svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+.nav-label{
+  overflow:hidden;opacity:1;max-width:160px;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .nav-label{opacity:0;max-width:0;transform:translateX(-8px);}
+
+.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;}
+.btn-logout{
+  display:flex;align-items:center;gap:12px;width:100%;padding:9px 1rem;
+  border-radius:8px;border:1px solid rgba(192,57,43,0.3);
+  background:rgba(192,57,43,0.08);color:rgba(231,76,60,0.8);
+  font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;
+  text-decoration:none;cursor:pointer;transition:all 0.2s;overflow:hidden;white-space:nowrap;
+}
+.btn-logout:hover{background:rgba(192,57,43,0.18);color:#e74c3c;border-color:rgba(231,76,60,0.5);}
+.btn-logout svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+/* MAIN */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow-y:auto;}
+
+.topbar{background:#152333;border-bottom:1px solid rgba(255,255,255,0.07);padding:0 1.8rem;height:58px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar h2{font-family:'Cinzel',serif;font-size:16px;font-weight:600;color:#fff;}
+.topbar p{font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px;}
+.welcome-pill{background:rgba(200,168,75,0.12);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;white-space:nowrap;}
+
+.page-body{padding:1.6rem 1.8rem 3rem;flex:1;}
+
+/* CONTENT SECTIONS */
+.content-section{margin-bottom:2rem;}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;}
+.section-title{font-family:'Cinzel',serif;font-size:20px;font-weight:600;color:#c8a84b;}
+.section-count{background:rgba(200,168,75,0.12);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;}
+
+.content-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;}
+.content-card{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1rem;transition:all 0.3s ease;}
+.content-card:hover{transform:translateY(-2px);box-shadow:0 4px 15px rgba(0,0,0,0.2);border-color:rgba(200,168,75,0.3);}
+
+.card-title{font-size:16px;font-weight:600;color:#fff;margin-bottom:0.5rem;}
+.card-meta{font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:0.5rem;}
+.card-description{font-size:13px;color:rgba(255,255,255,0.8);line-height:1.4;}
+
+.empty-state{text-align:center;padding:3rem;color:rgba(255,255,255,0.5);}
+.empty-icon{font-size:48px;margin-bottom:1rem;}
+.empty-title{font-size:18px;font-weight:600;color:#fff;margin-bottom:0.5rem;}
+.empty-text{font-size:14px;color:rgba(255,255,255,0.6);max-width:400px;margin:0 auto;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="layout">
+  <!-- TOP NAVIGATION -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'home' %}">
+        <img src="/media/church-logo.svg" alt="PHM-ARCC Logo" class="church-logo" onerror="this.style.display='none'">
+        <span style="display: none;">PHM-ARCC</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'player:dashboard' %}">Content Player</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'events:event_list' %}">Events</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'sermons:sermon_list' %}">Sermons</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'members:member_messages' %}">Messages</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              <i class="fas fa-user"></i> {{ user.first_name }}
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{% url 'profile' %}">Profile</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <form method="post" action="{% url 'members:logout' %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="dropdown-item" style="width:100%;border:none;background:none;text-align:left;cursor:pointer;">Logout</button>
+            </form>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h2>My Content</h2>
+        <p>PHM-ARCC Iyumbu Dodoma &mdash; Your Personal Church Content</p>
+      </div>
+      <span class="welcome-pill">Welcome, {{ user.first_name }} {{ user.last_name }}!</span>
+    </div>
+
+    <div class="page-body">
+      <!-- My Events -->
+      <div class="content-section">
+        <div class="section-header">
+          <div class="section-title">📅 My Registered Events</div>
+          <div class="section-count">{{ total_events }}</div>
+        </div>
+        
+        {% if my_events %}
+        <div class="content-grid">
+          {% for registration in my_events %}
+          <div class="content-card">
+            <div class="card-title">{{ registration.event.title }}</div>
+            <div class="card-meta">
+              {{ registration.event.start_date|date:"F d, Y h:i A" }} • {{ registration.event.location }}
+            </div>
+            <div class="card-description">
+              {{ registration.event.description|truncatewords:15 }}
+            </div>
+            <div class="mt-2">
+              <span class="badge bg-success">Registered</span>
+              {% if registration.event.is_upcoming %}
+              <span class="badge bg-primary">Upcoming</span>
+              {% elif registration.event.is_ongoing %}
+              <span class="badge bg-warning">Ongoing</span>
+              {% else %}
+              <span class="badge bg-secondary">Past</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">📅</div>
+          <div class="empty-title">No Registered Events</div>
+          <div class="empty-text">
+            You haven't registered for any events yet. Check out the upcoming events and register to participate.
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- My Sermon Bookmarks -->
+      <div class="content-section">
+        <div class="section-header">
+          <div class="section-title">📿 Sermon Bookmarks</div>
+          <div class="section-count">{{ total_bookmarks }}</div>
+        </div>
+        
+        {% if my_bookmarks %}
+        <div class="content-grid">
+          {% for bookmark in my_bookmarks %}
+          <div class="content-card">
+            <div class="card-title">{{ bookmark.sermon.title }}</div>
+            <div class="card-meta">
+              {{ bookmark.sermon.speaker.full_name }} • {{ bookmark.sermon.sermon_date|date:"F d, Y" }}
+            </div>
+            <div class="card-description">
+              {{ bookmark.sermon.description|truncatewords:15 }}
+            </div>
+            {% if bookmark.timestamp %}
+            <div class="card-meta">
+              <small>📍 Bookmarked at {{ bookmark.timestamp }}</small>
+            </div>
+            {% endif %}
+            {% if bookmark.note %}
+            <div class="card-description">
+              <em>"{{ bookmark.note }}"</em>
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">📿</div>
+          <div class="empty-title">No Bookmarks</div>
+          <div class="empty-text">
+            You haven't bookmarked any sermons yet. Listen to sermons and bookmark your favorite moments.
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- My Sermon Notes -->
+      <div class="content-section">
+        <div class="section-header">
+          <div class="section-title">📝 Sermon Notes</div>
+          <div class="section-count">{{ total_notes }}</div>
+        </div>
+        
+        {% if my_notes %}
+        <div class="content-grid">
+          {% for note in my_notes %}
+          <div class="content-card">
+            <div class="card-title">{{ note.sermon.title }}</div>
+            <div class="card-meta">
+              {{ note.sermon.speaker.full_name }} • {{ note.created_at|date:"F d, Y" }}
+            </div>
+            <div class="card-description">
+              {{ note.notes|truncatewords:20 }}
+            </div>
+            {% if note.timestamp %}
+            <div class="card-meta">
+              <small>📍 Note at {{ note.timestamp }}</small>
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">📝</div>
+          <div class="empty-title">No Notes</div>
+          <div class="empty-text">
+            You haven't taken any sermon notes yet. Listen to sermons and jot down your thoughts and insights.
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- My Messages -->
+      <div class="content-section">
+        <div class="section-header">
+          <div class="section-title">💬 My Messages</div>
+          <div class="section-count">{{ total_messages }} ({{ unread_messages }} unread)</div>
+        </div>
+        
+        {% if my_messages %}
+        <div class="content-grid">
+          {% for recipient in my_messages %}
+          <div class="content-card">
+            <div class="card-title">{{ recipient.message.title }}</div>
+            <div class="card-meta">
+              From {{ recipient.message.sender.full_name }} • {{ recipient.message.created_at|date:"F d, Y" }}
+            </div>
+            <div class="card-description">
+              {{ recipient.message.content|truncatewords:15 }}
+            </div>
+            <div class="mt-2">
+              {% if recipient.is_read %}
+              <span class="badge bg-secondary">Read</span>
+              {% else %}
+              <span class="badge bg-warning">Unread</span>
+              {% endif %}
+              <span class="badge bg-info">{{ recipient.message.get_priority_display }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">💬</div>
+          <div class="empty-title">No Messages</div>
+          <div class="empty-text">
+            You haven't received any messages yet. Church leadership will send important updates and announcements here.
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+</script>
+{% endblock %}

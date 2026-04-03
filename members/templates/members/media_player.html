@@ -1,0 +1,805 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - PHM-ARCC Iyumbu Church Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+
+html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; margin:0; padding:0; }
+
+.layout{
+  display:flex;
+  flex-direction:row;
+  min-height:100vh;
+  height:100%;
+}
+
+/* ─── SIDEBAR ─────────────────────────────────────────── */
+.sidebar{
+  width:240px;min-width:240px;height:100vh;position:sticky;top:0;
+  background:linear-gradient(180deg,#0d2340 0%,#0a1a2e 100%);
+  border-right:3px solid #c8a84b;display:flex;flex-direction:column;
+  flex-shrink:0;transition:width 0.35s cubic-bezier(.4,0,.2,1),min-width 0.35s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;z-index:100;
+}
+.sidebar.collapsed{width:64px;min-width:64px;}
+
+.sidebar-header{
+  padding:1.2rem 1rem;border-bottom:1px solid rgba(200,168,75,0.2);
+  display:flex;align-items:center;justify-content:space-between;
+  min-height:68px;gap:8px;flex-shrink:0;
+}
+.brand-logo{height:32px;width:auto;max-width:32px;border-radius:4px;}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1;overflow:hidden;}
+.brand-text{
+  display:flex;flex-direction:column;overflow:hidden;max-width:160px;
+  opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease,max-width 0.35s cubic-bezier(.4,0,.2,1),transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .brand-text{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+.church-name{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:#c8a84b;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.church-sub{font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap;}
+
+.toggle-btn{
+  background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);
+  border-radius:6px;width:30px;height:30px;min-width:30px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:background 0.2s;
+}
+.toggle-btn:hover{background:rgba(200,168,75,0.25);}
+.toggle-btn svg{width:16px;height:16px;stroke:#c8a84b;fill:none;stroke-width:2;transition:transform 0.35s cubic-bezier(.4,0,.2,1);}
+.sidebar.collapsed .toggle-btn svg{transform:rotate(180deg);}
+
+.user-area{
+  padding:1rem;border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:10px;overflow:hidden;flex-shrink:0;
+}
+.avatar{width:36px;height:36px;min-width:36px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#c8a84b);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;}
+.user-info{overflow:hidden;max-width:160px;opacity:1;transform:translateX(0);transition:opacity 0.25s ease,max-width 0.35s cubic-bezier(.4,0,.2,1),transform 0.25s ease;white-space:nowrap;}
+.sidebar.collapsed .user-info{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+.user-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;}
+.user-role{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+
+.nav-menu{flex:1;padding:1rem 0;overflow-y:auto;overflow-x:hidden;}
+.nav-section-label{
+  font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.2);padding:0.6rem 1.1rem 0.3rem;
+  white-space:nowrap;overflow:hidden;opacity:1;max-width:200px;
+  transition:opacity 0.2s ease,max-width 0.35s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed .nav-section-label{opacity:0;max-width:0;}
+
+.nav-item{
+  display:flex;align-items:center;gap:12px;padding:10px 1.1rem;margin:2px 8px;
+  border-radius:8px;color:rgba(255,255,255,0.55);font-size:12px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:background 0.2s,color 0.2s;white-space:nowrap;overflow:hidden;
+  cursor:pointer;position:relative;
+}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9);}
+.nav-item.active{background:rgba(200,168,75,0.12);color:#c8a84b;border-left:3px solid #c8a84b;margin-left:5px;padding-left:calc(1.1rem - 3px);}
+.nav-item svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+.nav-tooltip{
+  position:absolute;left:56px;top:50%;transform:translateY(-50%);
+  background:#1a3a5c;border:1px solid rgba(200,168,75,0.4);
+  color:#c8a84b;font-size:11px;font-weight:700;letter-spacing:0.5px;
+  text-transform:uppercase;padding:5px 10px;border-radius:6px;
+  white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.15s ease;z-index:200;
+}
+.nav-tooltip::before{content:'';position:absolute;right:100%;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:#1a3a5c;}
+.sidebar.collapsed .nav-item:hover .nav-tooltip{opacity:1;}
+
+.nav-label{overflow:hidden;opacity:1;max-width:160px;transform:translateX(0);transition:opacity 0.25s ease,max-width 0.35s cubic-bezier(.4,0,.2,1),transform 0.25s ease;white-space:nowrap;}
+.sidebar.collapsed .nav-label{opacity:0;max-width:0;transform:translateX(-8px);}
+
+.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;}
+.btn-logout{
+  display:flex;align-items:center;gap:12px;width:100%;padding:9px 1rem;
+  border-radius:8px;border:1px solid rgba(192,57,43,0.3);
+  background:rgba(192,57,43,0.08);color:rgba(231,76,60,0.8);
+  font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;
+  text-decoration:none;cursor:pointer;transition:all 0.2s;overflow:hidden;white-space:nowrap;
+}
+.btn-logout:hover{background:rgba(192,57,43,0.18);color:#e74c3c;border-color:rgba(231,76,60,0.5);}
+.btn-logout svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+/* ─── MAIN ────────────────────────────────────────────── */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow-y:auto;}
+
+/* ─── TOPNAV ──────────────────────────────────────────── */
+.topnav{
+  background:linear-gradient(90deg,#0d2340 0%,#152333 100%);
+  border-bottom:2px solid rgba(200,168,75,0.35);
+  padding:0 1.8rem;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;gap:1.2rem;position:relative;
+}
+.topnav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;}
+.topnav-logo-img{height:38px;width:38px;border-radius:8px;object-fit:contain;border:1px solid rgba(200,168,75,0.3);background:rgba(200,168,75,0.06);padding:3px;}
+.topnav-logo-placeholder{height:38px;width:38px;border-radius:8px;border:1.5px dashed rgba(200,168,75,0.4);background:rgba(200,168,75,0.05);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.topnav-logo-placeholder svg{width:18px;height:18px;stroke:rgba(200,168,75,0.5);fill:none;stroke-width:1.5;}
+.topnav-title-block{display:flex;flex-direction:column;justify-content:center;}
+.topnav-title{font-family:'Cinzel',serif;font-size:15px;font-weight:600;color:#fff;white-space:nowrap;line-height:1.2;}
+.topnav-subtitle{font-size:10px;color:rgba(255,255,255,0.35);white-space:nowrap;margin-top:1px;letter-spacing:0.3px;}
+
+.topnav-links{display:flex;align-items:center;gap:2px;flex:1;justify-content:center;list-style:none;margin:0;padding:0;}
+.topnav-links a{
+  display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:6px;
+  color:rgba(255,255,255,0.5);font-size:11px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:background 0.18s,color 0.18s;white-space:nowrap;
+}
+.topnav-links a:hover{background:rgba(200,168,75,0.1);color:rgba(255,255,255,0.9);}
+.topnav-links a.active{background:rgba(200,168,75,0.15);color:#c8a84b;border-bottom:2px solid #c8a84b;border-radius:6px 6px 0 0;}
+.topnav-links a svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+.topnav-dropdown{position:relative;}
+.topnav-dropdown-toggle{cursor:pointer;}
+.topnav-dropdown-toggle .caret{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.5;transition:transform 0.2s;margin-left:2px;}
+.topnav-dropdown:hover .caret{transform:rotate(180deg);}
+.topnav-dropdown-menu{
+  display:none;position:absolute;top:calc(100% + 8px);right:0;
+  background:#0d2340;border:1px solid rgba(200,168,75,0.3);
+  border-radius:8px;min-width:170px;z-index:300;overflow:hidden;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+.topnav-dropdown:hover .topnav-dropdown-menu{display:block;}
+.topnav-dropdown-menu a{
+  display:flex;align-items:center;gap:8px;padding:9px 14px;
+  color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:background 0.15s,color 0.15s;
+}
+.topnav-dropdown-menu a:hover{background:rgba(200,168,75,0.1);color:#c8a84b;}
+.topnav-dropdown-menu a svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;}
+.topnav-divider{border:none;border-top:1px solid rgba(255,255,255,0.07);margin:2px 0;}
+
+.topnav-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.welcome-pill{background:rgba(200,168,75,0.12);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;white-space:nowrap;}
+.topnav-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#c8a84b);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
+.topnav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px;}
+.topnav-hamburger span{display:block;width:20px;height:2px;background:#c8a84b;border-radius:2px;transition:all 0.25s;}
+
+@media(max-width:960px){
+  .topnav-links{display:none;}
+  .topnav-subtitle{display:none;}
+  .topnav-hamburger{display:flex;}
+  .welcome-pill{display:none;}
+  .topnav-links.open{
+    display:flex;flex-direction:column;position:absolute;top:64px;left:0;right:0;
+    background:#0d2340;border-bottom:2px solid rgba(200,168,75,0.35);
+    padding:0.5rem 1rem;z-index:300;gap:2px;
+  }
+  .topnav-links.open a{justify-content:flex-start;}
+  .topnav-dropdown-menu{position:static;box-shadow:none;border:none;border-left:2px solid rgba(200,168,75,0.2);border-radius:0;background:transparent;display:block;}
+}
+
+/* ─── PAGE BODY ───────────────────────────────────────── */
+.page-body{padding:1.6rem 1.8rem 3rem;flex:1;}
+
+/* ─── PLAYER ──────────────────────────────────────────── */
+.player-wrap{display:grid;grid-template-columns:1fr 340px;gap:1.5rem;align-items:start;}
+@media(max-width:1100px){.player-wrap{grid-template-columns:1fr;}}
+
+/* Main player card */
+.player-card{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;}
+
+.player-hero{position:relative;background:#0a1a2e;}
+.video-container{position:relative;padding-bottom:56.25%;height:0;background:#000;overflow:hidden;}
+.video-container video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;}
+
+/* No-video placeholder */
+.player-thumb{
+  position:relative;padding-bottom:42%;height:0;background:linear-gradient(135deg,#0d2340,#1a3a5c);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.player-thumb-inner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;}
+.thumb-icon{width:72px;height:72px;background:rgba(200,168,75,0.15);border:2px solid rgba(200,168,75,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.thumb-icon svg{width:30px;height:30px;stroke:#c8a84b;fill:none;stroke-width:1.5;}
+.thumb-label{font-family:'Cinzel',serif;font-size:13px;color:rgba(200,168,75,0.7);letter-spacing:2px;text-transform:uppercase;}
+
+/* Custom audio bar */
+.audio-bar{
+  background:linear-gradient(90deg,#0d2340,#0f2133);
+  border-top:1px solid rgba(200,168,75,0.15);
+  padding:1.2rem 1.5rem;
+}
+.audio-row{display:flex;align-items:center;gap:1rem;}
+.play-btn{
+  width:46px;height:46px;min-width:46px;background:#c8a84b;border:none;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all 0.25s;flex-shrink:0;
+}
+.play-btn:hover{background:#d4b455;transform:scale(1.08);box-shadow:0 0 20px rgba(200,168,75,0.35);}
+.play-btn svg{width:18px;height:18px;stroke:#0d2340;fill:#0d2340;stroke-width:0;}
+.play-btn.playing svg.pause-icon{display:block;}
+.play-btn.playing svg.play-icon{display:none;}
+.play-btn svg.pause-icon{display:none;}
+
+.progress-area{flex:1;min-width:0;}
+.progress-track{
+  height:5px;background:rgba(255,255,255,0.12);border-radius:3px;
+  cursor:pointer;margin-bottom:6px;position:relative;overflow:hidden;
+}
+.progress-fill{height:100%;background:linear-gradient(90deg,#c8a84b,#e8c86b);width:0%;border-radius:3px;transition:width 0.25s linear;pointer-events:none;}
+.time-row{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.45);}
+
+.vol-row{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.vol-row svg{width:15px;height:15px;stroke:rgba(255,255,255,0.4);fill:none;stroke-width:2;flex-shrink:0;}
+.vol-track{width:72px;height:4px;background:rgba(255,255,255,0.12);border-radius:2px;cursor:pointer;position:relative;}
+.vol-fill{height:100%;background:#c8a84b;width:70%;border-radius:2px;pointer-events:none;}
+
+/* Player info below */
+.player-info{padding:1.5rem;}
+.player-eyebrow{display:flex;align-items:center;gap:8px;margin-bottom:0.6rem;}
+.player-badge{
+  font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:3px 10px;border-radius:12px;
+}
+.badge-sermon{background:rgba(200,168,75,0.15);color:#c8a84b;border:1px solid rgba(200,168,75,0.3);}
+.badge-event{background:rgba(52,152,219,0.15);color:#3498db;border:1px solid rgba(52,152,219,0.3);}
+.player-series{font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;}
+
+.player-title-main{font-family:'Cinzel',serif;font-size:22px;font-weight:600;color:#fff;line-height:1.3;margin-bottom:0.5rem;}
+.player-meta-row{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem;}
+.player-meta-item{display:flex;align-items:center;gap:5px;font-size:12px;color:rgba(255,255,255,0.5);}
+.player-meta-item svg{width:13px;height:13px;stroke:#c8a84b;fill:none;stroke-width:2;}
+
+.player-desc{color:rgba(255,255,255,0.7);font-size:14px;line-height:1.7;margin-bottom:1.5rem;}
+
+/* Bible ref */
+.bible-block{
+  background:rgba(200,168,75,0.07);border-left:3px solid #c8a84b;
+  border-radius:0 8px 8px 0;padding:1rem 1.2rem;margin-bottom:1.5rem;
+}
+.bible-block-title{font-size:11px;font-weight:700;color:#c8a84b;letter-spacing:1px;text-transform:uppercase;margin-bottom:0.4rem;}
+.bible-block-text{color:rgba(255,255,255,0.75);font-style:italic;font-size:14px;line-height:1.6;}
+
+/* Transcript */
+.transcript-block{background:#0d2340;border-radius:10px;padding:1.2rem;max-height:280px;overflow-y:auto;}
+.transcript-block::-webkit-scrollbar{width:4px;}
+.transcript-block::-webkit-scrollbar-track{background:transparent;}
+.transcript-block::-webkit-scrollbar-thumb{background:rgba(200,168,75,0.3);border-radius:2px;}
+.transcript-text{color:rgba(255,255,255,0.7);font-size:13px;line-height:1.8;}
+
+/* Section heading */
+.section-hdr{font-family:'Cinzel',serif;font-size:14px;font-weight:600;color:#c8a84b;letter-spacing:1px;text-transform:uppercase;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid rgba(200,168,75,0.2);}
+
+/* ─── SIDEBAR PANEL ───────────────────────────────────── */
+.side-panel{display:flex;flex-direction:column;gap:1.2rem;}
+
+.side-card{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;}
+.side-card-hdr{padding:1rem 1.2rem;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:8px;}
+.side-card-hdr svg{width:14px;height:14px;stroke:#c8a84b;fill:none;stroke-width:2;}
+.side-card-hdr span{font-size:11px;font-weight:700;color:#fff;letter-spacing:1px;text-transform:uppercase;}
+.side-card-body{padding:1.2rem;}
+
+/* Info grid */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.info-item{}
+.info-label{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;}
+.info-value{font-size:13px;color:#fff;font-weight:600;}
+
+/* Notes */
+.notes-text{color:rgba(255,255,255,0.7);font-size:13px;line-height:1.7;}
+
+/* Event registration */
+.reg-card{padding:1.2rem;}
+.reg-count{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+.reg-label{font-size:12px;color:rgba(255,255,255,0.5);}
+.reg-num{font-size:18px;font-weight:700;color:#c8a84b;}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:1rem;}
+.badge-registered{background:rgba(46,204,113,0.15);color:#2ecc71;border:1px solid rgba(46,204,113,0.3);}
+.badge-available{background:rgba(52,152,219,0.15);color:#3498db;border:1px solid rgba(52,152,219,0.3);}
+.badge-full{background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);}
+.reg-btn{
+  width:100%;padding:11px;border:none;border-radius:8px;
+  font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;
+}
+.reg-btn-join{background:#c8a84b;color:#0d2340;}
+.reg-btn-join:hover{background:#d4b455;transform:translateY(-1px);box-shadow:0 4px 14px rgba(200,168,75,0.3);}
+.reg-btn-cancel{background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);}
+.reg-btn-cancel:hover{background:rgba(231,76,60,0.2);}
+
+/* Resources */
+.resource-item{display:flex;align-items:center;gap:10px;padding:0.75rem;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:0.5rem;transition:background 0.2s;}
+.resource-item:hover{background:rgba(255,255,255,0.06);}
+.resource-icon{width:34px;height:34px;min-width:34px;background:rgba(200,168,75,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.resource-icon svg{width:15px;height:15px;stroke:#c8a84b;fill:none;stroke-width:2;}
+.resource-info{flex:1;min-width:0;}
+.resource-name{font-size:13px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.resource-type{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;}
+.resource-link{font-size:11px;font-weight:700;color:#c8a84b;text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.resource-link:hover{text-decoration:underline;}
+
+/* Event info items */
+.event-info-row{display:flex;align-items:flex-start;gap:10px;padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.event-info-row:last-child{border-bottom:none;}
+.event-info-row svg{width:15px;height:15px;stroke:#c8a84b;fill:none;stroke-width:2;margin-top:2px;flex-shrink:0;}
+.event-info-text{font-size:13px;color:rgba(255,255,255,0.75);line-height:1.5;}
+.event-info-text strong{display:block;font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:2px;font-weight:700;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="layout">
+
+  <!-- ═══════════ SIDEBAR ═══════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <img src="/media/church-logo.svg" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
+        <div class="brand-text">
+          <span class="church-name">PHM-ARCC</span>
+          <span class="church-sub">Iyumbu · Dodoma</span>
+        </div>
+      </div>
+      <button class="toggle-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <div class="user-area">
+      <div class="avatar">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
+        <div class="user-role">Church Member</div>
+      </div>
+    </div>
+
+    <nav class="nav-menu">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item" href="{% url 'dashboard' %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="nav-label">Dashboard</span>
+        <span class="nav-tooltip">Dashboard</span>
+      </a>
+      <a class="nav-item active" href="{% url 'player:dashboard' %}">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        <span class="nav-label">Content Player</span>
+        <span class="nav-tooltip">Content Player</span>
+      </a>
+
+      <div class="nav-section-label">Community</div>
+      <a class="nav-item" href="{% url 'events:event_list' %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="nav-label">Events</span>
+        <span class="nav-tooltip">Events</span>
+      </a>
+      <a class="nav-item" href="{% url 'sermons:sermon_list' %}">
+        <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        <span class="nav-label">Sermons</span>
+        <span class="nav-tooltip">Sermons</span>
+      </a>
+      <a class="nav-item" href="{% url 'members:member_messages' %}">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span class="nav-label">Messages</span>
+        <span class="nav-tooltip">Messages</span>
+      </a>
+
+      <div class="nav-section-label">Giving</div>
+      <a class="nav-item" href="{% url 'donations:home' %}">
+        <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span class="nav-label">Donate</span>
+        <span class="nav-tooltip">Donate</span>
+      </a>
+      <a class="nav-item" href="{% url 'donations:history' %}">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span class="nav-label">Donation History</span>
+        <span class="nav-tooltip">History</span>
+      </a>
+
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" href="{% url 'profile' %}">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="nav-label">Profile</span>
+        <span class="nav-tooltip">Profile</span>
+      </a>
+      <a class="nav-item" href="{% url 'profile_edit' %}">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span class="nav-label">Edit Profile</span>
+        <span class="nav-tooltip">Edit Profile</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <form method="post" action="{% url 'members:logout' %}" style="margin:0;">
+        {% csrf_token %}
+        <button type="submit" class="btn-logout" style="width:100%;border:none;background:none;padding:0;cursor:pointer;">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span class="nav-label">Sign Out</span>
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <div class="main">
+
+    <!-- TOPNAV -->
+    <header class="topnav">
+      <a class="topnav-logo" href="{% url 'home' %}">
+        <img src="/media/church-logo.svg" alt="Church Logo" class="topnav-logo-img"
+             onerror="this.outerHTML='<div class=\'topnav-logo-placeholder\'><svg viewBox=\'0 0 24 24\'><path d=\'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5\'/></svg></div>'">
+        <div class="topnav-title-block">
+          <span class="topnav-title">{{ title }}</span>
+          <span class="topnav-subtitle">PHM-ARCC Iyumbu &mdash; {{ content_type|title }} Player</span>
+        </div>
+      </a>
+
+      <ul class="topnav-links" id="topnav-links">
+        <li><a href="{% url 'dashboard' %}">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard
+        </a></li>
+        <li><a href="{% url 'player:dashboard' %}" class="active">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>Player
+        </a></li>
+        <li><a href="{% url 'events:event_list' %}">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Events
+        </a></li>
+        <li><a href="{% url 'sermons:sermon_list' %}">
+          <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>Sermons
+        </a></li>
+        <li><a href="{% url 'donations:home' %}">
+          <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Donate
+        </a></li>
+        <li class="topnav-dropdown">
+          <a class="topnav-dropdown-toggle">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            {{ user.first_name }}
+            <svg class="caret" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </a>
+          <div class="topnav-dropdown-menu">
+            <a href="{% url 'profile' %}"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</a>
+            <a href="{% url 'profile_edit' %}"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit Profile</a>
+            <a href="{% url 'donations:history' %}"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Donations</a>
+            <hr class="topnav-divider">
+            <form method="post" action="{% url 'members:logout' %}" style="margin:0;">
+              {% csrf_token %}
+              <button type="submit" style="width:100%;border:none;background:none;text-align:left;padding:9px 14px;cursor:pointer;color:rgba(231,76,60,0.8);">
+                <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:middle;margin-right:8px;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out
+              </button>
+            </form>
+          </div>
+        </li>
+      </ul>
+
+      <div class="topnav-right">
+        <span class="welcome-pill">{{ user.first_name }} {{ user.last_name }}</span>
+        <div class="topnav-avatar">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</div>
+        <button class="topnav-hamburger" onclick="toggleTopnav()" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- PAGE BODY -->
+    <div class="page-body">
+      <div class="player-wrap">
+
+        <!-- ── LEFT: MAIN PLAYER CARD ── -->
+        <div class="player-card">
+
+          <!-- Video or Thumbnail Hero -->
+          {% if content_type == 'sermon' and video_url %}
+            <div class="player-hero">
+              <div class="video-container">
+                <video controls>
+                  <source src="{{ video_url }}" type="video/mp4">
+                  Your browser does not support video.
+                </video>
+              </div>
+            </div>
+          {% else %}
+            <div class="player-thumb">
+              <div class="player-thumb-inner">
+                <div class="thumb-icon">
+                  {% if content_type == 'sermon' %}
+                    <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+                  {% else %}
+                    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {% endif %}
+                </div>
+                <span class="thumb-label">{{ content_type|title }}</span>
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Audio Bar (sermon only) -->
+          {% if content_type == 'sermon' and audio_url %}
+          <div class="audio-bar">
+            <audio id="audioPlayer" src="{{ audio_url }}"></audio>
+            <div class="audio-row">
+              <button class="play-btn" id="playBtn" onclick="toggleAudio()">
+                <svg class="play-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3" fill="#0d2340"/></svg>
+                <svg class="pause-icon" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" fill="#0d2340"/><rect x="14" y="4" width="4" height="16" fill="#0d2340"/></svg>
+              </button>
+              <div class="progress-area">
+                <div class="progress-track" id="progressTrack" onclick="seekAudio(event)">
+                  <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="time-row">
+                  <span id="currentTime">0:00</span>
+                  <span id="duration">0:00</span>
+                </div>
+              </div>
+              <div class="vol-row">
+                <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>
+                <div class="vol-track" id="volTrack" onclick="setVolume(event)">
+                  <div class="vol-fill" id="volFill"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Info below player -->
+          <div class="player-info">
+            <div class="player-eyebrow">
+              <span class="player-badge {% if content_type == 'sermon' %}badge-sermon{% else %}badge-event{% endif %}">
+                {{ content_type|title }}
+              </span>
+              {% if series %}<span class="player-series">{{ series.title }}</span>{% endif %}
+            </div>
+
+            <div class="player-title-main">{{ title }}</div>
+
+            <div class="player-meta-row">
+              {% if content_type == 'sermon' %}
+                <div class="player-meta-item">
+                  <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  {{ speaker }}
+                </div>
+                <div class="player-meta-item">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {{ sermon_date|date:"F d, Y" }}
+                </div>
+                {% if duration %}
+                <div class="player-meta-item">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  {{ duration }}
+                </div>
+                {% endif %}
+              {% elif content_type == 'event' %}
+                <div class="player-meta-item">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {{ start_date|date:"F d, Y · h:i A" }}
+                </div>
+                <div class="player-meta-item">
+                  <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  {{ location }}
+                </div>
+              {% endif %}
+            </div>
+
+            {% if description %}
+              <div class="player-desc">{{ description|truncatechars:400 }}</div>
+            {% endif %}
+
+            {% if bible_references %}
+              <div class="bible-block">
+                <div class="bible-block-title">📖 Bible References</div>
+                <div class="bible-block-text">{{ bible_references }}</div>
+              </div>
+            {% endif %}
+
+            {% if transcript %}
+              <div class="section-hdr">Transcript</div>
+              <div class="transcript-block">
+                <div class="transcript-text">{{ transcript|linebreaks }}</div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- ── RIGHT: SIDE PANELS ── -->
+        <div class="side-panel">
+
+          {% if content_type == 'sermon' %}
+            <!-- Details -->
+            <div class="side-card">
+              <div class="side-card-hdr">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>Sermon Details</span>
+              </div>
+              <div class="side-card-body">
+                <div class="info-grid">
+                  <div class="info-item">
+                    <div class="info-label">Speaker</div>
+                    <div class="info-value">{{ speaker }}</div>
+                  </div>
+                  <div class="info-item">
+                    <div class="info-label">Date</div>
+                    <div class="info-value">{{ sermon_date|date:"M d, Y" }}</div>
+                  </div>
+                  {% if duration %}
+                  <div class="info-item">
+                    <div class="info-label">Duration</div>
+                    <div class="info-value">{{ duration }}</div>
+                  </div>
+                  {% endif %}
+                  {% if series %}
+                  <div class="info-item">
+                    <div class="info-label">Series</div>
+                    <div class="info-value">{{ series.title }}</div>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Sermon Notes -->
+            <div class="side-card">
+              <div class="side-card-hdr">
+                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <span>Sermon Notes</span>
+              </div>
+              <div class="side-card-body">
+                {% if notes %}
+                  <div class="notes-text">{{ notes|linebreaks }}</div>
+                {% else %}
+                  <p style="color:rgba(255,255,255,0.35);font-size:13px;text-align:center;padding:1rem 0;">No notes available for this sermon.</p>
+                {% endif %}
+              </div>
+            </div>
+
+          {% elif content_type == 'event' %}
+            <!-- Event Info -->
+            <div class="side-card">
+              <div class="side-card-hdr">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span>Event Details</span>
+              </div>
+              <div class="side-card-body" style="padding:0.8rem 1.2rem;">
+                <div class="event-info-row">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                  <div class="event-info-text">
+                    <strong>Date & Time</strong>
+                    {{ start_date|date:"F d, Y · h:i A" }}
+                  </div>
+                </div>
+                <div class="event-info-row">
+                  <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <div class="event-info-text">
+                    <strong>Location</strong>
+                    {{ location }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Registration -->
+            {% if registration_required %}
+            <div class="side-card">
+              <div class="side-card-hdr">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                <span>Registration</span>
+              </div>
+              <div class="reg-card">
+                <div class="reg-count">
+                  <div>
+                    <div class="reg-label">Registered</div>
+                    <div class="reg-num">{{ registered_count }}{% if max_participants %} <span style="font-size:13px;color:rgba(255,255,255,0.4);">/ {{ max_participants }}</span>{% endif %}</div>
+                  </div>
+                  <span class="status-badge {% if is_registered %}badge-registered{% else %}badge-available{% endif %}">
+                    {% if is_registered %}✓ Registered{% else %}Open{% endif %}
+                  </span>
+                </div>
+                {% if not is_registered %}
+                  <button class="reg-btn reg-btn-join" onclick="registerForEvent()">Register for This Event</button>
+                {% else %}
+                  <button class="reg-btn reg-btn-cancel" onclick="cancelRegistration()">Cancel Registration</button>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Resources -->
+            {% if resources %}
+            <div class="side-card">
+              <div class="side-card-hdr">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                <span>Resources</span>
+              </div>
+              <div class="side-card-body">
+                {% for resource in resources %}
+                <div class="resource-item">
+                  <div class="resource-icon">
+                    {% if resource.resource_type == 'document' %}
+                      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                    {% elif resource.resource_type == 'video' %}
+                      <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    {% elif resource.resource_type == 'audio' %}
+                      <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    {% else %}
+                      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                    {% endif %}
+                  </div>
+                  <div class="resource-info">
+                    <div class="resource-name">{{ resource.title }}</div>
+                    <div class="resource-type">{{ resource.get_resource_type_display }}</div>
+                  </div>
+                  {% if resource.file %}
+                    <a href="{{ resource.file.url }}" class="resource-link" download>↓ Save</a>
+                  {% elif resource.url %}
+                    <a href="{{ resource.url }}" class="resource-link" target="_blank">↗ Open</a>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+          {% endif %}
+
+        </div><!-- /side-panel -->
+      </div><!-- /player-wrap -->
+    </div><!-- /page-body -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+function toggleTopnav(){
+  document.getElementById('topnav-links').classList.toggle('open');
+}
+
+{% if content_type == 'sermon' and audio_url %}
+const audio = document.getElementById('audioPlayer');
+const playBtn = document.getElementById('playBtn');
+const progressFill = document.getElementById('progressFill');
+const progressTrack = document.getElementById('progressTrack');
+const currentTimeEl = document.getElementById('currentTime');
+const durationEl = document.getElementById('duration');
+const volFill = document.getElementById('volFill');
+
+function toggleAudio(){
+  if(audio.paused){ audio.play(); playBtn.classList.add('playing'); }
+  else { audio.pause(); playBtn.classList.remove('playing'); }
+}
+
+audio.addEventListener('timeupdate', () => {
+  if(!isNaN(audio.duration)){
+    const pct = (audio.currentTime / audio.duration) * 100;
+    progressFill.style.width = pct + '%';
+    currentTimeEl.textContent = fmt(audio.currentTime);
+    durationEl.textContent = fmt(audio.duration);
+  }
+});
+
+audio.addEventListener('ended', () => playBtn.classList.remove('playing'));
+
+function seekAudio(e){
+  const rect = progressTrack.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  audio.currentTime = pct * audio.duration;
+}
+
+function setVolume(e){
+  const rect = document.getElementById('volTrack').getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  audio.volume = pct;
+  volFill.style.width = (pct * 100) + '%';
+}
+
+function fmt(s){
+  if(isNaN(s)) return '0:00';
+  const m = Math.floor(s/60), sec = Math.floor(s%60);
+  return m + ':' + String(sec).padStart(2,'0');
+}
+{% endif %}
+
+{% if content_type == 'event' %}
+function registerForEvent(){ window.location.href = '/events/{{ event.id }}/register/'; }
+function cancelRegistration(){ window.location.href = '/events/{{ event.id }}/cancel/'; }
+{% endif %}
+</script>
+{% endblock %}

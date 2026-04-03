@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+{% block title %}PHM-ARCC Church - Welcome{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+  --accent: #c8a84b;
+  --primary: #0a1628;
+  --secondary: #152333;
+  --text-primary: #ffffff;
+  --text-secondary: #b8c5d6;
+  --text-muted: #6b7c93;
+  --border: rgba(255, 255, 255, 0.1);
+  --success: #27ae60;
+  --warning: #f39c12;
+  --danger: #e74c3c;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #0a1628 0%, #152333 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+.hero-section {
+  padding: 80px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(200, 168, 75, 0.1) 0%, rgba(200, 168, 75, 0.05) 100%);
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-content h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 20px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-content .subtitle {
+  font-size: 20px;
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 15px 30px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent) 0%, #b3943f 100%);
+  color: var(--primary);
+  box-shadow: 0 4px 15px rgba(200, 168, 75, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(200, 168, 75, 0.4);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.stats-section {
+  padding: 60px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  margin-bottom: 60px;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 30px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(200, 168, 75, 0.2);
+  border-color: var(--accent);
+}
+
+.stat-number {
+  font-family: 'Cinzel', serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.campaigns-section {
+  padding: 60px 20px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.section-title {
+  font-family: 'Cinzel', serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.campaigns-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.campaign-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 30px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.campaign-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(200, 168, 75, 0.2);
+  border-color: var(--accent);
+}
+
+.campaign-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 15px;
+}
+
+.campaign-description {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.login-prompt {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgba(200, 168, 75, 0.1);
+  border-radius: 16px;
+  border: 1px solid var(--accent);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.login-prompt h3 {
+  font-family: 'Cinzel', serif;
+  color: var(--accent);
+  margin-bottom: 15px;
+}
+
+.login-prompt p {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .hero-content h1 {
+    font-size: 32px;
+  }
+  
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .btn {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+  <div class="hero-content">
+    <h1>Welcome to PHM-ARCC Church</h1>
+    <p class="subtitle">Pentecostal Holiness Mission - Africa Reformed Church & Community<br>Iyumbu Dodoma</p>
+    <div class="hero-buttons">
+      <a href="{% url 'members:login' %}" class="btn btn-primary">
+        <i class="fas fa-sign-in-alt"></i>
+        Member Login
+      </a>
+      <a href="#campaigns" class="btn btn-secondary">
+        <i class="fas fa-hand-holding-usd"></i>
+        View Campaigns
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="stats-section">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-number">{{ total_members }}</div>
+      <div class="stat-label">Church Members</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ active_campaigns }}</div>
+      <div class="stat-label">Active Campaigns</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">24/7</div>
+      <div class="stat-label">Prayer Support</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">50+</div>
+      <div class="stat-label">Weekly Activities</div>
+    </div>
+  </div>
+</div>
+
+<div class="campaigns-section" id="campaigns">
+  <h2 class="section-title">Active Giving Campaigns</h2>
+  <div class="campaigns-grid">
+    {% if available_campaigns %}
+      {% for campaign in available_campaigns %}
+      <div class="campaign-card">
+        <h3 class="campaign-title">{{ campaign.title }}</h3>
+        <p class="campaign-description">{{ campaign.description|truncatewords:20 }}</p>
+        <a href="{% url 'members:login' %}" class="btn btn-primary">
+          <i class="fas fa-donate"></i>
+          Login to Give
+        </a>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="login-prompt">
+        <h3>No Active Campaigns</h3>
+        <p>Check back soon for new giving opportunities and church initiatives.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="stats-section">
+  <div class="login-prompt">
+    <h3>Join Our Church Community</h3>
+    <p>Login to access your member dashboard, view sermons, manage donations, and connect with fellow church members.</p>
+    <a href="{% url 'members:login' %}" class="btn btn-primary">
+      <i class="fas fa-user"></i>
+      Member Login
+    </a>
+  </div>
+</div>
+{% endblock %}

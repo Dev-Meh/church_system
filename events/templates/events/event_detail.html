@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load i18n_church %}
+
+{% block title %}{{ event.title }} - PHM-ARCC Iyumbu Church Management System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                {% if event.image %}
+                <img src="{{ event.image.url }}" class="card-img-top" alt="{{ event.title }}" style="height: 300px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h2 class="card-title">{{ event.title }}</h2>
+                    <div class="mb-3">
+                        <span class="badge bg-primary">{{ event.get_event_type_display }}</span>
+                        {% if event.is_upcoming %}
+                        <span class="badge bg-success">{% church_t 'event_status_upcoming' %}</span>
+                        {% elif event.is_ongoing %}
+                        <span class="badge bg-warning">{% church_t 'event_status_ongoing' %}</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{% church_t 'event_status_past' %}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>{% church_t 'description' %}</h5>
+                        <p>{{ event.description|linebreaks }}</p>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>{% church_t 'event_details_section' %}</h6>
+                            <p><strong>{% church_t 'date_time_label' %}</strong> {{ event.start_date|date:"F d, Y h:i A" }}</p>
+                            <p><strong>{% church_t 'end_label' %}</strong> {{ event.end_date|date:"F d, Y h:i A" }}</p>
+                            <p><strong>{% church_t 'location_label' %}</strong> {{ event.location }}</p>
+                            <p><strong>{% church_t 'frequency_label' %}</strong> {{ event.get_frequency_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>{% church_t 'registration_section' %}</h6>
+                            {% if event.registration_required %}
+                                <p><strong>{% church_t 'registration_required' %}</strong></p>
+                                {% if event.registration_deadline %}
+                                <p><strong>{% church_t 'deadline_label' %}</strong> {{ event.registration_deadline|date:"F d, Y h:i A" }}</p>
+                                {% endif %}
+                                {% if event.max_participants %}
+                                <p><strong>{% church_t 'capacity_label' %}</strong> {{ registration_count }}/{{ event.max_participants }}</p>
+                                {% else %}
+                                <p><strong>{% church_t 'registered_label' %}</strong> {{ registration_count }}</p>
+                                {% endif %}
+                            {% else %}
+                                <p><strong>{% church_t 'no_registration_required' %}</strong></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if event.speakers.all %}
+                    <div class="mb-4">
+                        <h6>{% church_t 'speakers' %}</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for speaker in event.speakers.all %}
+                            <span class="badge bg-info me-2">{{ speaker.full_name }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Registration Actions -->
+                    {% if user.is_authenticated %}
+                    {% if event.registration_required %}
+                    {% if is_registered %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> {% church_t 'you_are_registered' %}
+                        {% if registration.status == 'confirmed' %}
+                        <a href="{% url 'events:cancel' event.id %}" class="btn btn-sm btn-outline-danger ms-2">{% church_t 'cancel_registration' %}</a>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    {% if event.is_upcoming %}
+                    {% if not event.registration_deadline or now < event.registration_deadline %}
+                    {% if not event.max_participants or registration_count < event.max_participants %}
+                    <a href="{% url 'events:register' event.id %}" class="btn btn-primary">{% church_t 'register_for_event' %}</a>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> {% church_t 'event_fully_booked' %}
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-clock"></i> {% church_t 'registration_deadline_passed' %}
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                    {% endif %}
+                    {% endif %}
+                    {% endif %}
+                    
+                    <!-- Resources -->
+                    {% if resources %}
+                    <div class="mt-4">
+                        <h6>{% church_t 'event_resources' %}</h6>
+                        <div class="list-group">
+                            {% for resource in resources %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ resource.title }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ resource.get_resource_type_display }}</small>
+                                    {% if resource.description %}
+                                    <br><small>{{ resource.description }}</small>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    {% if resource.file %}
+                                    <a href="{{ resource.file.url }}" class="btn btn-sm btn-outline-primary" download>{% church_t 'download' %}</a>
+                                    {% elif resource.url %}
+                                    <a href="{{ resource.url }}" class="btn btn-sm btn-outline-primary" target="_blank">{% church_t 'view' %}</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Event Actions -->
+            {% if user.role in 'pastor,admin,elder,deacon' %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6>{% church_t 'event_management' %}</h6>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'events:edit' event.id %}" class="btn btn-outline-primary btn-sm mb-2">{% church_t 'edit_event' %}</a>
+                    <br>
+                    <a href="{% url 'events:add_resource' event.id %}" class="btn btn-outline-info btn-sm mb-2">{% church_t 'add_resource' %}</a>
+                    <br>
+                    <a href="{% url 'events:delete' event.id %}" class="btn btn-outline-danger btn-sm">{% church_t 'delete_event' %}</a>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Organizer Info -->
+            {% if event.organizer %}
+            <div class="card">
+                <div class="card-header">
+                    <h6>{% church_t 'organizer' %}</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>{{ event.organizer.full_name }}</strong></p>
+                    <p class="text-muted">{{ event.organizer.get_role_display }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

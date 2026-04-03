@@ -1,0 +1,471 @@
+{% extends 'base.html' %}
+{% block title %}Church Members - PHM-ARCC Church Management{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+  --accent: #c8a84b;
+  --primary: #0a1628;
+  --secondary: #152333;
+  --text-primary: #ffffff;
+  --text-secondary: #b8c5d6;
+  --text-muted: #6b7c93;
+  --border: rgba(255, 255, 255, 0.1);
+  --success: #27ae60;
+  --warning: #f39c12;
+  --danger: #e74c3c;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #0a1628 0%, #152333 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+.members-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.page-header h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.page-header p {
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.members-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  min-width: 300px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(200, 168, 75, 0.1);
+}
+
+.search-btn {
+  padding: 12px 20px;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(200, 168, 75, 0.3);
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent) 0%, #b3943f 100%);
+  color: var(--primary);
+  box-shadow: 0 4px 15px rgba(200, 168, 75, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(200, 168, 75, 0.4);
+}
+
+.members-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
+}
+
+.member-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 25px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.member-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(200, 168, 75, 0.2);
+  border-color: var(--accent);
+}
+
+.member-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.member-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent) 0%, #b3943f 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.member-info h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 5px;
+}
+
+.member-info .role {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(200, 168, 75, 0.2);
+  color: var(--accent);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.member-details {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.detail-item i {
+  width: 16px;
+  color: var(--accent);
+  text-align: center;
+}
+
+.member-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 15px;
+  border-top: 1px solid var(--border);
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-active {
+  background: rgba(39, 174, 96, 0.2);
+  color: var(--success);
+  border: 1px solid var(--success);
+}
+
+.status-inactive {
+  background: rgba(231, 76, 60, 0.2);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.member-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 40px;
+}
+
+.pagination a, .pagination span {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.pagination a:hover {
+  background: rgba(200, 168, 75, 0.1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pagination .current {
+  background: var(--accent);
+  color: var(--primary);
+  border-color: var(--accent);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.empty-state h3 {
+  font-family: 'Cinzel', serif;
+  color: var(--accent);
+  margin-bottom: 15px;
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .members-container {
+    margin: 20px auto;
+    padding: 0 15px;
+  }
+  
+  .members-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-box {
+    min-width: auto;
+  }
+  
+  .members-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .member-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .member-actions {
+    flex-direction: column;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="members-container">
+  <div class="page-header">
+    <h1>Church Members</h1>
+    <p>Complete directory of PHM-ARCC church members</p>
+  </div>
+
+  <div class="members-controls">
+    <div class="search-box">
+      <input type="text" class="search-input" placeholder="Search members by name, email, or role..." id="searchInput">
+      <button class="search-btn" onclick="searchMembers()">
+        <i class="fas fa-search"></i>
+        Search
+      </button>
+    </div>
+    <a href="{% url 'members:register' %}" class="btn btn-primary">
+      <i class="fas fa-user-plus"></i>
+      Add New Member
+    </a>
+  </div>
+
+  {% if members %}
+    <div class="members-grid" id="membersGrid">
+      {% for member in members %}
+        <div class="member-card">
+          <div class="member-header">
+            <div class="member-avatar">
+              {{ member.first_name|slice:":1" }}{{ member.last_name|slice:":1" }}
+            </div>
+            <div class="member-info">
+              <h3>{{ member.first_name }} {{ member.last_name }}</h3>
+              <span class="role">{{ member.get_role_display }}</span>
+            </div>
+          </div>
+          
+          <div class="member-details">
+            <div class="detail-item">
+              <i class="fas fa-envelope"></i>
+              <span>{{ member.email }}</span>
+            </div>
+            {% if member.phone_number %}
+            <div class="detail-item">
+              <i class="fas fa-phone"></i>
+              <span>{{ member.phone_number }}</span>
+            </div>
+            {% endif %}
+            {% if member.city %}
+            <div class="detail-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>{{ member.city }}, {{ member.country }}</span>
+            </div>
+            {% endif %}
+            {% if member.occupation %}
+            <div class="detail-item">
+              <i class="fas fa-briefcase"></i>
+              <span>{{ member.occupation }}</span>
+            </div>
+            {% endif %}
+          </div>
+          
+          <div class="member-status">
+            <div class="member-actions">
+              <a href="#" class="btn btn-sm btn-primary">
+                <i class="fas fa-eye"></i>
+                View
+              </a>
+              <a href="#" class="btn btn-sm">
+                <i class="fas fa-edit"></i>
+                Edit
+              </a>
+            </div>
+            <div class="status-badge {% if member.is_active_member %}status-active{% else %}status-inactive{% endif %}">
+              {% if member.is_active_member %}
+                <i class="fas fa-check-circle"></i> Active
+              {% else %}
+                <i class="fas fa-times-circle"></i> Inactive
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}">
+            <i class="fas fa-chevron-left"></i> Previous
+          </a>
+        {% endif %}
+        
+        <span class="current">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+        
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}">
+            Next <i class="fas fa-chevron-right"></i>
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="empty-state">
+      <h3>No Members Found</h3>
+      <p>No church members match your current search criteria.</p>
+      <a href="{% url 'members:register' %}" class="btn btn-primary">
+        <i class="fas fa-user-plus"></i>
+        Add First Member
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+function searchMembers() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const memberCards = document.querySelectorAll('.member-card');
+  
+  memberCards.forEach(card => {
+    const text = card.textContent.toLowerCase();
+    if (text.includes(searchTerm)) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// Search on Enter key
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    searchMembers();
+  }
+});
+</script>
+{% endblock %}

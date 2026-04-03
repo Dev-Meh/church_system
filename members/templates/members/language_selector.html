@@ -1,0 +1,199 @@
+{% load static %}
+<style>
+.language-selector {
+    position: relative;
+    display: inline-block;
+}
+
+.language-dropdown {
+    background: rgba(200,168,75,0.2);
+    border: 2px solid rgba(200,168,75,0.5);
+    border-radius: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    min-width: 140px;
+    box-shadow: 0 4px 12px rgba(200,168,75,0.3);
+}
+
+.language-dropdown:hover {
+    background: rgba(200,168,75,0.3);
+    border-color: rgba(200,168,75,0.7);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(200,168,75,0.4);
+}
+
+.current-language {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #c8a84b;
+}
+
+.language-flag {
+    font-size: 20px;
+}
+
+.language-arrow {
+    margin-left: auto;
+    font-size: 12px;
+    color: rgba(255,255,255,0.8);
+    transition: transform 0.3s ease;
+}
+
+.language-dropdown:hover .language-arrow {
+    transform: rotate(180deg);
+}
+
+.language-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: rgba(15,30,60,0.98);
+    backdrop-filter: blur(15px);
+    border: 2px solid rgba(200,168,75,0.4);
+    border-radius: 10px;
+    min-width: 160px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    margin-top: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.language-selector:hover .language-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.language-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    color: rgba(255,255,255,0.9);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.language-option:hover {
+    background: rgba(200,168,75,0.15);
+    color: #c8a84b;
+    transform: translateX(4px);
+}
+
+.language-option.active {
+    background: rgba(200,168,75,0.25);
+    color: #c8a84b;
+    font-weight: 600;
+}
+
+.language-option .flag {
+    font-size: 18px;
+}
+
+.language-option .name {
+    flex: 1;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .language-dropdown {
+        min-width: 120px;
+        padding: 8px 12px;
+    }
+    
+    .current-language {
+        font-size: 12px;
+    }
+    
+    .language-flag {
+        font-size: 16px;
+    }
+    
+    .language-menu {
+        min-width: 140px;
+    }
+}
+
+/* Ensure visibility in sidebar */
+.nav-user .language-selector {
+    margin-top: 8px;
+}
+
+.nav-user .language-dropdown {
+    background: rgba(200,168,75,0.15);
+    border: 1px solid rgba(200,168,75,0.3);
+    padding: 8px 12px;
+    min-width: 120px;
+}
+
+.nav-user .language-dropdown:hover {
+    background: rgba(200,168,75,0.25);
+    border-color: rgba(200,168,75,0.5);
+}
+</style>
+
+<div class="language-selector">
+    <div class="language-dropdown">
+        <div class="current-language">
+            {% with current_lang=current_language|default:'en' %}
+                {% if current_lang == 'sw' %}
+                    <span class="language-flag">🇹🇿</span>
+                    <span>Kiswahili</span>
+                {% else %}
+                    <span class="language-flag">🇬🇧</span>
+                    <span>English</span>
+                {% endif %}
+            {% endwith %}
+            <span class="language-arrow">▼</span>
+        </div>
+    </div>
+    
+    <div class="language-menu">
+        <a href="{% url 'members:set_language' 'en' %}" class="language-option {% if current_language == 'en' %}active{% endif %}" onclick="handleLanguageChange(event, 'en')">
+            <span class="flag">🇬🇧</span>
+            <span class="name">English</span>
+        </a>
+        <a href="{% url 'members:set_language' 'sw' %}" class="language-option {% if current_language == 'sw' %}active{% endif %}" onclick="handleLanguageChange(event, 'sw')">
+            <span class="flag">🇹🇿</span>
+            <span class="name">Kiswahili</span>
+        </a>
+    </div>
+</div>
+
+<script>
+function handleLanguageChange(event, language) {
+    // Store the selected language in session storage for immediate UI update
+    sessionStorage.setItem('selectedLanguage', language);
+    
+    // Trigger language change event
+    document.dispatchEvent(new CustomEvent('languageChanged', { 
+        detail: { language: language } 
+    }));
+    
+    // Allow the link to navigate normally
+    return true;
+}
+
+// Restore language preference from session storage on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedLanguage = sessionStorage.getItem('selectedLanguage');
+    if (savedLanguage && savedLanguage !== '{{ current_language|default:"en" }}') {
+        // Trigger language change event if stored language differs from current
+        document.dispatchEvent(new CustomEvent('languageChanged', { 
+            detail: { language: savedLanguage } 
+        }));
+    }
+});
+</script>

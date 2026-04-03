@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - PHM-ARCC Iyumbu Dodoma{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+
+html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; margin:0; padding:0; }
+
+.layout{
+  display:flex;
+  flex-direction:row;
+  min-height:100vh;
+  height:100%;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:240px;
+  min-width:240px;
+  height:100vh;
+  position:sticky;
+  top:0;
+  background:linear-gradient(180deg,#0d2340 0%,#0a1a2e 100%);
+  border-right:3px solid #c8a84b;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  transition:width 0.35s cubic-bezier(.4,0,.2,1), min-width 0.35s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+  z-index:100;
+}
+.sidebar.collapsed{width:64px;min-width:64px;}
+
+.sidebar-header{
+  padding:1.2rem 1rem;
+  border-bottom:1px solid rgba(200,168,75,0.2);
+  display:flex;align-items:center;
+  justify-content:space-between;
+  min-height:68px;gap:8px;flex-shrink:0;
+}
+
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1;overflow:hidden;}
+
+.brand-text{
+  display:flex;flex-direction:column;overflow:hidden;
+  max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .brand-text{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+
+.church-name{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:#c8a84b;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.church-sub{font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap;}
+
+.toggle-btn{
+  background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);
+  border-radius:6px;width:30px;height:30px;min-width:30px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:background 0.2s;
+}
+.toggle-btn:hover{background:rgba(200,168,75,0.25);}
+.toggle-btn svg{width:16px;height:16px;stroke:#c8a84b;fill:none;stroke-width:2;transition:transform 0.35s cubic-bezier(.4,0,.2,1);}
+.sidebar.collapsed .toggle-btn svg{transform:rotate(180deg);}
+
+.user-area{
+  padding:1rem;border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:10px;overflow:hidden;flex-shrink:0;
+}
+.avatar{width:36px;height:36px;min-width:36px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#c8a84b);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;}
+
+.user-info{
+  overflow:hidden;max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .user-info{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+.user-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;}
+.user-role{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+
+.nav-menu{flex:1;padding:1rem 0;overflow-y:auto;overflow-x:hidden;}
+
+.nav-section-label{
+  font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.2);padding:0.6rem 1.1rem 0.3rem;
+  white-space:nowrap;overflow:hidden;opacity:1;max-width:200px;
+  transition:opacity 0.2s ease, max-width 0.35s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed .nav-section-label{opacity:0;max-width:0;}
+
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 1.1rem;margin:2px 8px;border-radius:8px;
+  color:rgba(255,255,255,0.55);font-size:12px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:background 0.2s, color 0.2s;white-space:nowrap;overflow:hidden;
+}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9);}
+.nav-item.active{background:rgba(200,168,75,0.12);color:#c8a84b;border-left:3px solid #c8a84b;margin-left:5px;padding-left:calc(1.1rem - 3px);}
+.nav-item svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+.nav-label{
+  overflow:hidden;opacity:1;max-width:160px;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .nav-label{opacity:0;max-width:0;transform:translateX(-8px);}
+
+.nav-badge{
+  margin-left:auto;background:rgba(200,168,75,0.2);color:#c8a84b;
+  font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;
+  flex-shrink:0;opacity:1;transition:opacity 0.2s ease;
+}
+.sidebar.collapsed .nav-badge{opacity:0;}
+
+.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;}
+.btn-logout{
+  display:flex;align-items:center;gap:12px;width:100%;padding:9px 1rem;
+  border-radius:8px;border:1px solid rgba(192,57,43,0.3);
+  background:rgba(192,57,43,0.08);color:rgba(231,76,60,0.8);
+  font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;
+  text-decoration:none;cursor:pointer;transition:all 0.2s;overflow:hidden;white-space:nowrap;
+}
+.btn-logout:hover{background:rgba(192,57,43,0.18);color:#e74c3c;border-color:rgba(231,76,60,0.5);}
+.btn-logout svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+/* MAIN */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow-y:auto;}
+
+.topbar{background:#152333;border-bottom:1px solid rgba(255,255,255,0.07);padding:0 1.8rem;height:58px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar h2{font-family:'Cinzel',serif;font-size:16px;font-weight:600;color:#fff;}
+.topbar p{font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px;}
+.welcome-pill{background:rgba(200,168,75,0.12);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;white-space:nowrap;}
+
+.page-body{padding:1.6rem 1.8rem 3rem;flex:1;}
+
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.6rem;}
+.stat-card{border-radius:12px;padding:1.2rem 1.3rem;transition:transform 0.2s;cursor:pointer;}
+.stat-card:hover{transform:translateY(-3px);}
+.stat-card.blue{background:linear-gradient(135deg,#1a3a5c,#215080);}
+.stat-card.gold{background:linear-gradient(135deg,#7a5c1a,#a07820);}
+.stat-card.green{background:linear-gradient(135deg,#1a4a2e,#226038);}
+.stat-card.teal{background:linear-gradient(135deg,#0e3a44,#165060);}
+.sc-icon{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;margin-bottom:0.8rem;}
+.sc-icon svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;}
+.sc-label{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:3px;}
+.sc-value{font-size:24px;font-weight:700;color:#fff;line-height:1;}
+.sc-desc{font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px;margin-bottom:0.8rem;}
+.btn-sc{display:inline-block;padding:4px 12px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.18);border-radius:5px;font-size:10px;font-weight:700;color:#fff;letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;transition:background 0.2s;}
+.btn-sc:hover{background:rgba(255,255,255,0.24);color:#fff;}
+
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;}
+.panel{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;}
+.panel-hdr{padding:0.9rem 1.2rem;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:8px;}
+.panel-hdr svg{width:14px;height:14px;stroke:#c8a84b;fill:none;stroke-width:2;}
+.panel-hdr span{font-family:'Cinzel',serif;font-size:11px;font-weight:600;color:#c8a84b;letter-spacing:1px;text-transform:uppercase;}
+.panel-body{padding:1.1rem 1.2rem;}
+.announce-box{background:rgba(200,168,75,0.07);border:1px solid rgba(200,168,75,0.18);border-left:3px solid #c8a84b;border-radius:8px;padding:11px 13px;margin-bottom:9px;}
+.announce-box h6{font-size:12px;font-weight:700;color:#c8a84b;margin-bottom:3px;}
+.announce-box p{font-size:11px;color:rgba(255,255,255,0.5);line-height:1.6;margin:0;}
+.announce-muted{font-size:11px;color:rgba(255,255,255,0.25);margin-top:7px;}
+.action-btn{display:flex;align-items:center;gap:9px;width:100%;padding:8px 11px;margin-bottom:7px;border-radius:7px;border:1px solid rgba(255,255,255,0.09);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.7);font-size:11px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;text-decoration:none;transition:all 0.2s;cursor:pointer;}
+.action-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+.action-btn:hover{background:rgba(255,255,255,0.08);color:#fff;}
+.action-btn.danger{border-color:rgba(192,57,43,0.25);color:rgba(231,76,60,0.75);}
+.action-btn.danger:hover{background:rgba(192,57,43,0.1);color:#e74c3c;}
+.stats-row{display:grid;grid-template-columns:1fr 1fr;}
+.stat-item{text-align:center;padding:1rem;}
+.stat-item:first-child{border-right:1px solid rgba(255,255,255,0.06);}
+.stat-item .big{font-size:26px;font-weight:700;color:#c8a84b;font-family:'Cinzel',serif;}
+.stat-item .small{font-size:10px;color:rgba(255,255,255,0.35);margin-top:3px;text-transform:uppercase;letter-spacing:0.5px;}
+.dash-footer{text-align:center;font-size:10px;color:rgba(255,255,255,0.18);letter-spacing:0.5px;padding-top:1.2rem;}
+
+@media(max-width:768px){
+  .stat-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Welcome Message -->
+    <div class="welcome-message">
+        <h2>Welcome, {{ user.first_name }} {{ user.last_name }}!</h2>
+        <p>PHM-ARCC Iyumbu Dodoma &mdash; Your Church Dashboard</p>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-content">
+        <!-- Quick Actions -->
+        <div class="panel">
+            <div class="panel-hdr"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>Quick Actions</span></div>
+            <div class="panel-body">
+                <a class="action-btn" href="{% url 'profile_edit' %}"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit Profile</a>
+                <a class="action-btn" href="{% url 'donations:home' %}"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Make Donation</a>
+                <a class="action-btn" href="#"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Submit Prayer</a>
+                <a class="action-btn" href="#"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Send Message</a>
+                <form method="POST" action="{% url 'members:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="action-btn danger" style="width:100%;border:none;cursor:pointer;">
+                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5M21 12H9"/></svg>
+                         Logout
+                       </button>
+                    </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+</script>
+{% endblock %}

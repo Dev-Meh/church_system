@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+
+{% block title %}My Messages - PHM-ARCC Iyumbu Church Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+
+html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; margin:0; padding:0; }
+
+.layout{
+  display:flex;
+  flex-direction:row;
+  min-height:100vh;
+  height:100%;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:240px;
+  min-width:240px;
+  height:100vh;
+  position:sticky;
+  top:0;
+  background:linear-gradient(180deg,#0d2340 0%,#0a1a2e 100%);
+  border-right:3px solid #c8a84b;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  transition:width 0.35s cubic-bezier(.4,0,.2,1), min-width 0.35s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+  z-index:100;
+}
+.sidebar.collapsed{width:64px;min-width:64px;}
+
+.sidebar-header{
+  padding:1.2rem 1rem;
+  border-bottom:1px solid rgba(200,168,75,0.2);
+  display:flex;align-items:center;
+  justify-content:space-between;
+  min-height:68px;gap:8px;flex-shrink:0;
+}
+
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1;overflow:hidden;}
+
+.brand-text{
+  display:flex;flex-direction:column;overflow:hidden;
+  max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .brand-text{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+
+.church-name{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:#c8a84b;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.church-sub{font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap;}
+
+.toggle-btn{
+  background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);
+  border-radius:6px;width:30px;height:30px;min-width:30px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:background 0.2s;
+}
+.toggle-btn:hover{background:rgba(200,168,75,0.25);}
+.toggle-btn svg{width:16px;height:16px;stroke:#c8a84b;fill:none;stroke-width:2;transition:transform 0.35s cubic-bezier(.4,0,.2,1);}
+.sidebar.collapsed .toggle-btn svg{transform:rotate(180deg);}
+
+.user-area{
+  padding:1rem;border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:10px;overflow:hidden;flex-shrink:0;
+}
+.avatar{width:36px;height:36px;min-width:36px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#c8a84b);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;}
+
+.user-info{
+  overflow:hidden;max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .user-info{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+.user-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;}
+.user-role{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+
+.nav-menu{flex:1;padding:1rem 0;overflow-y:auto;overflow-x:hidden;}
+
+.nav-section-label{
+  font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.2);padding:0.6rem 1.1rem 0.3rem;
+  white-space:nowrap;overflow:hidden;opacity:1;max-width:200px;
+  transition:opacity 0.2s ease, max-width 0.35s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed .nav-section-label{opacity:0;max-width:0;}
+
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 1.1rem;margin:2px 8px;border-radius:8px;
+  color:rgba(255,255,255,0.55);font-size:12px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:background 0.2s, color 0.2s;white-space:nowrap;overflow:hidden;
+}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9);}
+.nav-item.active{background:rgba(200,168,75,0.12);color:#c8a84b;border-left:3px solid #c8a84b;margin-left:5px;padding-left:calc(1.1rem - 3px);}
+.nav-item svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+.nav-label{
+  overflow:hidden;opacity:1;max-width:160px;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .nav-label{opacity:0;max-width:0;transform:translateX(-8px);}
+
+.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;}
+.btn-logout{
+  display:flex;align-items:center;gap:12px;width:100%;padding:9px 1rem;
+  border-radius:8px;border:1px solid rgba(192,57,43,0.3);
+  background:rgba(192,57,43,0.08);color:rgba(231,76,60,0.8);
+  font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;
+  text-decoration:none;cursor:pointer;transition:all 0.2s;overflow:hidden;white-space:nowrap;
+}
+.btn-logout:hover{background:rgba(192,57,43,0.18);color:#e74c3c;border-color:rgba(231,76,60,0.5);}
+.btn-logout svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+/* MAIN */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow-y:auto;}
+
+.topbar{background:#152333;border-bottom:1px solid rgba(255,255,255,0.07);padding:0 1.8rem;height:58px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar h2{font-family:'Cinzel',serif;font-size:16px;font-weight:600;color:#fff;}
+.topbar p{font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px;}
+.welcome-pill{background:rgba(200,168,75,0.12);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;white-space:nowrap;}
+
+.page-body{padding:1.6rem 1.8rem 3rem;flex:1;}
+
+.panel{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:12px;margin-bottom:1.5rem;overflow:hidden;}
+.panel-hdr{padding:1rem 1.5rem;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:0.5rem;font-size:13px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:1px;}
+.panel-hdr svg{width:16px;height:16px;stroke:#c8a84b;}
+.panel-body{padding:1.5rem;}
+
+.message-item{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:1.5rem;margin-bottom:1rem;transition:all 0.2s ease;}
+.message-item:hover{background:rgba(255,255,255,0.05);}
+.message-item.unread{border-left:4px solid #c8a84b;}
+.message-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;}
+.message-title{font-size:16px;font-weight:600;color:#fff;margin-bottom:0.5rem;}
+.message-meta{display:flex;flex-direction:column;gap:0.25rem;font-size:12px;color:rgba(255,255,255,0.6);}
+.message-sender{font-weight:600;color:#c8a84b;}
+.message-priority{padding:2px 8px;border-radius:12px;font-weight:700;text-transform:uppercase;font-size:10px;}
+.priority-low{background:rgba(76,175,80,0.2);color:#4caf50;}
+.priority-medium{background:rgba(255,193,7,0.2);color:#ffc107;}
+.priority-high{background:rgba(255,152,0,0.2);color:#ff9800;}
+.priority-urgent{background:rgba(244,67,54,0.2);color:#f44336;}
+.message-content{color:rgba(255,255,255,0.8);line-height:1.6;margin-bottom:1rem;}
+.message-footer{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:rgba(255,255,255,0.5);}
+.read-status{display:flex;align-items:center;gap:0.5rem;}
+.read-indicator{width:8px;height:8px;border-radius:50%;background:#4caf50;}
+.unread-indicator{width:8px;height:8px;border-radius:50%;background:#ffc107;}
+.mark-read-btn{padding:4px 12px;background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.3);border-radius:4px;color:#4caf50;font-size:10px;font-weight:600;text-decoration:none;transition:all 0.2s ease;}
+.mark-read-btn:hover{background:rgba(76,175,80,0.2);}
+
+.empty-state{text-align:center;padding:3rem;color:rgba(255,255,255,0.5);}
+.empty-icon{font-size:48px;margin-bottom:1rem;}
+.empty-title{font-size:18px;font-weight:600;color:#fff;margin-bottom:0.5rem;}
+.empty-text{font-size:14px;color:rgba(255,255,255,0.6);max-width:400px;margin:0 auto;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <svg width="26" height="26" viewBox="0 0 48 48" fill="none" style="flex-shrink:0;">
+          <rect x="20" y="4" width="8" height="40" rx="2" fill="#c8a84b"/>
+          <rect x="6" y="16" width="36" height="8" rx="2" fill="#c8a84b"/>
+        </svg>
+        <div class="brand-text">
+          <div class="church-name">PHM-ARCC</div>
+          <div class="church-sub">Iyumbu Dodoma</div>
+        </div>
+      </div>
+      <button class="toggle-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <div class="user-area">
+      <div class="avatar">{{ user.first_name|slice:"1" }}{{ user.last_name|slice:"1" }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
+        <div class="user-role">Church Member</div>
+      </div>
+    </div>
+
+    <div class="nav-menu">
+      <div class="nav-section-label">Communication</div>
+      <a class="nav-item active" href="#">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span class="nav-label">My Messages</span>
+      </a>
+      <div class="nav-section-label">Member Dashboard</div>
+      <a class="nav-item" href="{% url 'dashboard' %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item" href="{% url 'profile' %}">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span class="nav-label">My Profile</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <form method="POST" action="{% url 'members:logout' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn-logout">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          <span class="nav-label">Logout</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h2>My Messages</h2>
+        <p>PHM-ARCC Iyumbu Dodoma &mdash; Messages from church leadership</p>
+      </div>
+      <span class="welcome-pill">Welcome, {{ user.first_name }} {{ user.last_name }}!</span>
+    </div>
+
+    <div class="page-body">
+      <div class="panel">
+        <div class="panel-hdr">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span>Messages from Church Leadership</span>
+        </div>
+        <div class="panel-body">
+          {% if messages_received %}
+            {% for recipient in messages_received %}
+              <div class="message-item {% if not recipient.is_read %}unread{% endif %}">
+                <div class="message-header">
+                  <div>
+                    <div class="message-title">{{ recipient.message.title }}</div>
+                    <div class="message-meta">
+                      <span>From: <span class="message-sender">{{ recipient.message.sender.first_name }} {{ recipient.message.sender.last_name }}</span></span>
+                      <span>Sent: {{ recipient.message.created_at|date:"M d, Y h:i A" }}</span>
+                      <span>Priority: <span class="message-priority priority-{{ recipient.message.priority }}">{{ recipient.message.get_priority_display }}</span></span>
+                    </div>
+                  </div>
+                  <div class="read-status">
+                    {% if recipient.is_read %}
+                      <div class="read-indicator"></div>
+                      <span>Read</span>
+                    {% else %}
+                      <div class="unread-indicator"></div>
+                      <span>Unread</span>
+                      <a href="#" class="mark-read-btn" onclick="markAsRead({{ recipient.id }})">Mark as Read</a>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="message-content">
+                  {{ recipient.message.content|linebreaks }}
+                </div>
+                <div class="message-footer">
+                  <span>Delivered: {{ recipient.delivered_at|date:"M d, Y h:i A" }}</span>
+                  {% if recipient.is_read %}
+                    <span>Read: {{ recipient.read_at|date:"M d, Y h:i A" }}</span>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">
+              <div class="empty-icon">📬</div>
+              <div class="empty-title">No Messages Yet</div>
+              <div class="empty-text">
+                You haven't received any messages from church leadership yet. 
+                Messages from pastors will appear here with read tracking.
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+function markAsRead(recipientId) {
+  fetch(`/members/mark-read/${recipientId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+      'Content-Type': 'application/json',
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.status === 'success') {
+      location.reload();
+    }
+  })
+  .catch(error => {
+    console.error('Error marking message as read:', error);
+  });
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
+{% endblock %}

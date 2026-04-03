@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+
+{% block title %}Content Player - PHM-ARCC Iyumbu Church Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+
+html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; margin:0; padding:0; }
+
+.layout{
+  display:flex;
+  flex-direction:row;
+  min-height:100vh;
+  height:100%;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:240px;
+  min-width:240px;
+  height:100vh;
+  position:sticky;
+  top:0;
+  background:linear-gradient(180deg,#0d2340 0%,#0a1a2e 100%);
+  border-right:3px solid #c8a84b;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  transition:width 0.35s cubic-bezier(.4,0,.2,1), min-width 0.35s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+  z-index:100;
+}
+.sidebar.collapsed{width:64px;min-width:64px;}
+
+.sidebar-header{
+  padding:1.2rem 1rem;
+  border-bottom:1px solid rgba(200,168,75,0.2);
+  display:flex;align-items:center;
+  justify-content:space-between;
+  min-height:68px;gap:8px;flex-shrink:0;
+}
+
+.brand-logo {
+  height: 32px;
+  width: auto;
+  max-width: 32px;
+  border-radius: 4px;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1;overflow:hidden;}
+
+.brand-text{
+  display:flex;flex-direction:column;overflow:hidden;
+  max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .brand-text{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+
+.church-name{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:#c8a84b;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.church-sub{font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap;}
+
+.toggle-btn{
+  background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);
+  border-radius:6px;width:30px;height:30px;min-width:30px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:background 0.2s;
+}
+.toggle-btn:hover{background:rgba(200,168,75,0.25);}
+.toggle-btn svg{width:16px;height:16px;stroke:#c8a84b;fill:none;stroke-width:2;transition:transform 0.35s cubic-bezier(.4,0,.2,1);}
+.sidebar.collapsed .toggle-btn svg{transform:rotate(180deg);}
+
+.user-area{
+  padding:1rem;border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:10px;overflow:hidden;flex-shrink:0;
+}
+.avatar{width:36px;height:36px;min-width:36px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#c8a84b);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;}
+
+.user-info{
+  overflow:hidden;max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .user-info{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+.user-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;}
+.user-role{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+
+.nav-menu{flex:1;padding:1rem 0;overflow-y:auto;overflow-x:hidden;}
+
+.nav-section-label{
+  font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.2);padding:0.6rem 1.1rem 0.3rem;
+  white-space:nowrap;overflow:hidden;opacity:1;max-width:200px;
+  transition:opacity 0.2s ease, max-width 0.35s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed .nav-section-label{opacity:0;max-width:0;}
+
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  color:rgba(255,255,255,0.55);font-size:12px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:background 0.2s, color 0.2s;white-space:nowrap;overflow:hidden;
+  cursor:pointer;position:relative;
+}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9);}
+.nav-item.active{background:rgba(200,168,75,0.12);color:#c8a84b;border-left:3px solid #c8a84b;margin-left:5px;padding-left:calc(1.1rem - 3px);}
+.nav-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+.nav-tooltip{
+  position:absolute;left:56px;top:50%;transform:translateY(-50%);
+  background:#1a3a5c;border:1px solid rgba(200,168,75,0.4);
+  color:#c8a84b;font-size:11px;font-weight:700;letter-spacing:0.5px;
+  text-transform:uppercase;padding:5px 10px;border-radius:6px;
+  white-space:nowrap;pointer-events:none;opacity:0;
+  transition:opacity 0.15s ease;z-index:200;
+}
+.nav-tooltip::before{content:'';position:absolute;right:100%;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:#1a3a5c;}
+.sidebar.collapsed .nav-item:hover .nav-tooltip{opacity:1;}
+.nav-label{overflow:hidden;opacity:1;max-width:160px;transform:translateX(0);transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;white-space:nowrap;}
+.sidebar.collapsed .nav-label{opacity:0;max-width:0;transform:translateX(-8px);}
+.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;}
+.btn-logout{
+  display:flex;align-items:center;gap:10px;width:100%;padding:0.6rem 1.1rem;
+  background:none;border:1px solid rgba(192,57,43,0.3);
+  color:rgba(231,76,60,0.75);font-size:11px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:all 0.2s;border-radius:6px;cursor:pointer;
+}
+.btn-logout:hover{background:rgba(192,57,43,0.18);color:#e74c3c;border-color:rgba(231,76,60,0.5);}
+.btn-logout svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+/* MAIN */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow-y:auto;}
+
+.topbar{background:#152333;border-bottom:1px solid rgba(255,255,255,0.07);padding:0 1.8rem;height:58px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar h2{font-family:'Cinzel',serif;font-size:16px;font-weight:600;color:#fff;}
+.topbar p{font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px;}
+.welcome-pill{background:rgba(200,168,75,0.12);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;white-space:nowrap;}
+
+.page-body{padding:1.6rem 1.8rem 3rem;flex:1;}
+
+/* CONTENT CARDS */
+.content-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:1.5rem;margin-bottom:2rem;}
+
+.content-card{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;transition:all 0.3s ease;cursor:pointer;}
+.content-card:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,0.3);border-color:rgba(200,168,75,0.3);}
+
+.content-header{position:relative;height:180px;background:linear-gradient(135deg,#1a3a5c,#0d2340);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.content-header img{width:100%;height:100%;object-fit:cover;}
+.content-header .overlay{position:absolute;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;}
+.content-header .overlay svg{width:48px;height:48px;stroke:#c8a84b;fill:none;stroke-width:2;}
+
+.content-body{padding:1.5rem;}
+.content-title{font-size:16px;font-weight:600;color:#fff;margin-bottom:0.5rem;}
+.content-description{font-size:13px;color:rgba(255,255,255,0.7);line-height:1.5;margin-bottom:1rem;}
+.content-meta{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;}
+.meta-tag{font-size:11px;padding:3px 8px;border-radius:12px;font-weight:600;text-transform:uppercase;}
+.meta-primary{background:rgba(52,152,219,0.2);color:#3498db;}
+.meta-success{background:rgba(46,204,113,0.2);color:#2ecc71;}
+.meta-warning{background:rgba(243,156,18,0.2);color:#f39c12;}
+.meta-info{background:rgba(52,152,219,0.2);color:#3498db;}
+.meta-danger{background:rgba(231,76,60,0.2);color:#e74c3c;}
+
+.content-footer{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:rgba(255,255,255,0.5);}
+.content-date{display:flex;align-items:center;gap:0.5rem;}
+.content-action{display:flex;align-items:center;gap:0.5rem;color:#c8a84b;font-weight:600;}
+
+/* STATS SECTION */
+.stats-section{margin-bottom:2rem;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;}
+.stat-card{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1.5rem;text-align:center;}
+.stat-number{font-size:32px;font-weight:700;color:#c8a84b;margin-bottom:0.5rem;}
+.stat-label{font-size:12px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;}
+
+/* FEATURED SECTION */
+.featured-section{margin-bottom:2rem;}
+.featured-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;}
+.featured-card{background:#152333;border:1px solid rgba(200,168,75,0.3);border-radius:12px;padding:1.5rem;}
+.featured-title{font-size:14px;font-weight:600;color:#c8a84b;margin-bottom:0.5rem;}
+.featured-description{font-size:12px;color:rgba(255,255,255,0.7);line-height:1.4;}
+
+/* FILTER BAR */
+.filter-bar{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1rem;margin-bottom:2rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;}
+.filter-btn{padding:8px 16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:rgba(255,255,255,0.8);font-size:12px;font-weight:600;text-decoration:none;transition:all 0.2s;}
+.filter-btn:hover{background:rgba(255,255,255,0.15);color:#fff;}
+.filter-btn.active{background:#c8a84b;color:#fff;border-color:#c8a84b;}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:4rem 2rem;color:rgba(255,255,255,0.5);}
+.empty-icon{font-size:64px;margin-bottom:1rem;}
+.empty-title{font-size:20px;font-weight:600;color:#fff;margin-bottom:0.5rem;}
+.empty-text{font-size:14px;color:rgba(255,255,255,0.6);max-width:400px;margin:0 auto;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="layout">
+
+  <!-- ═══════════ SIDEBAR ═══════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <img src="/media/church-logo.svg" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
+        <div class="brand-text">
+          <span class="church-name">PHM-ARCC</span>
+          <span class="church-sub">Iyumbu · Dodoma</span>
+        </div>
+      </div>
+      <button class="toggle-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <div class="user-area">
+      <div class="avatar">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
+        <div class="user-role">Content Player</div>
+      </div>
+    </div>
+
+    <nav class="nav-menu">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item" href="{% url 'dashboard' %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="nav-label">Dashboard</span>
+        <span class="nav-tooltip">Dashboard</span>
+      </a>
+      <a class="nav-item active" href="{% url 'player:dashboard' %}">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        <span class="nav-label">Content Player</span>
+        <span class="nav-tooltip">Content Player</span>
+      </a>
+
+      <div class="nav-section-label">Content</div>
+      <a class="nav-item" href="#" onclick="alert('Media Player will open when you select specific content')">
+        <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        <span class="nav-label">Media Player</span>
+        <span class="nav-tooltip">Media Player</span>
+      </a>
+      <a class="nav-item" href="{% url 'player:my_content' %}">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 20v-15A2.5 2.5 0 011.5 4H20"/></svg>
+        <span class="nav-label">My Content</span>
+        <span class="nav-tooltip">My Content</span>
+      </a>
+
+      <div class="nav-section-label">Community</div>
+      <a class="nav-item" href="{% url 'events:event_list' %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="nav-label">Events</span>
+        <span class="nav-tooltip">Events</span>
+      </a>
+      <a class="nav-item" href="{% url 'sermons:sermon_list' %}">
+        <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        <span class="nav-label">Sermons</span>
+        <span class="nav-tooltip">Sermons</span>
+      </a>
+
+      <div class="nav-section-label">Account</div>
+      <a class="nav-item" href="{% url 'profile' %}">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="nav-label">Profile</span>
+        <span class="nav-tooltip">Profile</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <form method="post" action="{% url 'members:logout' %}" style="margin:0;">
+        {% csrf_token %}
+        <button type="submit" class="btn-logout" style="width:100%;border:none;background:none;padding:0;cursor:pointer;">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span class="nav-label">Sign Out</span>
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <div class="main">
+    <!-- TOPNAV: logo + title + links + welcome pill -->
+    <header class="topnav">
+      <!-- LEFT: Logo + page title -->
+      <a class="topnav-logo" href="{% url 'home' %}">
+        <img src="/media/church-logo.svg" alt="Church Logo" class="topnav-logo-img"
+             onerror="this.replaceWith(document.getElementById('logo-placeholder').content.cloneNode(true))">
+        <template id="logo-placeholder">
+          <div class="topnav-logo-placeholder">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+        </template>
+        <div class="topnav-title-block">
+          <span class="topnav-title">Content Player</span>
+          <span class="topnav-subtitle">PHM-ARCC Iyumbu Dodoma &mdash; Media & Content Hub</span>
+        </div>
+      </a>
+
+      <!-- RIGHT: Welcome pill + avatar + hamburger -->
+      <div class="topnav-right">
+        <span class="welcome-pill">Welcome, {{ user.first_name }} {{ user.last_name }}!</span>
+        <div class="topnav-avatar">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</div>
+        <button class="topnav-hamburger" onclick="toggleTopnav()" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <div class="page-body">
+      <!-- Stats Overview -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">{{ total_media_count|default:0 }}</div>
+          <div class="stat-label">Total Media</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ recent_media|length }}</div>
+          <div class="stat-label">Recent Uploads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ favorite_media|length }}</div>
+          <div class="stat-label">Favorites</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ user_media_count|default:0 }}</div>
+          <div class="stat-label">My Uploads</div>
+        </div>
+      </div>
+
+      <!-- Recent Media -->
+      <div class="panel">
+        <div class="panel-hdr">
+          <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          Recent Media
+        </div>
+        <div class="panel-body">
+          {% for media in recent_media %}
+            <div class="media-item">
+              <div class="media-thumbnail">
+                {% if media.thumbnail %}
+                  <img src="{{ media.thumbnail.url }}" alt="{{ media.title }}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
+                {% else %}
+                  <svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;">
+                    <polygon points="23 7 16 12 23 17 23 7"/>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                  </svg>
+                {% endif %}
+              </div>
+              
+              <div class="media-info">
+                <div class="media-title">{{ media.title }}</div>
+                <div class="media-meta">{{ media.upload_date|date:"M d, Y" }} • {{ media.duration|default:"--:--" }}</div>
+              </div>
+              <a href="#" class="action-btn" style="width:auto;padding:8px 12px;" onclick="alert('This will open the media player for this specific content')">
+                <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Play
+              </a>
+            </div>
+          {% empty %}
+            <p style="text-align:center;color:rgba(255,255,255,0.5);padding:2rem;">No media available yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="panel">
+        <div class="panel-hdr">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3"/></svg>
+          Quick Actions
+        </div>
+        <div class="panel-body">
+          <a href="#" class="action-btn" onclick="alert('Media Player will open when you select specific content')">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Open Media Player
+          </a>
+          <a href="{% url 'player:my_content' %}" class="action-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            My Content
+          </a>
+          <a href="{% url 'profile_edit' %}" class="action-btn">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Profile
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+function toggleTopnav(){
+  document.getElementById('topnav-links').classList.toggle('open');
+}
+</script>
+{% endblock %}

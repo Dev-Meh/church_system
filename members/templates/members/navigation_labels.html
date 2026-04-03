@@ -1,0 +1,154 @@
+{% load static %}
+<!-- Navigation Labels with Language Support -->
+<script>
+// Translation dictionary for navigation
+const NAVIGATION_LABELS = {
+    'en': {
+        'dashboard': 'Dashboard',
+        'sermons': 'Sermons',
+        'all_sermons': 'All Sermons',
+        'create_sermon': 'Create Sermon',
+        'sermon_series': 'Sermon Series',
+        'messages': 'Messages',
+        'send_message': 'Send Message',
+        'view_messages': 'View Messages',
+        'admin_panel': 'Admin Panel',
+        'logout': 'Logout',
+        'quick_actions': 'Quick Actions',
+        'communication': 'Communication',
+        'member_management': 'Member Management',
+        'administration': 'Administration',
+        'all_members': 'All Members',
+        'edit_profile': 'Edit Profile',
+        'main_dashboard': 'Main Dashboard',
+        'pastoral_quick_actions': 'Pastoral Quick Actions'
+    },
+    'sw': {
+        'dashboard': 'Dashibodi',
+        'sermons': 'Mahubiri',
+        'all_sermons': 'Mahubiri Yote',
+        'create_sermon': 'Unda Hubo',
+        'sermon_series': 'Mfululizo wa Mahubiri',
+        'messages': 'Ujumbe',
+        'send_message': 'Tuma Ujumbe',
+        'view_messages': 'Ona Ujumbe',
+        'admin_panel': 'Bodi ya Utawala',
+        'logout': 'Toka',
+        'quick_actions': 'Hatua za Haraka',
+        'communication': 'Mawasiliano',
+        'member_management': 'Usimamizi wa Wanachama',
+        'administration': 'Utawala',
+        'all_members': 'Wanachama Wote',
+        'edit_profile': 'Haribu Wasifu',
+        'main_dashboard': 'Dashibodi Kuu',
+        'pastoral_quick_actions': 'Hatua za Haraka za Mchungaji'
+    }
+};
+
+// Dashboard content translations
+const DASHBOARD_LABELS = {
+    'en': {
+        'total_members': 'Total Members',
+        'active_members': 'Active Members',
+        'new_members_this_month': 'New Members This Month',
+        'total_donations': 'Total Donations',
+        'donations_this_month': 'Donations This Month',
+        'active_members_list': 'Active Members',
+        'recent_members': 'Recent Members',
+        'recent_donations': 'Recent Donations',
+        'welcome_back': 'Welcome back',
+        'statistics': 'Statistics',
+        'no_data_available': 'No data available'
+    },
+    'sw': {
+        'total_members': 'Jumla ya Wanachama',
+        'active_members': 'Wanachama Walio Hai',
+        'new_members_this_month': 'Wanachama Wapya Mwezi Huu',
+        'total_donations': 'Jumla ya Michango',
+        'donations_this_month': 'Michango ya Mwezi Huu',
+        'active_members_list': 'Orodha ya Wanachama Walio Hai',
+        'recent_members': 'Wanachama wa Karibuni',
+        'recent_donations': 'Michango ya Karibuni',
+        'welcome_back': 'Karibu tena',
+        'statistics': 'Takwimu',
+        'no_data_available': 'Hakuna data inayopatikana'
+    }
+};
+
+// Function to get translated label
+function getLabel(key, language = 'en', type = 'navigation') {
+    const labels = type === 'dashboard' ? DASHBOARD_LABELS : NAVIGATION_LABELS;
+    return labels[language]?.[key] || labels['en'][key] || key;
+}
+
+// Function to update all navigation labels based on current language
+function updateNavigationLabels() {
+    const currentLanguage = '{{ current_language|default:"en" }}';
+    
+    // Update navigation items
+    document.querySelectorAll('.nav-item').forEach(item => {
+        const span = item.querySelector('span');
+        if (span) {
+            const text = span.textContent.trim();
+            const key = Object.keys(NAVIGATION_LABELS['en']).find(k => 
+                NAVIGATION_LABELS['en'][k].toLowerCase() === text.toLowerCase()
+            );
+            if (key) {
+                span.textContent = getLabel(key, currentLanguage);
+            }
+        }
+    });
+    
+    // Update section labels
+    document.querySelectorAll('.nav-section-label').forEach(label => {
+        const text = label.textContent.trim();
+        const key = Object.keys(NAVIGATION_LABELS['en']).find(k => 
+            NAVIGATION_LABELS['en'][k].toLowerCase() === text.toLowerCase()
+        );
+        if (key) {
+            label.textContent = getLabel(key, currentLanguage);
+        }
+    });
+    
+    // Update dashboard content
+    updateDashboardContent(currentLanguage);
+}
+
+// Function to update dashboard content
+function updateDashboardContent(language) {
+    // Update stat labels
+    document.querySelectorAll('.stat-label').forEach(label => {
+        const text = label.textContent.trim();
+        const key = Object.keys(DASHBOARD_LABELS['en']).find(k => 
+            DASHBOARD_LABELS['en'][k].toLowerCase() === text.toLowerCase()
+        );
+        if (key) {
+            label.textContent = getLabel(key, language, 'dashboard');
+        }
+    });
+    
+    // Update welcome message
+    const welcomeElements = document.querySelectorAll('[style*="Welcome back"]');
+    welcomeElements.forEach(el => {
+        if (language === 'sw') {
+            el.textContent = el.textContent.replace('Welcome back', 'Karibu tena');
+        }
+    });
+    
+    // Update panel headers
+    document.querySelectorAll('.panel-hdr').forEach(header => {
+        const text = header.textContent.trim();
+        if (text === 'ACTIVE MEMBERS' && language === 'sw') {
+            header.textContent = 'WANACHAMA WALIO HAI';
+        } else if (text === 'RECENT MEMBERS' && language === 'sw') {
+            header.textContent = 'WANACHAMA WA KARIBUNI';
+        }
+    });
+}
+
+// Update labels when page loads and when language changes
+document.addEventListener('DOMContentLoaded', updateNavigationLabels);
+
+// Listen for language changes
+document.addEventListener('languageChanged', updateNavigationLabels);
+</script>

@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load i18n_church %}
+
+{% block title %}{% church_t 'sermons' %} - PHM-ARCC Iyumbu Church Management System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h4>{% if form.instance.pk %}{% church_t 'edit_sermon_header' %}{% else %}{% church_t 'create_new_sermon_header' %}{% endif %}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">{% church_t 'sermon_title_label' %}</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                <div class="text-danger">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.sermon_type.id_for_label }}" class="form-label">{% church_t 'sermon_type_label' %}</label>
+                                {{ form.sermon_type }}
+                                {% if form.sermon_type.errors %}
+                                <div class="text-danger">{{ form.sermon_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">{% church_t 'description_label' %}</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="text-danger">{{ form.description.errors }}</div>
+                                {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.speaker.id_for_label }}" class="form-label">{% church_t 'speaker_label' %} *</label>
+                                {{ form.speaker }}
+                                {% if form.speaker.errors %}
+                                <div class="text-danger">{{ form.speaker.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.sermon_date.id_for_label }}" class="form-label">{% church_t 'sermon_datetime_label' %}</label>
+                                {{ form.sermon_date }}
+                                {% if form.sermon_date.errors %}
+                                <div class="text-danger">{{ form.sermon_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.series.id_for_label }}" class="form-label">{% church_t 'sermon_series_label' %}</label>
+                                {{ form.series }}
+                                {% if form.series.errors %}
+                                <div class="text-danger">{{ form.series.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.bible_references.id_for_label }}" class="form-label">{% church_t 'bible_references_label' %}</label>
+                                {{ form.bible_references }}
+                                <small class="form-text text-muted">{% church_t 'bible_references_hint' %}</small>
+                                {% if form.bible_references.errors %}
+                                <div class="text-danger">{{ form.bible_references.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.duration.id_for_label }}" class="form-label">{% church_t 'duration_label' %}</label>
+                                {{ form.duration }}
+                                {% if form.duration.errors %}
+                                <div class="text-danger">{{ form.duration.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.audio_file.id_for_label }}" class="form-label">{% church_t 'audio_file_label' %}</label>
+                                {{ form.audio_file }}
+                                {% if form.audio_file.errors %}
+                                <div class="text-danger">{{ form.audio_file.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.video_file.id_for_label }}" class="form-label">{% church_t 'video_file_label' %}</label>
+                                {{ form.video_file }}
+                                {% if form.video_file.errors %}
+                                <div class="text-danger">{{ form.video_file.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.thumbnail.id_for_label }}" class="form-label">{% church_t 'thumbnail_label' %}</label>
+                                {{ form.thumbnail }}
+                                {% if form.thumbnail.errors %}
+                                <div class="text-danger">{{ form.thumbnail.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.slides.id_for_label }}" class="form-label">{% church_t 'slides_label' %}</label>
+                                {{ form.slides }}
+                                {% if form.slides.errors %}
+                                <div class="text-danger">{{ form.slides.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.transcript.id_for_label }}" class="form-label">{% church_t 'transcript_label' %}</label>
+                            {{ form.transcript }}
+                            {% if form.transcript.errors %}
+                            <div class="text-danger">{{ form.transcript.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">{% church_t 'sermon_notes_label' %}</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="text-danger">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    {{ form.is_published }}
+                                    <label class="form-check-label" for="{{ form.is_published.id_for_label }}">
+                                        {% church_t 'publish_sermon' %}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    {{ form.is_featured }}
+                                    <label class="form-check-label" for="{{ form.is_featured.id_for_label }}">
+                                        {% church_t 'feature_sermon' %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'sermons:sermon_list' %}" class="btn btn-secondary">{% church_t 'cancel' %}</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.pk %}{% church_t 'update_sermon' %}{% else %}{% church_t 'create_sermon' %}{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Message Test</title>
+    <style>
+        body { background: #0f1e2e; color: white; font-family: Arial; padding: 20px; }
+        .test-box { background: rgba(200,168,75,0.2); padding: 20px; border-radius: 8px; margin: 10px 0; }
+        .swahili { background: #c8a84b; color: black; }
+        .english { background: #4a90e2; color: white; }
+        .form-group { margin: 15px 0; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .btn-primary { background: #c8a84b; color: black; }
+        .btn-secondary { background: #6c757d; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Simple Message Creation Test</h1>
+    
+    <div class="test-box {% if request.session.django_language == 'sw' %}swahili{% else %}english{% endif %}">
+        <h3>{% if request.session.django_language == 'sw' %}🇹🇿 MFANO WA UJUMBE WA KISWAHILI{% else %}🇬🇧 ENGLISH MESSAGE EXAMPLE{% endif %}</h3>
+        <p><strong>Session Language:</strong> {{ request.session.django_language|default:'NOT_SET' }}</p>
+    </div>
+
+    <div class="test-box">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">
+                    {% if request.session.django_language == 'sw' %}Kichwa cha Ujumbe:{% else %}Message Title:{% endif %}
+                </label>
+                <input type="text" name="title" class="form-input" placeholder="{% if request.session.django_language == 'sw' %}Andika kichwa cha ujumbe hapa{% else %}Write message title here{% endif %}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    {% if request.session.django_language == 'sw' %}Maudhui ya Ujumbe:{% else %}Message Content:{% endif %}
+                </label>
+                <textarea name="content" class="form-input" rows="4" placeholder="{% if request.session.django_language == 'sw' %}Andika maudhui ya ujumbe hapa{% else %}Write message content here{% endif %}"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    {% if request.session.django_language == 'sw' %}Tuma kwa Wanachama Wote:{% else %}Send to All Members:{% endif %}
+                </label>
+                <input type="checkbox" name="send_to_all"> {% if request.session.django_language == 'sw' %}Ndio{% else %}Yes{% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                {% if request.session.django_language == 'sw' %}🇹🇿 Tuma Ujumbe{% else %}🇬🇧 Send Message{% endif %}
+            </button>
+            
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                {% if request.session.django_language == 'sw' %}Rudi Dashibodi{% else %}Back to Dashboard{% endif %}
+            </a>
+        </form>
+    </div>
+
+    <div class="test-box">
+        <h3>Language Switching:</h3>
+        <a href="{% url 'members:set_language' 'en' %}" class="btn" style="background: #4a90e2; color: white;">Switch to English</a>
+        <a href="{% url 'members:set_language' 'sw' %}" class="btn" style="background: #c8a84b; color: black;">Switch to Swahili</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Language Test</title>
+    <style>
+        body { background: #0f1e2e; color: white; font-family: Arial; padding: 20px; }
+        .debug { background: rgba(200,168,75,0.2); padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .test-button { background: #c8a84b; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Language System Test</h1>
+    
+    <div class="debug">
+        <h3>Debug Information:</h3>
+        <p><strong>Current Language:</strong> {{ current_language|default:'NOT_SET' }}</p>
+        <p><strong>Supported Languages:</strong> 
+            {% for lang in supported_languages %}
+                {{ lang.code }} ({{ lang.name }}) 
+            {% endfor %}
+        </p>
+        <p><strong>Language Info:</strong> 
+            {% if language_info %}
+                {{ language_info.code }} - {{ language_info.name }} ({{ language_info.native_name }})
+            {% else %}
+                NOT_AVAILABLE
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="debug">
+        <h3>Test Language Switching:</h3>
+        <a href="{% url 'members:set_language' 'en' %}" class="test-button">Switch to English</a>
+        <a href="{% url 'members:set_language' 'sw' %}" class="test-button">Switch to Swahili</a>
+        <a href="{% url 'dashboard' %}" class="test-button">Go to Dashboard</a>
+    </div>
+
+    <div class="debug">
+        <h3>Translation Test:</h3>
+        <p><strong>Dashboard:</strong> {{ 'dashboard'|t:request }}</p>
+        <p><strong>Members:</strong> {{ 'members'|t:request }}</p>
+        <p><strong>Messages:</strong> {{ 'messages'|t:request }}</p>
+        <p><strong>Success:</strong> {{ 'success'|t:request }}</p>
+    </div>
+
+    <div class="debug">
+        <h3>Session Test:</h3>
+        <p><strong>Session Language:</strong> {{ request.session.django_language|default:'NOT_SET' }}</p>
+    </div>
+</body>
+</html>

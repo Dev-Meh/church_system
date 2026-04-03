@@ -1,0 +1,473 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - PHM-ARCCI Church Management System{% endblock %}
+
+{% block content %}
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+
+    body {
+        background-color: #0d1b2a;
+        font-family: 'Lato', sans-serif;
+        min-height: 100vh;
+    }
+
+    .page-bg {
+        min-height: 100vh;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 2.5rem 1rem 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .bg-cross {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 700px;
+        height: 700px;
+        opacity: 0.04;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .reg-card {
+        background: #ffffff;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 860px;
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+        border: none !important;
+        animation: fadeUp 0.5s ease both;
+    }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reg-header {
+        background: linear-gradient(160deg, #1a3a5c, #0d2340);
+        padding: 2.2rem 2rem 1.8rem;
+        text-align: center;
+        border-bottom: 3px solid #c8a84b;
+    }
+
+    .reg-header .cross-icon { display: block; margin: 0 auto 0.9rem; }
+
+    .reg-header .church-name {
+        font-family: 'Cinzel', serif;
+        font-size: 15px;
+        font-weight: 600;
+        color: #c8a84b;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        line-height: 1.5;
+        margin-bottom: 4px;
+    }
+
+    .reg-header .church-sub {
+        font-size: 11px;
+        color: rgba(255,255,255,0.45);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .reg-header .page-title {
+        font-family: 'Cinzel', serif;
+        font-size: 20px;
+        font-weight: 600;
+        color: #ffffff;
+        margin-top: 1rem;
+        margin-bottom: 2px;
+    }
+
+    .reg-header .page-sub {
+        font-size: 12px;
+        color: rgba(255,255,255,0.5);
+    }
+
+    .reg-body { padding: 2rem 2rem 1.5rem; background: #fff; }
+
+    .reg-section {
+        background: #f7f9fc;
+        border: 1px solid #e4e8f0;
+        border-left: 4px solid #c8a84b;
+        border-radius: 10px;
+        padding: 1.4rem 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .reg-section .section-title {
+        font-family: 'Cinzel', serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1a3a5c;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 1.2rem;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #dce3ee;
+    }
+
+    .form-label {
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: #4a4a5a !important;
+        margin-bottom: 5px !important;
+    }
+
+    .required-star { color: #c8a84b; }
+
+    .form-control,
+    .form-select {
+        border: 1.5px solid #dce0e8 !important;
+        border-radius: 8px !important;
+        padding: 9px 12px 9px 36px !important;
+        font-size: 14px !important;
+        font-family: 'Lato', sans-serif !important;
+        background: #f9fafc !important;
+        color: #1a1a2e !important;
+        transition: border-color 0.2s, background 0.2s !important;
+        box-shadow: none !important;
+        height: auto !important;
+        width: 100%;
+    }
+
+    .form-select {
+        padding-left: 12px !important;
+        appearance: auto;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #1a3a5c !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    .input-wrap { position: relative; }
+
+    .input-wrap .input-icon {
+        position: absolute;
+        left: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 15px;
+        height: 15px;
+        opacity: 0.35;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    textarea.form-control {
+        padding-left: 12px !important;
+        resize: vertical;
+    }
+
+    .mb-3 { margin-bottom: 1rem !important; }
+
+    .alert-danger {
+        border-radius: 8px !important;
+        font-size: 13px;
+        border: 1px solid #f5c6cb;
+        background: #fff5f5;
+        color: #721c24;
+        padding: 10px 14px;
+        margin-bottom: 1.2rem;
+    }
+
+    .text-danger small { font-size: 12px; }
+
+    .btn-register {
+        display: inline-block;
+        padding: 13px 3rem;
+        background-color: #1a3a5c;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-family: 'Lato', sans-serif;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: #ffffff;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-register:hover { background-color: #122b47; color: #fff; }
+    .btn-register:active { transform: scale(0.98); }
+
+    .reg-footer {
+        background-color: #f4f6f9;
+        border-top: 1px solid #e8eaf0;
+        text-align: center;
+        padding: 1rem;
+        font-size: 13px;
+        color: #888;
+    }
+
+    .reg-footer a {
+        color: #c8a84b;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .reg-footer a:hover { text-decoration: underline; }
+
+    .footer-strip {
+        background: #0d1b2a;
+        padding: 9px;
+        text-align: center;
+        font-size: 11px;
+        color: rgba(255,255,255,0.25);
+        letter-spacing: 0.5px;
+    }
+
+    .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 1.5rem;
+    }
+
+    @media (max-width: 600px) {
+        .two-col { grid-template-columns: 1fr; }
+        .reg-body { padding: 1.2rem; }
+    }
+</style>
+
+<div class="page-bg">
+    <svg class="bg-cross" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="85" y="10" width="30" height="180" fill="white"/>
+        <rect x="10" y="70" width="180" height="30" fill="white"/>
+    </svg>
+
+    <div class="reg-card">
+
+        <div class="reg-header">
+            <svg class="cross-icon" width="44" height="44" viewBox="0 0 48 48" fill="none">
+                <rect x="20" y="4" width="8" height="40" rx="2" fill="#c8a84b"/>
+                <rect x="6" y="16" width="36" height="8" rx="2" fill="#c8a84b"/>
+            </svg>
+            <div class="church-name">PHM-ARCC Iyumbu</div>
+            <div class="church-sub">Dodoma &mdash; Church Management System</div>
+            <div class="page-title">Church Member Registration</div>
+            <div class="page-sub">Fill in all required fields to create your account</div>
+        </div>
+
+        <div class="reg-body">
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Section A: Account Credentials -->
+                <div class="reg-section">
+                    <div class="section-title">A. Account Credentials</div>
+                    <div class="two-col">
+
+                        <div class="mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">Username <span class="required-star">*</span></label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                {{ form.username }}
+                            </div>
+                            {% if form.username.errors %}<div class="text-danger mt-1">{% for e in form.username.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email Address <span class="required-star">*</span></label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2">
+                                    <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+                                </svg>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}<div class="text-danger mt-1">{% for e in form.email.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3"></div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.password1.id_for_label }}" class="form-label">Password <span class="required-star">*</span></label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2">
+                                    <rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>
+                                </svg>
+                                {{ form.password1 }}
+                            </div>
+                            {% if form.password1.errors %}<div class="text-danger mt-1">{% for e in form.password1.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password <span class="required-star">*</span></label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2">
+                                    <rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>
+                                </svg>
+                                {{ form.password2 }}
+                            </div>
+                            {% if form.password2.errors %}<div class="text-danger mt-1">{% for e in form.password2.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Section B: Personal Information -->
+                <div class="reg-section">
+                    <div class="section-title">B. Personal Information</div>
+                    <div class="two-col">
+
+                        <div class="mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name <span class="required-star">*</span></label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2">
+                                    <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                                </svg>
+                                {{ form.first_name }}
+                            </div>
+                            {% if form.first_name.errors %}<div class="text-danger mt-1">{% for e in form.first_name.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name <span class="required-star">*</span></label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2">
+                                    <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                                </svg>
+                                {{ form.last_name }}
+                            </div>
+                            {% if form.last_name.errors %}<div class="text-danger mt-1">{% for e in form.last_name.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of Birth</label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                                </svg>
+                                {{ form.date_of_birth }}
+                            </div>
+                            {% if form.date_of_birth.errors %}<div class="text-danger mt-1">{% for e in form.date_of_birth.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2">
+                                    <path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013.08 4.18 2 2 0 015.09 2h3a2 2 0 012 1.72c.13 1 .37 1.97.72 2.9a2 2 0 01-.45 2.11L9.09 9.91a16 16 0 006.99 7l1.18-1.18a2 2 0 012.11-.45c.93.35 1.9.59 2.9.72A2 2 0 0122 17z"/>
+                                </svg>
+                                {{ form.phone_number }}
+                            </div>
+                            {% if form.phone_number.errors %}<div class="text-danger mt-1">{% for e in form.phone_number.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.gender.id_for_label }}" class="form-label">Gender</label>
+                            {{ form.gender }}
+                            {% if form.gender.errors %}<div class="text-danger mt-1">{% for e in form.gender.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.marital_status.id_for_label }}" class="form-label">Marital Status</label>
+                            {{ form.marital_status }}
+                            {% if form.marital_status.errors %}<div class="text-danger mt-1">{% for e in form.marital_status.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.occupation.id_for_label }}" class="form-label">Occupation</label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2">
+                                    <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+                                </svg>
+                                {{ form.occupation }}
+                            </div>
+                            {% if form.occupation.errors %}<div class="text-danger mt-1">{% for e in form.occupation.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Section C: Address Information -->
+                <div class="reg-section">
+                    <div class="section-title">C. Address Information</div>
+                    <div class="two-col">
+
+                        <div class="mb-3" style="grid-column: 1 / -1;">
+                            <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
+                            {{ form.address }}
+                            {% if form.address.errors %}<div class="text-danger mt-1">{% for e in form.address.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.city.id_for_label }}" class="form-label">City</label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                                </svg>
+                                {{ form.city }}
+                            </div>
+                            {% if form.city.errors %}<div class="text-danger mt-1">{% for e in form.city.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.country.id_for_label }}" class="form-label">Country</label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/>
+                                </svg>
+                                {{ form.country }}
+                            </div>
+                            {% if form.country.errors %}<div class="text-danger mt-1">{% for e in form.country.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.postal_code.id_for_label }}" class="form-label">Postal Code</label>
+                            <div class="input-wrap">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="#1a3a5c" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                {{ form.postal_code }}
+                            </div>
+                            {% if form.postal_code.errors %}<div class="text-danger mt-1">{% for e in form.postal_code.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div style="text-align: center; margin-top: 1.5rem; margin-bottom: 0.5rem;">
+                    <button type="submit" class="btn-register">Register Now</button>
+                </div>
+
+            </form>
+        </div>
+
+        <div class="reg-footer">
+            <p class="mb-0">Already have an account? <a href="{% url 'members:login' %}">Login here</a></p>
+        </div>
+
+        <div class="footer-strip">
+            &copy; 2025 PHM-ARCC Iyumbu Dodoma &mdash; All rights reserved
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
