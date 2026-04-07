@@ -10,6 +10,7 @@ from django.http import JsonResponse
 from .models import ChurchUser
 from .models_message import Message, MessageRecipient, Announcement
 from .message_forms import MessageForm, AnnouncementForm
+from .sms_service import sms_service
 
 @login_required(login_url='members:login')
 def message_center(request):
@@ -71,9 +72,15 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
         
         MessageRecipient.objects.bulk_create(message_recipients)
         
+        # Send SMS to all recipients
+        sms_text = f"NEW CHURCH MESSAGE: {message.title}\n{message.content[:100]}..."
+        for recipient in recipients:
+            if recipient.phone_number:
+                sms_service.send_sms(recipient.phone_number, sms_text)
+        
         messages.success(
             self.request, 
-            f'Message sent to {len(recipients)} members successfully!'
+            f'Message sent to {len(recipients)} members successfully (and SMS notifications triggered)!'
         )
         return redirect('members:message_center')
     
@@ -109,11 +116,6 @@ class MessageListView(LoginRequiredMixin, ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Add read statistics for each message
-        messages = context['messages']
-        for msg in messages:
-            msg.read_count = MessageRecipient.objects.filter(message=msg, is_read=True).count()
-            msg.total_recipients = MessageRecipient.objects.filter(message=msg).count()
         return context
 
 class MessageDetailView(LoginRequiredMixin, DetailView):
@@ -162,7 +164,7 @@ def member_messages(request):
     )
     
     context = {
-        'message_recipients': message_recipients,
+        'messages_received': message_recipients,
     }
     
     return render(request, 'members/member_messages.html', context)

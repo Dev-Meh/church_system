@@ -1,146 +1,95 @@
-import urllib.request
-import urllib.parse
-import json
-import base64
 import logging
+from twilio.rest import Client
 from django.conf import settings
-from django.contrib import messages
 
 logger = logging.getLogger(__name__)
 
 class SMSService:
-    """SMS service for sending messages to church members using Beem API"""
+    """SMS service for sending messages to church members using Twilio API"""
     
     def __init__(self):
-        self.api_key = getattr(settings, 'SMS_API_KEY', None)
-        self.api_secret = getattr(settings, 'SMS_API_SECRET', None)
-        self.api_url = getattr(settings, 'SMS_API_URL', None)
-        self.sender_id = getattr(settings, 'SMS_SENDER_ID', 'PHM-ARCC')
+        self.account_sid = getattr(settings, 'TWILIO_ACCOUNT_SID', None)
+        self.auth_token = getattr(settings, 'TWILIO_AUTH_TOKEN', None)
+        self.messaging_service_sid = getattr(settings, 'TWILIO_MESSAGING_SERVICE_SID', None)
+        self.twilio_phone_number = getattr(settings, 'TWILIO_PHONE_NUMBER', None)
         self.development_mode = getattr(settings, 'SMS_DEVELOPMENT_MODE', True)
+        
+        self.client = None
+        if self.account_sid and self.auth_token:
+            try:
+                self.client = Client(self.account_sid, self.auth_token)
+            except Exception as e:
+                logger.error(f"Failed to initialize Twilio client: {str(e)}")
     
     def send_sms(self, phone_number, message_text):
-        """Send SMS to a single phone number using Beem API"""
+        """Send SMS to a single phone number using Twilio"""
         try:
-            # For development/testing, just log the SMS
-            if self.development_mode or not self.api_key or not self.api_secret or not self.api_url:
-                logger.info(f"SMS would be sent to {phone_number}: {message_text}")
+            if self.development_mode:
+                logger.info(f"SMS DEVELOPMENT MODE: Would be sent to {phone_number}: {message_text}")
                 return {'success': True, 'message': 'SMS logged (development mode)'}
             
-            # Format phone number for Beem API
-            formatted_phone = self.format_phone_number(phone_number)
-            
-            # Try different payload formats for Beem
-            # Format 1: Original format
-            payload1 = {
-                'source_addr': self.sender_id,
-                'encoding': '0',
-                'schedule_time': '',
-                'message': message_text,
-                'recipients': [
-                    {
-                        'recipient_id': '1',
-                        'dest_addr': formatted_phone
-                    }
-                ]
+            if not self.client:
+                logger.error("Twilio client not initialized. Check credentials.")
+                return {'success': False, 'message': 'SMS service not configured'}
+
+            # Prepare message parameters
+            msg_params = {
+                'to': self.format_phone_number(phone_number),
+                'body': message_text
             }
             
-            # Format 2: Simpler format
-            payload2 = {
-                'api_key': self.api_key,
-                'secret_key': self.api_secret,
-                'sender': self.sender_id,
-                'message': message_text,
-                'recipients': formatted_phone
-            }
+            # Use Messaging Service SID if available, otherwise use phone number
+            if self.messaging_service_sid:
+                msg_params['messaging_service_sid'] = self.messaging_service_sid
+            elif self.twilio_phone_number:
+                msg_params['from_'] = self.twilio_phone_number
+            else:
+                logger.error("Neither Twilio Phone Number nor Messaging Service SID is configured.")
+                return {'success': False, 'message': 'SMS sender not configured'}
+
+            # Send via Twilio
+            message = self.client.messages.create(**msg_params)
             
-            # Format 3: Beem standard format
-            payload3 = {
-                'source_addr': self.sender_id,
-                'message': message_text,
-                'recipients': formatted_phone
-            }
+            logger.info(f"SMS sent successfully to {phone_number}. SID: {message.sid}")
+            return {'success': True, 'sid': message.sid}
             
-            # Create authentication header
-            auth_string = f"{self.api_key}:{self.api_secret}"
-            auth_bytes = auth_string.encode('ascii')
-            auth_b64 = base64.b64encode(auth_bytes).decode('ascii')
-            
-            # Try payload 1 first (original format)
-            data = json.dumps(payload1).encode('utf-8')
-            req = urllib.request.Request(
-                self.api_url,
-                data=data,
-                headers={
-                    'Content-Type': 'application/json',
-                    'Authorization': f'Basic {auth_b64}'
-                }
-            )
-            
-            with urllib.request.urlopen(req, timeout=30) as response:
-                response_data = response.read().decode('utf-8')
-                result = json.loads(response_data)
-                
-                # Log the full response for debugging
-                logger.info(f"Beem API response: {result}")
-                logger.info(f"Beem API status code: {response.status}")
-                
-                # Check Beem API response format
-                if result.get('code') == 100:
-                    logger.info(f"SMS sent successfully to {formatted_phone}")
-                    return {'success': True, 'message': 'SMS sent successfully'}
-                elif result.get('success') == True:
-                    logger.info(f"SMS sent successfully to {formatted_phone}")
-                    return {'success': True, 'message': 'SMS sent successfully'}
-                elif result.get('status') == 'success':
-                    logger.info(f"SMS sent successfully to {formatted_phone}")
-                    return {'success': True, 'message': 'SMS sent successfully'}
-                else:
-                    error_msg = result.get('message', result.get('description', f'Unknown error: {result}'))
-                    logger.error(f"Beem API error: {error_msg}")
-                    return {'success': False, 'message': error_msg}
-                
-        except urllib.error.URLError as e:
-            logger.error(f"SMS network error: {str(e)}")
-            return {'success': False, 'message': 'SMS network error'}
-        except json.JSONDecodeError as e:
-            logger.error(f"SMS response JSON error: {str(e)}")
-            return {'success': False, 'message': 'SMS response error'}
         except Exception as e:
-            logger.error(f"Unexpected SMS error: {str(e)}")
-            return {'success': False, 'message': 'SMS sending failed'}
+            logger.error(f"Twilio SMS error: {str(e)}")
+            return {'success': False, 'message': str(e)}
     
     def format_phone_number(self, phone_number):
-        """Format phone number for Beem API (Tanzania format)"""
+        """Format phone number for Twilio (E.164 format)"""
+        if not phone_number:
+            return None
+            
         # Remove all non-digit characters
         digits_only = ''.join(filter(str.isdigit, str(phone_number)))
         
-        # Format for Beem API (should start with 255 for Tanzania)
+        # If it already looks like E.164 (starts with +), just return it
+        if str(phone_number).startswith('+'):
+            return str(phone_number)
+            
+        # Handle TZ numbers (assuming Tanzania if no prefix)
         if digits_only.startswith('255'):
-            # Already starts with 255, return as-is
-            return digits_only
-        elif phone_number.startswith('+255'):
-            # Already has +255, remove + and return
-            return digits_only
+            return '+' + digits_only
         elif digits_only.startswith('0') and len(digits_only) == 10:
-            # Remove leading 0 and add 255 (e.g., 0712345678 → 255712345678)
-            return '255' + digits_only[1:]
-        elif len(digits_only) == 9 and digits_only.startswith(('6', '7')):
-            # Add 255 prefix for Tanzania mobile numbers (e.g., 712345678 → 255712345678)
-            return '255' + digits_only
-        else:
-            # Unknown format, return as-is
-            return digits_only
+            return '+255' + digits_only[1:]
+        elif len(digits_only) == 9:
+            return '+255' + digits_only
+            
+        # Default fallback: add + if missing
+        return '+' + digits_only if not digits_only.startswith('+') else digits_only
     
     def send_bulk_sms(self, phone_numbers, message_text):
-        """Send SMS to multiple phone numbers using Beem API"""
+        """Send SMS to multiple phone numbers using Twilio"""
         results = []
         for phone in phone_numbers:
-            if phone:  # Only send if phone number exists
+            if phone:
                 result = self.send_sms(phone, message_text)
                 results.append({
                     'phone': phone,
                     'success': result['success'],
-                    'message': result['message']
+                    'message': result.get('message', 'Sent')
                 })
         return results
 

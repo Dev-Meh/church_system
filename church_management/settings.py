@@ -2,13 +2,18 @@
 Django settings for church_management project.
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-y5==$h6-5!)y&dreww3-hfq9bjg_wb%fb9hh2io0mqarxo2=-f'
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / '.env')
 
-DEBUG = True
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-y5==$h6-5!)y&dreww3-hfq9bjg_wb%fb9hh2io0mqarxo2=-f')
+
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = []
 
@@ -64,12 +69,12 @@ WSGI_APPLICATION = 'church_management.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'church',
-        'USER': 'postgres',
-        'PASSWORD': '12345',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': BASE_DIR / os.getenv('DB_NAME', 'db.sqlite3') if os.getenv('DB_ENGINE') == 'django.db.backends.sqlite3' else os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', '12345'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
@@ -130,13 +135,19 @@ SECURE_BROWSER_XSS_FILTER = True
 
 # ── SMS CONFIGURATION ───────────────────────────
 # Beem SMS API Configuration (Tanzania SMS provider)
-SMS_API_KEY = '6e951d16009ae944'  # Beem API key
-SMS_API_SECRET = 'YjZlMDk0NTA3Njk1Njc1MjJjNjNjMDYzNTMwMzgxNTUzZmY3OTE5MzNmNGNjMWM4M2M0YTU4MWRlMDViNTJjOA=='  # Beem secret key
-SMS_API_URL = 'https://apisms.beem.africa/public/v1/send-sms'  # Correct Beem SMS API endpoint
-SMS_SENDER_ID = 'PHM-ARCC'  # Church identifier for SMS
+SMS_API_KEY = os.getenv('SMS_API_KEY', '6e951d16009ae944')
+SMS_API_SECRET = os.getenv('SMS_API_SECRET', 'YjZlMDk0NTA3Njk1Njc1MjJjNjNjMDYzNTMwMzgxNTUzZmY3OTE5MzNmNGNjMWM4M2M0YTU4MWRlMDViNTJjOA==')
+SMS_API_URL = 'https://apisms.beem.africa/public/v1/send-sms'
+SMS_SENDER_ID = os.getenv('SMS_SENDER_ID', 'PHM-ARCC')
 
 # Development mode - set to False in production
-SMS_DEVELOPMENT_MODE = False  # Set to False to enable actual SMS sending
+SMS_DEVELOPMENT_MODE = os.getenv('SMS_DEVELOPMENT_MODE', 'True') == 'True'
+
+# ── TWILIO SMS CONFIGURATION ────────────────────
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+TWILIO_MESSAGING_SERVICE_SID = os.getenv('TWILIO_SERVICE_ID')  # Using TWILIO_SERVICE_ID as messaging service SID
+TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
 
 # ── DJANGO REST FRAMEWORK ───────────────────────
 REST_FRAMEWORK = {

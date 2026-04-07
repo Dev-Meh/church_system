@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load i18n_church %}
 
-{% block title %}Create Message - PHM-ARCC Iyumbu Church Management System{% endblock %}
+{% block title %}{% church_t 'new_message_nav' %} - PHM-ARCC Iyumbu Church Management System{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -182,7 +183,7 @@ textarea.form-control{resize:vertical;min-height:120px;}
         </svg>
         <div class="brand-text">
           <div class="church-name">PHM-ARCC</div>
-          <div class="church-sub">Iyumbu Dodoma</div>
+          <div class="church-sub">{% church_t 'church_name_full' %}</div>
         </div>
       </div>
       <button class="toggle-btn" onclick="toggleSidebar()">
@@ -194,29 +195,29 @@ textarea.form-control{resize:vertical;min-height:120px;}
       <div class="avatar">👨‍⚕️</div>
       <div class="user-info">
         <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
-        <div class="user-role">Pastor</div>
+        <div class="user-role">{% church_t 'pastor' %}</div>
       </div>
     </div>
 
     <div class="nav-menu">
-      <div class="nav-section-label">Communication</div>
+      <div class="nav-section-label">{% church_t 'communication' %}</div>
       <a class="nav-item" href="{% url 'members:message_center' %}">
         <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        <span class="nav-label">Message Center</span>
+        <span class="nav-label">{% church_t 'message_center_nav' %}</span>
       </a>
       <a class="nav-item active" href="{% url 'members:message_create' %}">
         <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 9.5-9.5z"/></svg>
-        <span class="nav-label">New Message</span>
+        <span class="nav-label">{% church_t 'new_message_nav' %}</span>
       </a>
       <a class="nav-item" href="{% url 'members:message_list' %}">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6l3-3"/></svg>
-        <span class="nav-label">Sent Messages</span>
+        <span class="nav-label">{% church_t 'sent_messages_nav' %}</span>
       </a>
       
-      <div class="nav-section-label">Pastoral Dashboard</div>
+      <div class="nav-section-label">{% church_t 'pastoral_dashboard_nav' %}</div>
       <a class="nav-item" href="{% url 'dashboard' %}">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        <span class="nav-label">Dashboard</span>
+        <span class="nav-label">{% church_t 'dashboard' %}</span>
       </a>
     </div>
 
@@ -225,7 +226,7 @@ textarea.form-control{resize:vertical;min-height:120px;}
         {% csrf_token %}
         <button type="submit" class="btn-logout">
           <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-          <span class="nav-label">Logout</span>
+          <span class="nav-label">{% church_t 'logout' %}</span>
         </button>
       </form>
     </div>
@@ -235,10 +236,10 @@ textarea.form-control{resize:vertical;min-height:120px;}
   <div class="main">
     <div class="topbar">
       <div>
-        <h2>Create New Message</h2>
-        <p>PHM-ARCC Iyumbu Dodoma &mdash; Send messages to church members</p>
+        <h2>{% church_t 'create_new_message_header' %}</h2>
+        <p>PHM-ARCC {% church_t 'church_name_full' %} &mdash; {% church_t 'send_message' %}</p>
       </div>
-      <span class="welcome-pill">Welcome, Pastor {{ user.first_name }} {{ user.last_name }}!</span>
+      <span class="welcome-pill">{% church_t 'welcome_greeting' %}, {% church_t 'pastor' %} {{ user.first_name }} {{ user.last_name }}!</span>
     </div>
 
     <div class="page-body">
@@ -252,8 +253,8 @@ textarea.form-control{resize:vertical;min-height:120px;}
 
       <div class="form-container">
         <div class="form-header">
-          <div class="form-title">Compose Message</div>
-          <div class="form-sub">Send a message to church members with delivery tracking</div>
+          <div class="form-title">{% church_t 'compose_message_title' %}</div>
+          <div class="form-sub">{% church_t 'message_broadcast_help' %}</div>
         </div>
 
         <form method="post">
@@ -261,31 +262,31 @@ textarea.form-control{resize:vertical;min-height:120px;}
 
           <!-- Recipients Information -->
           <div class="recipients-info">
-            <div class="recipients-title">Message Recipients</div>
+            <div class="recipients-title">{% church_t 'message_recipients_label' %}</div>
             <div class="recipients-stats">
               <div class="recipients-stat">
                 <span class="recipients-number">{{ member_count }}</span>
-                <span class="recipients-label">Total Members</span>
+                <span class="recipients-label">{% church_t 'total_members' %}</span>
               </div>
               <div class="recipients-stat">
                 <span class="recipients-number">100%</span>
-                <span class="recipients-label">Delivery Rate</span>
+                <span class="recipients-label">{% church_t 'delivery_rate_label' %}</span>
               </div>
               <div class="recipients-stat">
                 <span class="recipients-number">Real-time</span>
-                <span class="recipients-label">Tracking</span>
+                <span class="recipients-label">{% church_t 'tracking_label' %}</span>
               </div>
             </div>
           </div>
 
           <!-- Message Details -->
           <div class="form-section">
-            <div class="section-title">Message Details</div>
+            <div class="section-title">{% church_t 'message_details_header' %}</div>
             
             <div class="form-row">
               <div class="form-group">
                 <label for="{{ form.title.id_for_label }}" class="form-label">
-                  Message Title <span class="required">*</span>
+                  {% church_t 'message_title_label' %} <span class="required">*</span>
                 </label>
                 {{ form.title }}
                 {% if form.title.errors %}
@@ -297,7 +298,7 @@ textarea.form-control{resize:vertical;min-height:120px;}
 
               <div class="form-group">
                 <label for="{{ form.priority.id_for_label }}" class="form-label">
-                  Priority Level
+                  {% church_t 'priority_level_label' %}
                 </label>
                 {{ form.priority }}
                 {% if form.priority.errors %}
@@ -310,7 +311,7 @@ textarea.form-control{resize:vertical;min-height:120px;}
 
             <div class="form-group">
               <label for="{{ form.content.id_for_label }}" class="form-label">
-                Message Content <span class="required">*</span>
+                {% church_t 'message_content_label' %} <span class="required">*</span>
               </label>
               {{ form.content }}
               {% if form.content.errors %}
@@ -323,13 +324,13 @@ textarea.form-control{resize:vertical;min-height:120px;}
 
           <!-- Recipient Settings -->
           <div class="form-section">
-            <div class="section-title">Recipients</div>
+            <div class="section-title">{% church_t 'recipients' %}</div>
             
             <div class="form-group">
               <div class="form-check-group">
                 {{ form.send_to_all }}
                 <label for="{{ form.send_to_all.id_for_label }}" class="form-label">
-                  Send to all members
+                  {% church_t 'send_to_all_label' %}
                 </label>
               </div>
               <div class="form-help">
@@ -339,7 +340,7 @@ textarea.form-control{resize:vertical;min-height:120px;}
 
             <div class="form-group">
               <label for="{{ form.target_roles.id_for_label }}" class="form-label">
-                Target Roles (if not sending to all)
+                {% church_t 'target_roles' %} ({% church_t 'if_not_sending_to_all' %})
               </label>
               {{ form.target_roles }}
               {% if form.target_roles.errors %}
@@ -355,10 +356,10 @@ textarea.form-control{resize:vertical;min-height:120px;}
 
           <div class="submit-section">
             <button type="submit" class="submit-btn">
-              Send Message
+              {% church_t 'send_message_btn' %}
             </button>
             <a href="{% url 'members:message_center' %}" class="cancel-btn">
-              Cancel
+              {% church_t 'cancel' %}
             </a>
           </div>
         </form>

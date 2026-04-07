@@ -122,11 +122,18 @@ def member_dashboard(request):
     # Available campaigns
     available_campaigns = DonationCampaign.objects.filter(status='active').order_by('-created_at')[:5]
     
+    # Unread messages count
+    unread_messages_count = MessageRecipient.objects.filter(
+        recipient=user,
+        is_read=False
+    ).count()
+    
     context = {
         'user': user,
         'user_donations': user_donations,
         'total_user_donations': total_user_donations,
         'available_campaigns': available_campaigns,
+        'unread_messages_count': unread_messages_count,
         'is_pastor': False,
     }
     

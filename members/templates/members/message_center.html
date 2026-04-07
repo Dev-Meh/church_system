@@ -233,7 +233,7 @@ html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; mar
         <h2>Message Center</h2>
         <p>PHM-ARCC Iyumbu Dodoma &mdash; Church Communication Hub</p>
       </div>
-      <span class="welcome-pill">Welcome, Pastor {{ user.first_name }} {{ user.last_name }}!</span>
+      <span class="welcome-pill">{% church_t 'welcome_greeting' %}, {% church_t 'pastor' %} {{ user.first_name }} {{ user.last_name }}!</span>
     </div>
 
     <div class="page-body">

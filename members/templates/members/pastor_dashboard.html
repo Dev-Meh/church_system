@@ -1,9 +1,10 @@
+{% load i18n_church %}
 <!DOCTYPE html>
 <html lang="{{ current_language|default:'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Pastor Dashboard | PHM-ARCC Iyumbu CMS</title>
+    <title>{% church_t 'pastor_dashboard_title' %} | PHM-ARCC Iyumbu CMS</title>
     <!-- Font Awesome 6 (free icons) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Google Fonts -->
@@ -640,7 +641,7 @@
                 <img src="/media/church-logo.jpeg" alt="Church Logo" class="church-logo-img" onerror="this.onerror=null; this.style.display='none';">
                 <div class="brand-text">
                     <h3>PHM-ARCC</h3>
-                    <p>Iyumbu Dodoma</p>
+                    <p>{% church_t 'church_name_full' %}</p>
                 </div>
             </div>
             <button class="nav-close-btn" id="closeSidebarBtn"><i class="fas fa-times"></i></button>
@@ -654,8 +655,8 @@
             </div>
             <div class="user-info">
                 <div class="user-name">Pastor Wilson</div>
-                <div class="user-role">Senior Pastor</div>
-                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">Welcome back ✝️</div>
+                <div class="user-role">{% church_t 'senior_pastor' %}</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">{% church_t 'welcome_back_emoji' %}</div>
                 <!-- Language Selector -->
                 <div style="margin-top: 8px;">
                     {% include 'members/language_selector.html' %}
@@ -666,52 +667,52 @@
         <div class="nav-menu">
             <!-- All important links as per original design -->
             <a href="#" class="nav-item active">
-                <i class="fas fa-tachometer-alt"></i> <span>Main Dashboard</span>
+                <i class="fas fa-tachometer-alt"></i> <span>{% church_t 'main_dashboard' %}</span>
             </a>
             <a href="#" class="nav-item">
-                <i class="fas fa-microphone"></i> <span>Sermons</span>
+                <i class="fas fa-microphone"></i> <span>{% church_t 'sermons' %}</span>
             </a>
             
             <!-- PASTORAL QUICK ACTIONS -->
-            <div class="nav-section-divider"></div>
-            <div class="nav-section-label">Quick Actions</div>
+            {% church_t 'quick_actions' %}
+            <div class="nav-section-label">{% church_t 'quick_actions' %}</div>
             
             <!-- Communication -->
             <a href="{% url 'members:message_create' %}" class="nav-item">
-                <i class="fas fa-envelope"></i> <span>Create Message</span>
+                <i class="fas fa-envelope"></i> <span>{% church_t 'create_message' %}</span>
             </a>
             <a href="{% url 'members:member_messages' %}" class="nav-item">
-                <i class="fas fa-inbox"></i> <span>View Messages</span>
+                <i class="fas fa-inbox"></i> <span>{% church_t 'view_messages' %}</span>
             </a>
             
             <!-- Member Management -->
             <a href="{% url 'members:member_list' %}" class="nav-item">
-                <i class="fas fa-user-friends"></i> <span>All Members</span>
+                <i class="fas fa-user-friends"></i> <span>{% church_t 'all_members' %}</span>
             </a>
             <a href="{% url 'profile' %}" class="nav-item">
-                <i class="fas fa-user-edit"></i> <span>Edit Profile</span>
+                <i class="fas fa-user-edit"></i> <span>{% church_t 'edit_profile' %}</span>
             </a>
             
             <!-- Sermons -->
             <a href="{% url 'sermons:sermon_list' %}" class="nav-item">
-                <i class="fas fa-microphone"></i> <span>All Sermons</span>
+                <i class="fas fa-microphone"></i> <span>{% church_t 'all_sermons' %}</span>
             </a>
             <a href="{% url 'sermons:sermon_create' %}" class="nav-item">
-                <i class="fas fa-plus"></i> <span>Create Sermon</span>
+                <i class="fas fa-plus"></i> <span>{% church_t 'create_sermon' %}</span>
             </a>
             <a href="{% url 'sermons:series_list' %}" class="nav-item">
-                <i class="fas fa-book"></i> <span>Sermon Series</span>
+                <i class="fas fa-book"></i> <span>{% church_t 'series_label' %}</span>
             </a>
             
             <!-- Administration -->
             <a href="/admin/" class="nav-item">
-                <i class="fas fa-shield-alt"></i> <span>Admin Panel</span>
+                <i class="fas fa-shield-alt"></i> <span>{% church_t 'admin_panel' %}</span>
             </a>
             
             <form method="post" action="{% url 'members:logout' %}" style="display: contents;">
                 {% csrf_token %}
                 <button type="submit" class="nav-item logout-btn" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                    <i class="fas fa-sign-out-alt"></i> <span>{% church_t 'logout' %}</span>
                 </button>
             </form>
         </div>
@@ -734,26 +735,26 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-number">{{ total_members }}</div>
-                    <div class="stat-label">Total Members</div>
+                    <div class="stat-label">{% church_t 'total_members' %}</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">{{ active_members }}</div>
-                    <div class="stat-label">Active Members</div>
+                    <div class="stat-label">{% church_t 'active_members_stat' %}</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">{{ new_members_this_month }}</div>
-                    <div class="stat-label">New This Month</div>
+                    <div class="stat-label">{% church_t 'new_this_month' %}</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${{ total_donations|default:0 }}</div>
-                    <div class="stat-label">Total Donations</div>
+                    <div class="stat-label">{% church_t 'total_donations' %}</div>
                 </div>
             </div>
 
             <!-- ACTIVE MEMBERS -->
             <div class="panel">
                 <div class="panel-hdr">
-                    <i class="fas fa-users"></i> <span>Active Members</span>
+                    <i class="fas fa-users"></i> <span>{% church_t 'active_members' %}</span>
                 </div>
                 <div class="panel-body">
                     {% if active_members_list %}
@@ -764,14 +765,14 @@
                                     <div class="member-name">{{ member.first_name }} {{ member.last_name }}</div>
                                     <div class="member-email">{{ member.email }}</div>
                                     <div class="member-meta">
-                                        <span class="member-joined">Joined: {{ member.date_joined|date:"M d, Y" }}</span>
-                                        <span class="member-status active">✅ Active</span>
+                                        <span class="member-joined">{% church_t 'joined_label' %} {{ member.date_joined|date:"M d, Y" }}</span>
+                                        <span class="member-status active">✅ {% church_t 'active_status' %}</span>
                                     </div>
                                 </div>
                             </div>
                         {% endfor %}
                     {% else %}
-                        <p style="text-align:center;color:var(--text-muted);padding:1rem;">👥 No active members found</p>
+                        <p style="text-align:center;color:var(--text-muted);padding:1rem;">👥 {% church_t 'no_active_members' %}</p>
                     {% endif %}
                 </div>
             </div>
