@@ -234,8 +234,8 @@ html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; mar
           <span>Messages from Church Leadership</span>
         </div>
         <div class="panel-body">
-          {% if messages_received %}
-            {% for recipient in messages_received %}
+          {% if message_recipients %}
+            {% for recipient in message_recipients %}
               <div class="message-item {% if not recipient.is_read %}unread{% endif %}">
                 <div class="message-header">
                   <div>

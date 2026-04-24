@@ -175,42 +175,178 @@ html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; mar
 
 @media(max-width:768px){
   .stat-grid{grid-template-columns:1fr 1fr;}
+  .bottom-grid{grid-template-columns:1fr;}
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-    <!-- Welcome Message -->
-    <div class="welcome-message">
-        <h2>Welcome, {{ user.first_name }} {{ user.last_name }}!</h2>
-        <p>PHM-ARCC Iyumbu Dodoma &mdash; Your Church Dashboard</p>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <svg width="26" height="26" viewBox="0 0 48 48" fill="none" style="flex-shrink:0;">
+          <rect x="20" y="4" width="8" height="40" rx="2" fill="#c8a84b"/>
+          <rect x="6" y="16" width="36" height="8" rx="2" fill="#c8a84b"/>
+        </svg>
+        <div class="brand-text">
+          <div class="church-name">PHM-ARCC</div>
+          <div class="church-sub">Iyumbu Dodoma</div>
+        </div>
+      </div>
+      <button class="toggle-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
     </div>
 
-    <!-- Dashboard Content -->
-    <div class="dashboard-content">
-        <!-- Quick Actions -->
-        <div class="panel">
-            <div class="panel-hdr"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>Quick Actions</span></div>
-            <div class="panel-body">
-                <a class="action-btn" href="{% url 'profile_edit' %}"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit Profile</a>
-                <a class="action-btn" href="{% url 'donations:home' %}"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Make Donation</a>
-                <a class="action-btn" href="#"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Submit Prayer</a>
-                <a class="action-btn" href="#"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Send Message</a>
-                <form method="POST" action="{% url 'members:logout' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="action-btn danger" style="width:100%;border:none;cursor:pointer;">
-                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5M21 12H9"/></svg>
-                         Logout
-                       </button>
-                    </form>
-            </div>
-        </div>
+    <div class="user-area">
+      <div class="avatar">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
+        <div class="user-role">Church Member</div>
+      </div>
     </div>
+
+    <div class="nav-menu">
+      <div class="nav-section-label">Main Menu</div>
+      <a class="nav-item active" href="{% url 'dashboard' %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item" href="{% url 'profile' %}">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span class="nav-label">My Profile</span>
+      </a>
+      <div class="nav-section-label">Church</div>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <span class="nav-label">Events</span><span class="nav-badge">12</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span class="nav-label">Sermons</span><span class="nav-badge">8</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        <span class="nav-label">Prayers</span><span class="nav-badge">25</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span class="nav-label">Messages</span>
+      </a>
+      <div class="nav-section-label">Finance</div>
+      <a class="nav-item" href="{% url 'donations:home' %}">
+        <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span class="nav-label">Donations</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8"/></svg>
+        <span class="nav-label">Financials</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <form method="POST" action="{% url 'members:logout' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn-logout">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          <span class="nav-label">Logout</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h2>Dashboard</h2>
+        <p>PHM-ARCC Iyumbu Dodoma &mdash; Church Management System</p>
+      </div>
+      <span class="welcome-pill">Welcome, {{ user.first_name }} {{ user.last_name }}!</span>
+    </div>
+
+    <div class="page-body">
+      <div class="stat-grid">
+        <div class="stat-card blue">
+          <div class="sc-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+          <div class="sc-label">Profile</div><div class="sc-value">You</div>
+          <div class="sc-desc">Manage your personal info</div>
+          <a class="btn-sc" href="{% url 'profile' %}">View Profile</a>
+        </div>
+        <div class="stat-card gold">
+          <div class="sc-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          <div class="sc-label">Events</div><div class="sc-value">12</div>
+          <div class="sc-desc">Upcoming church events</div>
+          <a class="btn-sc" href="#">View Events</a>
+        </div>
+        <div class="stat-card green">
+          <div class="sc-icon"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+          <div class="sc-label">Prayers</div><div class="sc-value">25</div>
+          <div class="sc-desc">Active prayer requests</div>
+          <a class="btn-sc" href="#">View Prayers</a>
+        </div>
+        <div class="stat-card teal">
+          <div class="sc-icon"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+          <div class="sc-label">Sermons</div><div class="sc-value">8</div>
+          <div class="sc-desc">New sermons this month</div>
+          <a class="btn-sc" href="#">View Sermons</a>
+        </div>
+      </div>
+
+      <div class="bottom-grid">
+        <div class="panel">
+          <div class="panel-hdr"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>Announcements</span></div>
+          <div class="panel-body">
+            <div class="announce-box">
+              <h6>Welcome to PHM-ARCC Iyumbu CMS!</h6>
+              <p>This is your personal dashboard. Access all church services and manage your profile from here.</p>
+            </div>
+            <p class="announce-muted">More announcements will appear here as published by administrators.</p>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3"/></svg><span>Quick Actions</span></div>
+          <div class="panel-body">
+            <a class="action-btn" href="{% url 'profile_edit' %}"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit Profile</a>
+            <a class="action-btn" href="{% url 'donations:home' %}"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Make Donation</a>
+            <a class="action-btn" href="#"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>Submit Prayer</a>
+            <a class="action-btn" href="#"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Send Message</a>
+            <form method="POST" action="{% url 'members:logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="action-btn danger" style="width:100%;border:none;cursor:pointer;">
+                <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                Logout
+              </button>
+            </form>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Church Statistics</span></div>
+          <div class="panel-body" style="padding:0;">
+            <div class="stats-row">
+              <div class="stat-item"><div class="big">500+</div><div class="small">Members</div></div>
+              <div class="stat-item"><div class="big">12</div><div class="small">Events</div></div>
+            </div>
+            <div class="stats-row" style="border-top:1px solid rgba(255,255,255,0.06);">
+              <div class="stat-item"><div class="big">25</div><div class="small">Prayers</div></div>
+              <div class="stat-item"><div class="big">8</div><div class="small">Sermons</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+          </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
 </script>
 {% endblock %}

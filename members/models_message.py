@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.utils import timezone
 
 class Message(models.Model):
@@ -13,7 +14,7 @@ class Message(models.Model):
     
     title = models.CharField(max_length=200)
     content = models.TextField()
-    sender = models.ForeignKey('members.ChurchUser', on_delete=models.CASCADE, related_name='sent_messages')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_messages')
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -47,7 +48,7 @@ class MessageRecipient(models.Model):
     """Track message delivery and read status for each recipient"""
     
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='message_recipients')
-    recipient = models.ForeignKey('members.ChurchUser', on_delete=models.CASCADE, related_name='received_messages')
+    recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='received_messages')
     is_delivered = models.BooleanField(default=False)
     delivered_at = models.DateTimeField(null=True, blank=True)
     is_read = models.BooleanField(default=False)
@@ -76,7 +77,7 @@ class Announcement(models.Model):
     
     title = models.CharField(max_length=200)
     content = models.TextField()
-    author = models.ForeignKey('members.ChurchUser', on_delete=models.CASCADE, related_name='announcements')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='announcements')
     priority = models.CharField(
         max_length=10, 
         choices=Message.PRIORITY_CHOICES, 

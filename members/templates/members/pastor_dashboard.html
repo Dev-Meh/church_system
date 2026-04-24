@@ -685,6 +685,16 @@
                 <i class="fas fa-inbox"></i> <span>{% church_t 'view_messages' %}</span>
             </a>
             
+            <!-- Events -->
+            <a href="{% url 'events:event_list' %}" class="nav-item">
+                <i class="fas fa-calendar"></i> <span>{% church_t 'events' %}</span>
+            </a>
+            {% if user.role == 'pastor' %}
+            <a href="{% url 'events:event_create' %}" class="nav-item">
+                <i class="fas fa-plus"></i> <span>{% church_t 'create_event' %}</span>
+            </a>
+            {% endif %}
+            
             <!-- Member Management -->
             <a href="{% url 'members:member_list' %}" class="nav-item">
                 <i class="fas fa-user-friends"></i> <span>{% church_t 'all_members' %}</span>
@@ -726,28 +736,33 @@
     <!-- MAIN CONTENT AREA -->
     <div class="main-content" id="mainContent">
         <div class="dashboard-content">
-            <!-- Language Selector - Top Right -->
-            <div style="position: absolute; top: 20px; right: 20px; z-index: 100;">
-                {% include 'members/language_selector.html' %}
-            </div>
             
-            <!-- STATISTICS CARDS -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number">{{ total_members }}</div>
-                    <div class="stat-label">{% church_t 'total_members' %}</div>
+            <!-- STATS GRID -->
+            <div class="stats-grid" id="statsGrid">
+                <!-- Stats will be rendered by JavaScript -->
+            </div>
+
+            <!-- RECENT MESSAGES -->
+            <div class="panel">
+                <div class="panel-hdr">
+                    <i class="fas fa-envelope"></i> <span>{% church_t 'recent_messages' %}</span>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{ active_members }}</div>
-                    <div class="stat-label">{% church_t 'active_members_stat' %}</div>
+                <div class="panel-body">
+                    <div id="recentMessagesList">
+                        <!-- Messages will be rendered by JavaScript -->
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{ new_members_this_month }}</div>
-                    <div class="stat-label">{% church_t 'new_this_month' %}</div>
+            </div>
+
+            <!-- RECENT DONATIONS -->
+            <div class="panel">
+                <div class="panel-hdr">
+                    <i class="fas fa-donate"></i> <span>{% church_t 'recent_donations_panel' %}</span>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number">${{ total_donations|default:0 }}</div>
-                    <div class="stat-label">{% church_t 'total_donations' %}</div>
+                <div class="panel-body">
+                    <div id="recentDonationsList">
+                        <!-- Donations will be rendered by JavaScript -->
+                    </div>
                 </div>
             </div>
 
@@ -776,45 +791,41 @@
                     {% endif %}
                 </div>
             </div>
-
-            
-                    </div>
     </div>
 
     <script>
-        // ---------- MOCK DATA ----------
-        const dashboardData = {
-            totalMembers: 487,
-            activeMembers: 412,
-            newMembersThisMonth: 24,
-            totalDonations: 14320,
-            activeMembersList: [
-                { firstName: "Grace", lastName: "Mkono", email: "grace.m@phm.org", joined: "2025-02-18", status: "active" },
-                { firstName: "Emmanuel", lastName: "Juma", email: "emma.j@phm.org", joined: "2025-02-10", status: "active" },
-                { firstName: "Sarah", lastName: "Lukas", email: "sarah.l@phm.org", joined: "2025-02-05", status: "active" },
-                { firstName: "David", lastName: "Mushi", email: "david.m@phm.org", joined: "2025-01-28", status: "active" },
-                { firstName: "Esther", lastName: "Mwinyi", email: "esther.m@phm.org", joined: "2025-01-22", status: "active" },
-                { firstName: "John", lastName: "Makasi", email: "john.m@phm.org", joined: "2024-12-15", status: "active" },
-                { firstName: "Lydia", lastName: "Charles", email: "lydia.c@phm.org", joined: "2024-11-20", status: "active" },
-                { firstName: "Peter", lastName: "Mwita", email: "peter.m@phm.org", joined: "2024-10-08", status: "active" }
-            ],
-            recentDonations: [
-                { donor: "John Makasi", campaign: "Building Fund", amount: 250, date: "2025-02-20 10:30" },
-                { donor: "Lydia Charles", campaign: "Youth Outreach", amount: 120, date: "2025-02-19 14:15" },
-                { donor: "Peter Mwita", campaign: "Tithe", amount: 500, date: "2025-02-18 09:45" },
-                { donor: "Anna Ndege", campaign: "Missions", amount: 80, date: "2025-02-17 18:20" },
-                { donor: "Samuel Kipanga", campaign: "Building Fund", amount: 320, date: "2025-02-16 11:00" }
-            ],
-            campaigns: [
-                { title: "New Sanctuary Construction", description: "Expanding worship space", raised: 24800, goal: 50000, donors: 124 },
-                { title: "Youth Discipleship Program", description: "Equipping young believers", raised: 12500, goal: 20000, donors: 89 },
-                { title: "Community Food Bank", description: "Supporting families in Dodoma", raised: 8750, goal: 15000, donors: 56 }
-            ]
-        };
+        // ---------- REAL DATA FROM DJANGO CONTEXT ----------
+        const dashboardData = JSON.parse('{{ dashboard_data|safe|escapejs }}');
 
         function formatDate(isoString) {
             const d = new Date(isoString);
             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function renderRecentMessages() {
+            const container = document.getElementById('recentMessagesList');
+            if(!dashboardData.recentMessages.length){
+                container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">📧 No messages sent yet</p>';
+                return;
+            }
+            let html = '';
+            dashboardData.recentMessages.forEach(m => {
+                const parsedDate = new Date(m.date);
+                const dateStr = parsedDate.toLocaleDateString() + ' ' + parsedDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                html += `
+                    <div class="message-item">
+                        <div style="flex:1">
+                            <div class="member-name">${m.title}</div>
+                            <div style="font-size:0.7rem;color:var(--text-secondary)">From: ${m.sender}</div>
+                            <div style="font-size:0.65rem;color:var(--text-muted)">${dateStr}</div>
+                        </div>
+                        <div class="message-status">
+                            <span style="font-size:0.8rem;">📤 ${m.recipients} recipients</span>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
         }
 
         function renderStats() {
@@ -905,13 +916,10 @@
         function renderQuickActions() {
             const container = document.getElementById('actionButtons');
             container.innerHTML = `
-                <a href="#" class="action-btn"><i class="fas fa-envelope-open-text"></i> Create Message to Congregation</a>
-                <a href="#" class="action-btn"><i class="fas fa-bullhorn"></i> Create Announcement</a>
-                <a href="#" class="action-btn"><i class="fas fa-users"></i> View All Members Directory</a>
-                <a href="#" class="action-btn"><i class="fas fa-chart-pie"></i> Financial Reports & Overview</a>
-                <a href="#" class="action-btn"><i class="fas fa-calendar-plus"></i> Schedule Event / Service</a>
-                <a href="#" class="action-btn"><i class="fas fa-hand-sparkles"></i> Prayer Request Follow-up</a>
-                <a href="#" class="action-btn"><i class="fas fa-church"></i> View All Campaigns</a>
+                <a href="{% url 'members:message_create' %}" class="action-btn"><i class="fas fa-envelope-open-text"></i> {% church_t 'create_message_to_congregation' %}</a>
+                <a href="#" class="action-btn"><i class="fas fa-bullhorn"></i> {% church_t 'create_announcement' %}</a>
+                <a href="#" class="action-btn"><i class="fas fa-users"></i> {% church_t 'view_all_members_directory' %}</a>
+                <a href="#" class="action-btn"><i class="fas fa-chart-pie"></i> {% church_t 'financial_reports_overview' %}</a>
             `;
         }
 
@@ -1030,12 +1038,16 @@
         });
         
         function initDashboard() {
-            renderQuickActions();
             if (window.innerWidth > 780) {
                 setMinimized(false);
             } else {
                 verticalNav.classList.remove('mobile-open');
             }
+            // Render all dashboard components
+            renderStats();
+            renderRecentMessages();
+            renderRecentDonations();
+            renderActiveMembers();
         }
         
         initDashboard();

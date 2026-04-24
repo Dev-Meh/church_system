@@ -1,11 +1,9 @@
-from django.utils import translation
 from django.conf import settings
-from django.urls import reverse
-
-from .i18n_strings import EXTRA_EN, EXTRA_SW
+from django.utils import translation
+from django.contrib import messages
 
 class LanguageManager:
-    """Handle language switching and management for the church system"""
+    """Manage language switching and translations"""
     
     SUPPORTED_LANGUAGES = {
         'en': {
@@ -13,21 +11,130 @@ class LanguageManager:
             'name': 'English',
             'native_name': 'English',
             'flag': '🇬🇧',
-            'direction': 'ltr'
+            'direction': 'ltr',
         },
         'sw': {
             'code': 'sw',
             'name': 'Swahili',
             'native_name': 'Kiswahili',
             'flag': '🇹🇿',
-            'direction': 'ltr'
+            'direction': 'ltr',
         }
+    }
+    
+    TRANSLATIONS = {
+        # Navigation and common terms
+        'dashboard': {'en': 'Dashboard', 'sw': 'Dashibodi'},
+        'members': {'en': 'Members', 'sw': 'Wanachama'},
+        'messages': {'en': 'Messages', 'sw': 'Ujumbe'},
+        'sermons': {'en': 'Sermons', 'sw': 'Mahubiri'},
+        'donations': {'en': 'Donations', 'sw': 'Michango'},
+        'events': {'en': 'Events', 'sw': 'Matukio'},
+        'profile': {'en': 'Profile', 'sw': 'Wasifu'},
+        'settings': {'en': 'Settings', 'sw': 'Mipangilio'},
+        'logout': {'en': 'Logout', 'sw': 'Toka'},
+        'login': {'en': 'Login', 'sw': 'Ingia'},
+        
+        # Form labels and buttons
+        'send': {'en': 'Send', 'sw': 'Tuma'},
+        'cancel': {'en': 'Cancel', 'sw': 'Ghairi'},
+        'save': {'en': 'Save', 'sw': 'Hifadhi'},
+        'edit': {'en': 'Edit', 'sw': 'Hariri'},
+        'delete': {'en': 'Delete', 'sw': 'Futa'},
+        'create': {'en': 'Create', 'sw': 'Unda'},
+        'update': {'en': 'Update', 'sw': 'Sasisha'},
+        'view': {'en': 'View', 'sw': 'Ona'},
+        'back': {'en': 'Back', 'sw': 'Rudi'},
+        
+        # Dashboard specific labels
+        'total_donations': {'en': 'Total Donations', 'sw': 'Jumla ya Michango'},
+        'donations_made': {'en': 'Donations Made', 'sw': 'Michango Iliyotolewa'},
+        'member_since': {'en': 'Member Since', 'sw': 'Mwanachama Tangu'},
+        'recent_donations_panel': {'en': 'Recent Donations', 'sw': 'Michango ya Karibuni'},
+        'make_donation': {'en': 'Make Donation', 'sw': 'Toa Michango'},
+        'edit_profile': {'en': 'Edit Profile', 'sw': 'Hariri Wasifu'},
+        'member_dashboard_title': {'en': 'Member Dashboard', 'sw': 'Dashibodi ya Mwanachama'},
+        'quick_actions': {'en': 'Quick Actions', 'sw': 'Hatua za Haraka'},
+        'send_message': {'en': 'Send Message', 'sw': 'Tuma Ujumbe'},
+        'main_menu': {'en': 'Main Menu', 'sw': 'Menyu Kuu'},
+        'main_dashboard': {'en': 'Main Dashboard', 'sw': 'Dashibodi Kuu'},
+        
+        # Navigation items
+        'create_message': {'en': 'Create Message', 'sw': 'Unda Ujumbe'},
+        'view_messages': {'en': 'View Messages', 'sw': 'Ona Ujumbe'},
+        'all_members': {'en': 'All Members', 'sw': 'Wanachama Wote'},
+        'create_sermon': {'en': 'Create Sermon', 'sw': 'Unda Hubo'},
+        'series_label': {'en': 'Series', 'sw': 'Mfululizo'},
+        'admin_panel': {'en': 'Admin Panel', 'sw': 'Bodi ya Utawala'},
+        
+        # Message center navigation
+        'message_center_nav': {'en': 'Message Center', 'sw': 'Kituo cha Ujumbe'},
+        'new_message_nav': {'en': 'New Message', 'sw': 'Ujumbe Mpya'},
+        'sent_messages_nav': {'en': 'Sent Messages', 'sw': 'Ujumbe Uliotumwa'},
+        
+        # Pastor quick actions
+        'create_message_to_congregation': {'en': 'Create Message to Congregation', 'sw': 'Unda Ujumbe kwa Jumuiya'},
+        'create_announcement': {'en': 'Create Announcement', 'sw': 'Unda Tangazo'},
+        'view_all_members_directory': {'en': 'View All Members Directory', 'sw': 'Ona Orodha ya Wanachama Wote'},
+        'financial_reports_overview': {'en': 'Financial Reports & Overview', 'sw': 'Ripoti za Fedha na Muhtasari'},
+        
+        # Message related
+        'message_title': {'en': 'Message Title', 'sw': 'Kichwa cha Ujumbe'},
+        'message_content': {'en': 'Message Content', 'sw': 'Maudhui ya Ujumbe'},
+        'send_message': {'en': 'Send Message', 'sw': 'Tuma Ujumbe'},
+        'my_messages': {'en': 'My Messages', 'sw': 'Ujumbe Wangu'},
+        'all_messages': {'en': 'All Messages', 'sw': 'Ujumbe Zote'},
+        'unread_messages': {'en': 'Unread', 'sw': 'Zisizosomwa'},
+        'delivered_messages': {'en': 'Delivered', 'sw': 'Zimetumwa'},
+        'recent_messages': {'en': 'Recent Messages', 'sw': 'Ujumbe wa Karibuni'},
+        
+        # Message form labels
+        'compose_message_title': {'en': 'Compose Message', 'sw': 'Andika Ujumbe'},
+        'message_recipients_label': {'en': 'Message Recipients', 'sw': 'Wapokeaji wa Ujumbe'},
+        'message_broadcast_help': {'en': 'Broadcast a message to all church members', 'sw': 'Tuma ujumbe kwa wanachama wote wa kanisa'},
+        'message_details_header': {'en': 'Message Details', 'sw': 'Maelezo ya Ujumbe'},
+        'delivery_rate_label': {'en': 'Delivery Rate', 'sw': 'Kiwango cha Uwasilishaji'},
+        'tracking_label': {'en': 'Tracking', 'sw': 'Ufuatiliaji'},
+        
+        # Status messages
+        'no_active_members': {'en': 'No active members found', 'sw': 'Hakuna wanachama walio hai'},
+        
+        # Form labels
+        'message_title_label': {'en': 'Message Title', 'sw': 'Kichwa cha Ujumbe'},
+        'priority_level_label': {'en': 'Priority Level', 'sw': 'Kiwango cha Kipaumbele'},
+        'send_to_all_label': {'en': 'Send to All Members', 'sw': 'Tuma kwa Wanachama Wote'},
+        'recipients': {'en': 'Recipients', 'sw': 'Wapokeaji'},
+        'target_roles': {'en': 'Target Roles (if not sending to all)', 'sw': 'Viti Malengo (kama hautumii kwa wote)'},
+        'send_message_btn': {'en': 'Send Message', 'sw': 'Tuma Ujumbe'},
+        
+        # Sermon related
+        'all_sermons': {'en': 'All Sermons', 'sw': 'Mahubiri Yote'},
+        'featured_sermons': {'en': 'Featured Sermons', 'sw': 'Mahubiri Yanayopendwa'},
+        'sermon_series': {'en': 'Sermon Series', 'sw': 'Mfululizo wa Mahubiri'},
+        'listen': {'en': 'Listen', 'sw': 'Sikiliza'},
+        'download': {'en': 'Download', 'sw': 'Pakua'},
+        
+        # Status and feedback
+        'success': {'en': 'Success', 'sw': 'Mafanikio'},
+        'error': {'en': 'Error', 'sw': 'Kosa'},
+        'loading': {'en': 'Loading', 'sw': 'Inapakia'},
+        'no_data': {'en': 'No data available', 'sw': 'Hakuna data inapatikana'},
+        'confirm': {'en': 'Are you sure?', 'sw': 'Una uhakika?'},
+        'yes': {'en': 'Yes', 'sw': 'Ndio'},
+        'no': {'en': 'No', 'sw': 'Hapana'},
+        
+        # Dashboard stats
+        'total_members': {'en': 'Total Members', 'sw': 'Jumla ya Wanachama'},
+        'active_members': {'en': 'Active Members', 'sw': 'Wanachama Wenye Vitendo'},
+        'new_members': {'en': 'New Members', 'sw': 'Wanachama Wapya'},
+        'total_donations': {'en': 'Total Donations', 'sw': 'Jumla ya Michango'},
+        'this_month': {'en': 'This Month', 'sw': 'Mwezi Huu'},
     }
     
     @classmethod
     def get_supported_languages(cls):
-        """Get list of supported languages"""
-        return list(cls.SUPPORTED_LANGUAGES.values())
+        """Get all supported languages"""
+        return cls.SUPPORTED_LANGUAGES
     
     @classmethod
     def get_language_info(cls, language_code):
@@ -35,222 +142,24 @@ class LanguageManager:
         return cls.SUPPORTED_LANGUAGES.get(language_code, cls.SUPPORTED_LANGUAGES['en'])
     
     @classmethod
+    def get_current_language(cls, request):
+        """Get current language from session or default"""
+        return request.session.get('django_language', 'en')
+    
+    @classmethod
     def set_language(cls, request, language_code):
-        """Activate language for this request and persist preference in session."""
+        """Set language in session"""
         if language_code in cls.SUPPORTED_LANGUAGES:
             request.session['django_language'] = language_code
-            translation.activate(language_code)
-            request.LANGUAGE_CODE = cls.normalize_language_code(
-                translation.get_language() or language_code
-            )
+            request.session.modified = True
             return True
         return False
     
-    @staticmethod
-    def normalize_language_code(code):
-        """Map Django language codes (e.g. en-us) to our app keys en / sw."""
-        if not code:
-            return 'en'
-        primary = str(code).split('-')[0].lower()
-        if primary == 'en':
-            return 'en'
-        if primary == 'sw':
-            return 'sw'
-        return primary if primary in LanguageManager.SUPPORTED_LANGUAGES else 'en'
-    
     @classmethod
-    def get_current_language(cls, request):
-        """Prefer LocaleMiddleware (cookie), then session, then settings."""
-        code = getattr(request, 'LANGUAGE_CODE', None)
-        if not code:
-            code = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
-        if not code:
-            code = request.session.get('django_language')
-        if not code:
-            code = settings.LANGUAGE_CODE
-        return cls.normalize_language_code(code)
-    
-    @classmethod
-    def get_language_switch_url(cls, request, language_code):
-        """Get URL for language switching"""
-        return reverse('members:set_language', kwargs={'language_code': language_code})
-
-# Translation dictionary for common terms
-TRANSLATIONS = {
-    'en': {
-        # Navigation
-        'dashboard': 'Dashboard',
-        'members': 'Members',
-        'sermons': 'Sermons',
-        'messages': 'Messages',
-        'donations': 'Donations',
-        'events': 'Events',
-        'settings': 'Settings',
-        'logout': 'Logout',
-        
-        # Common actions
-        'create': 'Create',
-        'edit': 'Edit',
-        'delete': 'Delete',
-        'save': 'Save',
-        'cancel': 'Cancel',
-        'submit': 'Submit',
-        'search': 'Search',
-        'filter': 'Filter',
-        
-        # Church specific
-        'pastor': 'Pastor',
-        'elder': 'Elder',
-        'deacon': 'Deacon',
-        'member': 'Member',
-        'admin': 'Administrator',
-        
-        # Messages
-        'send_message': 'Send Message',
-        'message_title': 'Message Title',
-        'message_content': 'Message Content',
-        'send_to_all': 'Send to All Members',
-        'send_to_roles': 'Send to Specific Roles',
-        
-        # Dashboard
-        'total_members': 'Total Members',
-        'active_members': 'Active Members',
-        'new_members': 'New Members',
-        'total_donations': 'Total Donations',
-        'recent_activity': 'Recent Activity',
-        
-        # Forms
-        'first_name': 'First Name',
-        'last_name': 'Last Name',
-        'email': 'Email',
-        'phone_number': 'Phone Number',
-        'date_of_birth': 'Date of Birth',
-        'address': 'Address',
-        'city': 'City',
-        'country': 'Country',
-        
-        # Status messages
-        'success': 'Success',
-        'error': 'Error',
-        'warning': 'Warning',
-        'info': 'Information',
-        
-        # Dashboard specific
-        'main_dashboard': 'Main Dashboard',
-        'statistics': 'Statistics',
-        'welcome_back': 'Welcome back',
-        'pastoral_quick_actions': 'Pastoral Quick Actions',
-        'communication': 'Communication',
-        'member_management': 'Member Management',
-        'administration': 'Administration',
-        
-        # Sermons
-        'all_sermons': 'All Sermons',
-        'create_sermon': 'Create Sermon',
-        'sermon_series': 'Sermon Series',
-        
-        # Quick Actions
-        'quick_actions': 'Quick Actions',
-        'create_message': 'Create Message',
-        'view_messages': 'View Messages',
-        'admin_panel': 'Admin Panel',
-        'all_members': 'All Members',
-        'edit_profile': 'Edit Profile',
-    },
-    'sw': {
-        # Navigation
-        'dashboard': 'Dashibodi',
-        'members': 'Wanachama',
-        'sermons': 'Mahubiri',
-        'messages': 'Ujumbe',
-        'donations': 'Michango',
-        'events': 'Matukio',
-        'settings': 'Mipangilio',
-        'logout': 'Toka',
-        
-        # Common actions
-        'create': 'Unda',
-        'edit': 'Hariri',
-        'delete': 'Futa',
-        'save': 'Hifadhi',
-        'cancel': 'Ghairi',
-        'submit': 'Wasilisha',
-        'search': 'Tafuta',
-        'filter': 'Chuja',
-        
-        # Church specific
-        'pastor': 'Mchungaji',
-        'elder': 'Mzee wa Kanisa',
-        'deacon': 'Mshirika',
-        'member': 'Mwanachama',
-        'admin': 'Msimamizi',
-        
-        # Messages
-        'send_message': 'Tuma Ujumbe',
-        'message_title': 'Kichwa cha Ujumbe',
-        'message_content': 'Maudhui ya Ujumbe',
-        'send_to_all': 'Tuma kwa Wanachama Wote',
-        'send_to_roles': 'Tuma kwa Viti Maalum',
-        
-        # Dashboard
-        'total_members': 'Jumla ya Wanachama',
-        'active_members': 'Wanachama Walio Hai',
-        'new_members': 'Wanachama Wapya',
-        'total_donations': 'Jumla ya Michango',
-        'recent_activity': 'Shughuli za Karibuni',
-        
-        # Forms
-        'first_name': 'Jina la Kwanza',
-        'last_name': 'Jina la Mwisho',
-        'email': 'Barua pepe',
-        'phone_number': 'Namba ya Simu',
-        'date_of_birth': 'Tarehe ya Kuzaliwa',
-        'address': 'Anwani',
-        'city': 'Jiji',
-        'country': 'Nchi',
-        
-        # Status messages
-        'success': 'Mafanikio',
-        'error': 'Kosa',
-        'warning': 'Onyo',
-        'info': 'Maelezo',
-        
-        # Dashboard specific
-        'main_dashboard': 'Dashibodi Kuu',
-        'statistics': 'Takwimu',
-        'welcome_back': 'Karibu tena',
-        'pastoral_quick_actions': 'Hatua za Haraka za Mchungaji',
-        'communication': 'Mawasiliano',
-        'member_management': 'Usimamizi wa Wanachama',
-        'administration': 'Utawala',
-        
-        # Sermons
-        'all_sermons': 'Mahubiri Yote',
-        'create_sermon': 'Unda Hubo',
-        'sermon_series': 'Mfululizo wa Mahubiri',
-        
-        # Quick Actions
-        'quick_actions': 'Hatua za Haraka',
-        'create_message': 'Unda Ujumbe',
-        'view_messages': 'Ona Ujumbe',
-        'admin_panel': 'Bodi ya Utawala',
-        'all_members': 'Wanachama Wote',
-        'edit_profile': 'Haribu Wasifu',
-    },
-}
-
-TRANSLATIONS['en'].update(EXTRA_EN)
-TRANSLATIONS['sw'].update(EXTRA_SW)
-
+    def get_translation(cls, key, language_code='en'):
+        """Get translation for a key"""
+        return cls.TRANSLATIONS.get(key, {}).get(language_code, key)
 
 def get_translation(key, language_code='en'):
-    """Get translation for a key in specified language"""
-    return TRANSLATIONS.get(language_code, {}).get(key, key)
-
-def t(key, request=None):
-    """Translation function for templates"""
-    if request:
-        language_code = LanguageManager.get_current_language(request)
-    else:
-        language_code = 'en'
-    return get_translation(key, language_code)
+    """Helper function to get translation"""
+    return LanguageManager.get_translation(key, language_code)

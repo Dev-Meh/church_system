@@ -164,7 +164,7 @@ def member_messages(request):
     )
     
     context = {
-        'messages_received': message_recipients,
+        'message_recipients': message_recipients,
     }
     
     return render(request, 'members/member_messages.html', context)

@@ -4,10 +4,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView
 from django.utils import timezone
 from django.db.models import Q
-from .models import ChurchUser, MessageRecipient, Announcement
+from django.contrib.auth import get_user_model
 from events.models import Event, EventRegistration
 from sermons.models import Sermon, SermonSeries
 from datetime import timedelta
+
+# Get the User model
+ChurchUser = get_user_model()
 
 class PlayerDashboardView(LoginRequiredMixin, ListView):
     """Unified player dashboard for members to view all content"""

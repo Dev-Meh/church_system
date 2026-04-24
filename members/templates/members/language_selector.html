@@ -116,6 +116,7 @@
 </div>
 
 <script>
+<<<<<<< Updated upstream
 // Smooth transition feedback
 document.querySelectorAll('.language-pill-option').forEach(option => {
     option.addEventListener('click', function(e) {
@@ -133,5 +134,184 @@ document.querySelectorAll('.language-pill-option').forEach(option => {
             slider.style.transform = 'translateX(0)';
         }
     });
+=======
+function handleLanguageChange(event, language) {
+    // Store the selected language in session storage for immediate UI update
+    sessionStorage.setItem('selectedLanguage', language);
+    
+    // Show success message
+    showLanguageChangeMessage(language);
+    
+    // Trigger language change event
+    document.dispatchEvent(new CustomEvent('languageChanged', { 
+        detail: { language: language } 
+    }));
+    
+    // Allow the link to navigate normally
+    return true;
+}
+
+function showLanguageChangeMessage(language) {
+    // Create a beautiful notification
+    const message = language === 'sw' ? 
+        'Lugha imebadilika ku Kiswahili!' : 
+        'Language changed to English!';
+    
+    const icon = language === 'sw' ? 'sw' : 'en';
+    const flag = language === 'sw' ? 'TZ' : 'GB';
+    
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, ${language === 'sw' ? '#c8a84b' : '#4a90e2'}, ${language === 'sw' ? '#d4b063' : '#5ba0f2'});
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        z-index: 10000;
+        font-weight: 600;
+        font-size: 14px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideInBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        transition: all 0.3s ease;
+        max-width: 320px;
+    `;
+    
+    // Add icon and flag
+    notification.innerHTML = `
+        <div style="
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+        ">${flag}</div>
+        <div style="flex: 1;">
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 2px;">${language === 'sw' ? 'Mafanikio!' : 'Success!'}</div>
+            <div style="font-weight: 600;">${message}</div>
+        </div>
+        <div style="
+            width: 8px;
+            height: 8px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        "></div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Add hover effect
+    notification.addEventListener('mouseenter', () => {
+        notification.style.transform = 'scale(1.05)';
+        notification.style.boxShadow = '0 12px 40px rgba(0,0,0,0.4)';
+    });
+    
+    notification.addEventListener('mouseleave', () => {
+        notification.style.transform = 'scale(1)';
+        notification.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)';
+    });
+    
+    // Auto-remove after 4 seconds with fade out
+    setTimeout(() => {
+        notification.style.animation = 'slideOutFade 0.5s ease-out';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 500);
+    }, 4000);
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInBounce {
+        0% {
+            transform: translateX(100%) scale(0.8);
+            opacity: 0;
+        }
+        60% {
+            transform: translateX(-10px) scale(1.05);
+            opacity: 1;
+        }
+        80% {
+            transform: translateX(5px) scale(0.95);
+        }
+        100% {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutFade {
+        0% {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+        }
+        100% {
+            transform: translateX(100%) scale(0.8);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 0.8;
+        }
+        50% {
+            transform: scale(1.2);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 0.8;
+        }
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Restore language preference from session storage on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedLanguage = sessionStorage.getItem('selectedLanguage');
+    const currentLanguage = '{{ current_language|default:"en" }}';
+    if (savedLanguage && savedLanguage !== currentLanguage) {
+        // Show notification if stored language differs from current
+        showLanguageChangeMessage(savedLanguage);
+    }
+>>>>>>> Stashed changes
 });
 </script>

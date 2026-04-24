@@ -12,7 +12,7 @@ urlpatterns = [
     path('', home, name='home'),              # visits / → goes to login
     path('dashboard/', dashboard, name='dashboard'),
     path('members/', include('members.urls')),
-    path('player/', include('members.urls_player')),  # Changed to avoid conflict
+    path('player/', include('members.urls_player')),  # Player URLs
     path('events/', include('events.urls')),
     path('sermons/', include('sermons.urls')),
     path('profile/', ProfileView.as_view(), name='profile'),

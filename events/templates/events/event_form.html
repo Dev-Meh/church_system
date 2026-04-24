@@ -3,145 +3,630 @@
 
 {% block title %}{% church_t 'events' %} - PHM-ARCC Iyumbu Church Management System{% endblock %}
 
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+
+html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; margin:0; padding:0; }
+
+.layout{
+  display:flex;
+  flex-direction:row;
+  min-height:100vh;
+  height:100%;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:240px;
+  min-width:240px;
+  height:100vh;
+  position:sticky;
+  top:0;
+  background:linear-gradient(180deg,#0d2340 0%,#0a1a2e 100%);
+  border-right:3px solid #c8a84b;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+  transition:width 0.35s cubic-bezier(.4,0,.2,1), min-width 0.35s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+  z-index:100;
+}
+.sidebar.collapsed{width:64px;min-width:64px;}
+
+.sidebar-header{
+  padding:1.2rem 1rem;
+  border-bottom:1px solid rgba(200,168,75,0.2);
+  display:flex;align-items:center;
+  justify-content:space-between;
+  min-height:68px;gap:8px;flex-shrink:0;
+}
+
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1;overflow:hidden;}
+
+.brand-text{
+  display:flex;flex-direction:column;overflow:hidden;
+  max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .brand-text{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+
+.church-name{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:#c8a84b;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.church-sub{font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap;}
+
+.toggle-btn{
+  background:rgba(200,168,75,0.1);border:1px solid rgba(200,168,75,0.3);
+  border-radius:6px;width:30px;height:30px;min-width:30px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:background 0.2s;
+}
+.toggle-btn:hover{background:rgba(200,168,75,0.25);}
+.toggle-btn svg{width:16px;height:16px;stroke:#c8a84b;fill:none;stroke-width:2;transition:transform 0.35s cubic-bezier(.4,0,.2,1);}
+.sidebar.collapsed .toggle-btn svg{transform:rotate(180deg);}
+
+.user-area{
+  padding:1rem;border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:10px;overflow:hidden;flex-shrink:0;
+}
+.avatar{width:36px;height:36px;min-width:36px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#c8a84b);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;}
+
+.user-info{
+  overflow:hidden;max-width:160px;opacity:1;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .user-info{opacity:0;max-width:0;transform:translateX(-10px);pointer-events:none;}
+.user-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;}
+.user-role{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+
+.nav-menu{flex:1;padding:1rem 0;overflow-y:auto;overflow-x:hidden;}
+
+.nav-section-label{
+  font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.2);padding:0.6rem 1.1rem 0.3rem;
+  white-space:nowrap;overflow:hidden;opacity:1;max-width:200px;
+  transition:opacity 0.2s ease, max-width 0.35s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed .nav-section-label{opacity:0;max-width:0;}
+
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 1.1rem;margin:2px 8px;border-radius:8px;
+  color:rgba(255,255,255,0.55);font-size:12px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;
+  transition:background 0.2s, color 0.2s;white-space:nowrap;overflow:hidden;
+}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9);}
+.nav-item.active{background:rgba(200,168,75,0.12);color:#c8a84b;border-left:3px solid #c8a84b;margin-left:5px;padding-left:calc(1.1rem - 3px);}
+.nav-item svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+.nav-label{
+  overflow:hidden;opacity:1;max-width:160px;transform:translateX(0);
+  transition:opacity 0.25s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
+  white-space:nowrap;
+}
+.sidebar.collapsed .nav-label{opacity:0;max-width:0;transform:translateX(-8px);}
+
+.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;}
+.btn-logout{
+  display:flex;align-items:center;gap:12px;width:100%;padding:9px 1rem;
+  border-radius:8px;border:1px solid rgba(192,57,43,0.3);
+  background:rgba(192,57,43,0.08);color:rgba(231,76,60,0.8);
+  font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;
+  text-decoration:none;cursor:pointer;transition:all 0.2s;overflow:hidden;white-space:nowrap;
+}
+.btn-logout:hover{background:rgba(192,57,43,0.18);color:#e74c3c;border-color:rgba(231,76,60,0.5);}
+.btn-logout svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;}
+
+/* MAIN */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow-y:auto;}
+
+.topbar{background:#152333;border-bottom:1px solid rgba(255,255,255,0.07);padding:0 1.8rem;height:58px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar h2{font-family:'Cinzel',serif;font-size:16px;font-weight:600;color:#fff;}
+.topbar p{font-size:11px;color:rgba(255,255,255,0.35);margin-top:1px;}
+.welcome-pill{background:rgba(200,168,75,0.12);border:1px solid rgba(200,168,75,0.3);color:#c8a84b;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;white-space:nowrap;}
+
+.page-body{padding:1.6rem 1.8rem 3rem;flex:1;}
+
+.event-form-container{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:2rem;max-width:800px;margin:0 auto;}
+.form-header{margin-bottom:2rem;text-align:center;}
+.form-title{font-family:'Cinzel',serif;font-size:24px;font-weight:600;color:#c8a84b;margin-bottom:0.5rem;}
+.form-subtitle{color:rgba(255,255,255,0.6);font-size:14px;}
+
+.form-group{margin-bottom:1.5rem;}
+.form-label{display:block;margin-bottom:0.5rem;color:#fff;font-weight:600;font-size:14px;}
+.form-input{width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;transition:all 0.2s;}
+.form-input:focus{outline:none;border-color:#c8a84b;background:rgba(255,255,255,0.08);box-shadow:0 0 0 3px rgba(200,168,75,0.1);}
+.form-input::placeholder{color:rgba(255,255,255,0.4);}
+
+.form-select{width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;cursor:pointer;}
+.form-select:focus{outline:none;border-color:#c8a84b;background:rgba(255,255,255,0.08);}
+.form-select option{background:#152333;color:#fff;}
+
+.form-textarea{width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:14px;resize:vertical;min-height:100px;}
+.form-textarea:focus{outline:none;border-color:#c8a84b;background:rgba(255,255,255,0.08);}
+
+.form-row{display:flex;gap:1rem;}
+.form-col{flex:1;}
+
+.form-checkbox{display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;}
+.form-checkbox input{width:18px;height:18px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;}
+.form-checkbox label{color:#fff;font-weight:500;cursor:pointer;}
+
+.form-error{color:#e74c3c;font-size:12px;margin-top:0.25rem;}
+
+.form-actions{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.1);}
+.btn{padding:12px 24px;border:none;border-radius:8px;font-weight:600;text-decoration:none;cursor:pointer;transition:all 0.2s;}
+.btn-primary{background:#c8a84b;color:#fff;}
+.btn-primary:hover{background:#b8943a;transform:translateY(-1px);}
+.btn-secondary{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);}
+.btn-secondary:hover{background:rgba(255,255,255,0.15);}
+
+/* Date inputs specific styling */
+input[type="date"]{color-scheme:dark;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px 16px 12px 40px;color:#fff;font-size:14px;width:100%;transition:all 0.2s;cursor:pointer;}
+input[type="date"]:focus{outline:none;border-color:#c8a84b;background:rgba(255,255,255,0.08);box-shadow:0 0 0 3px rgba(200,168,75,0.1);}
+input[type="date"]:hover{border-color:rgba(200,168,75,0.3);background:rgba(255,255,255,0.07);}
+input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer;opacity:1;transition:opacity 0.2s;width:24px;height:24px;margin-right:8px;}
+input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;transform:scale(1.1);}
+input[type="date"]::-webkit-inner-spin-button{filter:invert(1);}
+input[type="date"]::-webkit-datetime-edit-text-field{color:#fff;cursor:pointer;}
+input[type="date"]::-webkit-datetime-edit{color:#fff;cursor:pointer;}
+input[type="date"]::-webkit-datetime-edit-year-field{color:#fff;cursor:pointer;}
+input[type="date"]::-webkit-datetime-edit-month-field{color:#fff;cursor:pointer;}
+input[type="date"]::-webkit-datetime-edit-day-field{color:#fff;cursor:pointer;}
+
+/* Hide text cursor and prevent text selection */
+input[type="date"] {
+  caret-color: transparent;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Date picker calendar styling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23c8a84b' stroke-width='2'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+  filter: none;
+  opacity: 1;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  background-size: contain;
+}
+
+/* Date input container styling */
+.date-input-container{position: relative; display: flex; align-items: center;}
+
+/* Date picker hover effect */
+.date-input-container:hover input[type="date"] {
+  border-color: #c8a84b;
+  box-shadow: 0 0 0 2px rgba(200,168,75,0.1);
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h4>{% if form.instance.pk %}{% church_t 'edit_event_header' %}{% else %}{% church_t 'create_new_event_header' %}{% endif %}</h4>
-                </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.title.id_for_label }}" class="form-label">{% church_t 'event_title_label' %}</label>
-                                {{ form.title }}
-                                {% if form.title.errors %}
-                                <div class="text-danger">{{ form.title.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.event_type.id_for_label }}" class="form-label">{% church_t 'event_type_label' %}</label>
-                                {{ form.event_type }}
-                                {% if form.event_type.errors %}
-                                <div class="text-danger">{{ form.event_type.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.description.id_for_label }}" class="form-label">{% church_t 'description_label' %}</label>
-                            {{ form.description }}
-                            {% if form.description.errors %}
-                            <div class="text-danger">{{ form.description.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.start_date.id_for_label }}" class="form-label">{% church_t 'start_datetime_label' %}</label>
-                                {{ form.start_date }}
-                                {% if form.start_date.errors %}
-                                <div class="text-danger">{{ form.start_date.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.end_date.id_for_label }}" class="form-label">{% church_t 'end_datetime_label' %}</label>
-                                {{ form.end_date }}
-                                {% if form.end_date.errors %}
-                                <div class="text-danger">{{ form.end_date.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.location.id_for_label }}" class="form-label">{% church_t 'location_label_form' %}</label>
-                                {{ form.location }}
-                                {% if form.location.errors %}
-                                <div class="text-danger">{{ form.location.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.max_participants.id_for_label }}" class="form-label">{% church_t 'max_participants_label' %}</label>
-                                {{ form.max_participants }}
-                                {% if form.max_participants.errors %}
-                                <div class="text-danger">{{ form.max_participants.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.frequency.id_for_label }}" class="form-label">{% church_t 'frequency_label_form' %}</label>
-                                {{ form.frequency }}
-                                {% if form.frequency.errors %}
-                                <div class="text-danger">{{ form.frequency.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.registration_deadline.id_for_label }}" class="form-label">{% church_t 'registration_deadline_label' %}</label>
-                                {{ form.registration_deadline }}
-                                {% if form.registration_deadline.errors %}
-                                <div class="text-danger">{{ form.registration_deadline.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="form-check">
-                                    {{ form.registration_required }}
-                                    <label class="form-check-label" for="{{ form.registration_required.id_for_label }}">
-                                        {% church_t 'registration_required' %}
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="form-check">
-                                    {{ form.is_published }}
-                                    <label class="form-check-label" for="{{ form.is_published.id_for_label }}">
-                                        {% church_t 'publish_event' %}
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.image.id_for_label }}" class="form-label">{% church_t 'event_image_label' %}</label>
-                            {{ form.image }}
-                            {% if form.image.errors %}
-                            <div class="text-danger">{{ form.image.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.speakers.id_for_label }}" class="form-label">{% church_t 'speakers_label' %}</label>
-                            {{ form.speakers }}
-                            {% if form.speakers.errors %}
-                            <div class="text-danger">{{ form.speakers.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {{ form.non_field_errors }}
-                        </div>
-                        {% endif %}
-                        
-                        <div class="d-flex justify-content-between">
-                            <a href="{% url 'events:event_list' %}" class="btn btn-secondary">{% church_t 'cancel' %}</a>
-                            <button type="submit" class="btn btn-primary">
-                                {% if form.instance.pk %}{% church_t 'update_event' %}{% else %}{% church_t 'create_event_btn' %}{% endif %}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <svg width="26" height="26" viewBox="0 0 48 48" fill="none" style="flex-shrink:0;">
+          <rect x="20" y="4" width="8" height="40" rx="2" fill="#c8a84b"/>
+          <rect x="6" y="16" width="36" height="8" rx="2" fill="#c8a84b"/>
+        </svg>
+        <div class="brand-text">
+          <div class="church-name">PHM-ARCC</div>
+          <div class="church-sub">Iyumbu Dodoma</div>
         </div>
+      </div>
+      <button class="toggle-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
     </div>
+
+    <div class="user-area">
+      <div class="avatar">{{ user.first_name|slice:"1" }}{{ user.last_name|slice:"1" }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
+        <div class="user-role">{% if user.role == 'pastor' %}Pastor{% else %}Church Member{% endif %}</div>
+      </div>
+    </div>
+
+    <div class="nav-menu">
+      <div class="nav-section-label">Main Menu</div>
+      <a class="nav-item" href="{% url 'dashboard' %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a class="nav-item active" href="{% url 'events:event_list' %}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="nav-label">Events</span>
+      </a>
+      
+      {% if user.role == 'pastor' %}
+      <div class="nav-section-label">Pastoral Actions</div>
+      <a class="nav-item" href="{% url 'members:message_create' %}">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span class="nav-label">Create Message</span>
+      </a>
+      {% endif %}
+      
+      <div class="nav-section-label">Quick Actions</div>
+      <a class="nav-item" href="{% url 'donations:home' %}">
+        <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span class="nav-label">Make Donation</span>
+      </a>
+      <a class="nav-item" href="{% url 'profile_edit' %}">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span class="nav-label">Edit Profile</span>
+      </a>
+      {% if user.role == 'member' %}
+      <a class="nav-item" href="{% url 'members:member_messages' %}">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span class="nav-label">View Messages</span>
+      </a>
+      {% endif %}
+    </div>
+
+    <div class="sidebar-footer">
+      <form method="POST" action="{% url 'members:logout' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn-logout">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          <span class="nav-label">Logout</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h2>{% if form.instance.pk %}Edit Event{% else %}Create New Event{% endif %}</h2>
+        <p>PHM-ARCC Iyumbu Dodoma &mdash; {% if form.instance.pk %}Update event details{% else %}Add a new church event{% endif %}</p>
+      </div>
+      <span class="welcome-pill">Welcome, {{ user.first_name }} {{ user.last_name }}!</span>
+    </div>
+
+    <div class="page-body">
+      <div class="event-form-container">
+        <div class="form-header">
+          <div class="form-title">{% if form.instance.pk %}Edit Event{% else %}Create New Event{% endif %}</div>
+          <div class="form-subtitle">{% if form.instance.pk %}Update the details for this event{% else %}Fill in the details to create a new church event{% endif %}</div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-group">
+                <label for="{{ form.title.id_for_label }}" class="form-label">Event Title *</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                  <div class="form-error">{{ form.title.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="form-col">
+              <div class="form-group">
+                <label for="{{ form.event_type.id_for_label }}" class="form-label">Event Type *</label>
+                {{ form.event_type }}
+                {% if form.event_type.errors %}
+                  <div class="form-error">{{ form.event_type.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="{{ form.description.id_for_label }}" class="form-label">Description *</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+              <div class="form-error">{{ form.description.errors }}</div>
+            {% endif %}
+          </div>
+          
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-group">
+                <label for="{{ form.start_date.id_for_label }}" class="form-label">Start Date *</label>
+                <div style="position: relative; display: flex; align-items: center;" class="date-input-container">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c8a84b" stroke-width="2" style="position: absolute; left: 12px; z-index: 1; pointer-events: none;">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  {{ form.start_date }}
+                </div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  Click calendar icon to pick date
+                </div>
+                {% if form.start_date.errors %}
+                  <div class="form-error">{{ form.start_date.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="form-col">
+              <div class="form-group">
+                <label for="{{ form.end_date.id_for_label }}" class="form-label">End Date *</label>
+                <div style="position: relative; display: flex; align-items: center;" class="date-input-container">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c8a84b" stroke-width="2" style="position: absolute; left: 12px; z-index: 1; pointer-events: none;">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  {{ form.end_date }}
+                </div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  Click calendar icon to pick date
+                </div>
+                {% if form.end_date.errors %}
+                  <div class="form-error">{{ form.end_date.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-group">
+                <label for="{{ form.location.id_for_label }}" class="form-label">Location *</label>
+                {{ form.location }}
+                {% if form.location.errors %}
+                  <div class="form-error">{{ form.location.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="form-col">
+              <div class="form-group">
+                <label for="{{ form.max_participants.id_for_label }}" class="form-label">Maximum Participants</label>
+                {{ form.max_participants }}
+                {% if form.max_participants.errors %}
+                  <div class="form-error">{{ form.max_participants.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-group">
+                <label for="{{ form.frequency.id_for_label }}" class="form-label">Frequency</label>
+                {{ form.frequency }}
+                {% if form.frequency.errors %}
+                  <div class="form-error">{{ form.frequency.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="form-col">
+              <div class="form-group">
+                <label for="{{ form.registration_deadline.id_for_label }}" class="form-label">Registration Deadline</label>
+                <div style="position: relative; display: flex; align-items: center;" class="date-input-container">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c8a84b" stroke-width="2" style="position: absolute; left: 12px; z-index: 1; pointer-events: none;">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  {{ form.registration_deadline }}
+                </div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  Click calendar icon to pick date
+                </div>
+                {% if form.registration_deadline.errors %}
+                  <div class="form-error">{{ form.registration_deadline.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-group">
+                <label for="{{ form.image.id_for_label }}" class="form-label">Event Image</label>
+                {{ form.image }}
+                {% if form.image.errors %}
+                  <div class="form-error">{{ form.image.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="form-col">
+              <div class="form-group">
+                <label for="{{ form.speakers.id_for_label }}" class="form-label">Speakers</label>
+                {{ form.speakers }}
+                {% if form.speakers.errors %}
+                  <div class="form-error">{{ form.speakers.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-checkbox">
+                {{ form.registration_required }}
+                <label for="{{ form.registration_required.id_for_label }}">Registration Required</label>
+              </div>
+            </div>
+            <div class="form-col">
+              <div class="form-checkbox">
+                {{ form.is_published }}
+                <label for="{{ form.is_published.id_for_label }}">Publish Event</label>
+              </div>
+            </div>
+          </div>
+          
+          {% if form.non_field_errors %}
+          <div style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:8px;padding:1rem;margin-bottom:1.5rem;">
+            <div style="color:#e74c3c;font-weight:600;margin-bottom:0.5rem;">Please correct the following errors:</div>
+            {{ form.non_field_errors }}
+          </div>
+          {% endif %}
+          
+          <div class="form-actions">
+            <a href="{% url 'events:event_list' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+              {% if form.instance.pk %}Update Event{% else %}Create Event{% endif %}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+// Set minimum date to today for date inputs and enhance date picker functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const startDateInput = document.getElementById('{{ form.start_date.id_for_label }}');
+  const endDateInput = document.getElementById('{{ form.end_date.id_for_label }}');
+  const deadlineInput = document.getElementById('{{ form.registration_deadline.id_for_label }}');
+  
+  const now = new Date();
+  const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  const minDate = localDateTime.toISOString().slice(0, 10);
+  
+  // Helper function to format date for display
+  function formatDateForDisplay(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric'
+    });
+  }
+  
+  // Helper function to create date helper text
+  function createDateHelper(input, type) {
+    const helper = document.createElement('div');
+    helper.style.cssText = 'font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px;';
+    helper.id = input.id + '-helper';
+    
+    input.parentNode.parentNode.appendChild(helper);
+    
+    input.addEventListener('change', function() {
+      if (this.value) {
+        helper.textContent = 'Selected: ' + formatDateForDisplay(this.value);
+        helper.style.color = '#c8a84b';
+      } else {
+        helper.textContent = '';
+      }
+    });
+    
+    input.addEventListener('focus', function() {
+      if (!this.value) {
+        helper.textContent = 'Click to open date picker';
+        helper.style.color = 'rgba(255,255,255,0.4)';
+      }
+    });
+    
+    input.addEventListener('blur', function() {
+      if (!this.value) {
+        helper.textContent = '';
+      }
+    });
+  }
+  
+  // Setup start date input
+  if (startDateInput) {
+    startDateInput.min = minDate;
+    
+    // Create helper text
+    createDateHelper(startDateInput, 'start');
+    
+    // Add change event for validation
+    startDateInput.addEventListener('change', function() {
+      if (endDateInput && this.value) {
+        endDateInput.min = this.value;
+        
+        // Clear end date if it's before new start date
+        if (endDateInput.value && endDateInput.value < this.value) {
+          endDateInput.value = '';
+          endDateInput.dispatchEvent(new Event('change'));
+        }
+      }
+      
+      // Update deadline minimum
+      if (deadlineInput && this.value) {
+        deadlineInput.max = this.value;
+      }
+    });
+  }
+  
+  // Setup end date input
+  if (endDateInput) {
+    if (startDateInput && startDateInput.value) {
+      endDateInput.min = startDateInput.value;
+    }
+    
+    // Create helper text
+    createDateHelper(endDateInput, 'end');
+    
+    // Add change event for validation
+    endDateInput.addEventListener('change', function() {
+      if (startDateInput && this.value && startDateInput.value) {
+        if (this.value <= startDateInput.value) {
+          this.setCustomValidity('End date must be after start date');
+        } else {
+          this.setCustomValidity('');
+        }
+      }
+    });
+  }
+  
+  // Setup registration deadline input
+  if (deadlineInput) {
+    deadlineInput.min = minDate;
+    if (startDateInput && startDateInput.value) {
+      deadlineInput.max = startDateInput.value;
+    }
+    
+    // Create helper text
+    createDateHelper(deadlineInput, 'deadline');
+    
+    // Add change event for validation
+    deadlineInput.addEventListener('change', function() {
+      if (startDateInput && this.value && startDateInput.value) {
+        if (this.value >= startDateInput.value) {
+          this.setCustomValidity('Registration deadline must be before event start date');
+        } else {
+          this.setCustomValidity('');
+        }
+      }
+    });
+  }
+});
+</script>
 {% endblock %}

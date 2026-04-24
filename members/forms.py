@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import ChurchUser
-from .models_message import Message, Announcement
 
 class ChurchUserRegistrationForm(UserCreationForm):
     """Unified registration form for both members and pastors"""
@@ -293,88 +292,3 @@ class ChurchUserUpdateForm(forms.ModelForm):
             'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
             'address': forms.Textarea(attrs={'rows': 3}),
         }
-
-class MessageForm(forms.ModelForm):
-    """Form for pastors to create messages to members"""
-    
-    class Meta:
-        model = Message
-        fields = ['title', 'content', 'priority', 'send_to_all', 'target_roles']
-        widgets = {
-            'title': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter message title...',
-                'required': True
-            }),
-            'content': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 6,
-                'placeholder': 'Write your message to church members...',
-                'required': True
-            }),
-            'priority': forms.Select(attrs={
-                'class': 'form-control'
-            }),
-            'send_to_all': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
-            }),
-            'target_roles': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g., member,elder,deacon (leave empty if sending to all)'
-            })
-        }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['title'].label = 'Message Title'
-        self.fields['content'].label = 'Message Content'
-        self.fields['priority'].label = 'Priority Level'
-        self.fields['send_to_all'].label = 'Send to All Members'
-        self.fields['target_roles'].label = 'Target Specific Roles (Optional)'
-        self.fields['target_roles'].help_text = 'Comma-separated roles. Only used if "Send to All" is unchecked.'
-        
-    def clean_target_roles(self):
-        target_roles = self.cleaned_data.get('target_roles', '')
-        if target_roles:
-            # Validate role names
-            valid_roles = ['member', 'pastor', 'elder', 'deacon', 'admin']
-            roles = [role.strip() for role in target_roles.split(',')]
-            for role in roles:
-                if role not in valid_roles:
-                    raise forms.ValidationError(f'Invalid role: {role}. Valid roles are: {", ".join(valid_roles)}')
-        return target_roles
-
-class AnnouncementForm(forms.ModelForm):
-    """Form for creating public announcements"""
-    
-    class Meta:
-        model = Announcement
-        fields = ['title', 'content', 'priority', 'expires_at']
-        widgets = {
-            'title': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter announcement title...',
-                'required': True
-            }),
-            'content': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 6,
-                'placeholder': 'Write your announcement...',
-                'required': True
-            }),
-            'priority': forms.Select(attrs={
-                'class': 'form-control'
-            }),
-            'expires_at': forms.DateTimeInput(attrs={
-                'class': 'form-control',
-                'type': 'datetime-local'
-            })
-        }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['title'].label = 'Announcement Title'
-        self.fields['content'].label = 'Announcement Content'
-        self.fields['priority'].label = 'Priority Level'
-        self.fields['expires_at'].label = 'Expiration Date (Optional)'
-        self.fields['expires_at'].help_text = 'Leave empty for no expiration'
