@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load i18n_church %}
+
+{% block title %}All Members - PHM-ARCC{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3><i class="fas fa-users"></i> All Members</h3>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {% if members %}
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Accountant Access</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in members %}
+                                <tr>
+                                    <td>{{ member.full_name|default:member.username }}</td>
+                                    <td>{{ member.username }}</td>
+                                    <td>{{ member.email|default:"-" }}</td>
+                                    <td>{{ member.phone_number|default:"-" }}</td>
+                                    <td>
+                                        {{ member.get_role_display }}
+                                        {% if member.role == 'member' %}
+                                            <form method="post" action="{% url 'members:promote_to_accountant' member.id %}" style="display:inline-block; margin-left:8px;">
+                                                {% csrf_token %}
+                                                <button class="btn btn-sm btn-outline-primary" type="submit">Make Accountant</button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if member.is_active_member %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if member.role == 'accountant' %}
+                                            <form method="post" action="{% url 'members:toggle_accountant_access' member.id %}">
+                                                {% csrf_token %}
+                                                {% if member.can_post_member_donations %}
+                                                    <button class="btn btn-sm btn-warning" type="submit">Revoke Access</button>
+                                                {% else %}
+                                                    <button class="btn btn-sm btn-success" type="submit">Grant Access</button>
+                                                {% endif %}
+                                            </form>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="mb-0 text-muted">No members found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

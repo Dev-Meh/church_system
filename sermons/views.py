@@ -14,7 +14,7 @@ from members.models import ChurchUser
 
 class PastorRequiredMixin(UserPassesTestMixin):
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.role in ['pastor', 'admin', 'elder', 'deacon']
+        return self.request.user.is_authenticated and self.request.user.role == 'pastor'
 
 class SermonListView(LoginRequiredMixin, ListView):
     model = Sermon
@@ -118,6 +118,7 @@ class SermonCreateView(PastorRequiredMixin, LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.speaker = self.request.user
+        form.instance.sermon_date = timezone.now()
         messages.success(self.request, 'Sermon created successfully!')
         return super().form_valid(form)
 

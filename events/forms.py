@@ -1,9 +1,23 @@
+from datetime import datetime, time
+
 from django import forms
 from django.utils import timezone
 from .models import Event, EventRegistration, EventResource
 from members.models import ChurchUser
 
 class EventForm(forms.ModelForm):
+    # Use date pickers only, then convert to datetime in save().
+    start_date = forms.DateField(
+        widget=forms.DateInput(attrs={'class': 'form-input', 'type': 'date'})
+    )
+    end_date = forms.DateField(
+        widget=forms.DateInput(attrs={'class': 'form-input', 'type': 'date'})
+    )
+    registration_deadline = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-input', 'type': 'date'})
+    )
+
     class Meta:
         model = Event
         fields = [
@@ -13,9 +27,6 @@ class EventForm(forms.ModelForm):
             'speakers', 'is_published'
         ]
         widgets = {
-            'start_date': forms.DateTimeInput(attrs={'class': 'form-input', 'type': 'date'}),
-            'end_date': forms.DateTimeInput(attrs={'class': 'form-input', 'type': 'date'}),
-            'registration_deadline': forms.DateTimeInput(attrs={'class': 'form-input', 'type': 'date'}),
             'description': forms.Textarea(attrs={'rows': 4, 'class': 'form-textarea'}),
             'speakers': forms.CheckboxSelectMultiple(),
         }
@@ -29,34 +40,33 @@ class EventForm(forms.ModelForm):
         
         # Add better error messages for date fields
         self.fields['start_date'].error_messages = {
-            'required': 'Start date and time are required.',
-            'invalid': 'Please enter a valid start date and time.',
+            'required': 'Start date is required.',
+            'invalid': 'Please choose a valid start date.',
         }
         self.fields['end_date'].error_messages = {
-            'required': 'End date and time are required.',
-            'invalid': 'Please enter a valid end date and time.',
+            'required': 'End date is required.',
+            'invalid': 'Please choose a valid end date.',
         }
         self.fields['registration_deadline'].error_messages = {
-            'invalid': 'Please enter a valid registration deadline.',
+            'invalid': 'Please choose a valid registration deadline.',
         }
 
     def clean_start_date(self):
         start_date = self.cleaned_data.get('start_date')
         if not start_date:
-            raise forms.ValidationError("Start date and time are required.")
+            raise forms.ValidationError("Start date is required.")
         return start_date
 
     def clean_end_date(self):
         end_date = self.cleaned_data.get('end_date')
         if not end_date:
-            raise forms.ValidationError("End date and time are required.")
+            raise forms.ValidationError("End date is required.")
         return end_date
 
     def clean_registration_deadline(self):
         registration_deadline = self.cleaned_data.get('registration_deadline')
         if registration_deadline:
-            from django.utils import timezone
-            if registration_deadline < timezone.now():
+            if registration_deadline < timezone.localdate():
                 raise forms.ValidationError("Registration deadline cannot be in the past.")
         return registration_deadline
 
@@ -68,11 +78,11 @@ class EventForm(forms.ModelForm):
 
         # Check if start_date is provided and valid
         if not start_date:
-            raise forms.ValidationError("Start date and time are required.")
+            raise forms.ValidationError("Start date is required.")
         
         # Check if end_date is provided and valid
         if not end_date:
-            raise forms.ValidationError("End date and time are required.")
+            raise forms.ValidationError("End date is required.")
         
         # Validate date logic
         if start_date and end_date:
@@ -85,6 +95,33 @@ class EventForm(forms.ModelForm):
                 raise forms.ValidationError("Registration deadline must be before event start date.")
 
         return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        start_date = self.cleaned_data.get('start_date')
+        end_date = self.cleaned_data.get('end_date')
+        registration_deadline = self.cleaned_data.get('registration_deadline')
+
+        if start_date:
+            instance.start_date = timezone.make_aware(
+                datetime.combine(start_date, time(hour=8, minute=0))
+            )
+        if end_date:
+            instance.end_date = timezone.make_aware(
+                datetime.combine(end_date, time(hour=18, minute=0))
+            )
+        if registration_deadline:
+            instance.registration_deadline = timezone.make_aware(
+                datetime.combine(registration_deadline, time(hour=23, minute=59))
+            )
+        else:
+            instance.registration_deadline = None
+
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
 
 class EventRegistrationForm(forms.ModelForm):
     class Meta:

@@ -158,7 +158,20 @@ class LanguageManager:
     @classmethod
     def get_translation(cls, key, language_code='en'):
         """Get translation for a key"""
-        return cls.TRANSLATIONS.get(key, {}).get(language_code, key)
+        normalized_key = (key or "").strip()
+
+        # Direct hit
+        if normalized_key in cls.TRANSLATIONS:
+            return cls.TRANSLATIONS[normalized_key].get(language_code, normalized_key)
+
+        # Common typo tolerance, e.g. "sermon_title_labe" -> "sermon_title_label"
+        if normalized_key.endswith("labe"):
+            candidate = f"{normalized_key}l"
+            if candidate in cls.TRANSLATIONS:
+                return cls.TRANSLATIONS[candidate].get(language_code, candidate)
+
+        # Friendly fallback instead of exposing raw translation key
+        return normalized_key.replace("_", " ").strip().capitalize() or key
 
 def get_translation(key, language_code='en'):
     """Helper function to get translation"""

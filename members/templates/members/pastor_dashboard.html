@@ -1,1059 +1,338 @@
+{% extends "base.html" %}
 {% load i18n_church %}
-<!DOCTYPE html>
-<html lang="{{ current_language|default:'en' }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>{% church_t 'pastor_dashboard_title' %} | PHM-ARCC Iyumbu CMS</title>
-    <!-- Font Awesome 6 (free icons) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        /* ---------- GLOBAL RESET & VARIABLES ---------- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        :root {
-            --bg-primary: #0a1628;
-            --bg-secondary: #152333;
-            --bg-tertiary: #1a2f4a;
-            --text-primary: #ffffff;
-            --text-secondary: rgba(255,255,255,0.75);
-            --text-muted: rgba(255,255,255,0.45);
-            --accent: #c8a84b;
-            --accent-hover: #dbb95e;
-            --border: rgba(255,255,255,0.08);
-            --shadow: rgba(0,0,0,0.4);
-            --danger: #e74c3c;
-        }
+{% block title %}Pastor Dashboard - PHM-ARCC{% endblock %}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.5;
-            overflow-x: hidden;
-        }
+{% block extra_css %}
+<style>
+body { background: #0b1626; }
+.pd-layout { display: flex; min-height: calc(100vh - 120px); }
+.pd-sidebar {
+    width: 260px; min-width: 260px; background: linear-gradient(180deg, #0d2340 0%, #071221 100%);
+    border-right: 2px solid rgba(200, 168, 75, 0.35); padding: 1rem .8rem;
+    border-radius: 14px; margin-right: 1rem; position: relative;
+    transition: width .25s ease, min-width .25s ease, margin-right .25s ease, padding .25s ease;
+    overflow: visible;
+    z-index: 20;
+}
+.pd-main { flex: 1; }
+.pd-shell { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1rem 2rem; }
+.pd-top { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1.25rem; }
+.pd-title { color:#fff; margin:0; font-weight:700; }
+.pd-sub { color:#9fb2c8; font-size:.92rem; }
+.pd-lang {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .35rem .55rem;
+    border: 1px solid rgba(200,168,75,.3);
+    border-radius: 999px;
+    background: rgba(200,168,75,.08);
+}
+.pd-lang a {
+    color: #d7e4f3;
+    text-decoration: none;
+    font-size: .78rem;
+    font-weight: 700;
+}
+.pd-lang a.active { color: #f2d37a; }
+.pd-lang .sep { color: rgba(255,255,255,.35); font-size: .75rem; }
+.hamburger-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid rgba(200,168,75,.45);
+    background: rgba(200,168,75,.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+.hamburger-btn:hover { background: rgba(200,168,75,.18); }
+.hamburger-icon {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.hamburger-icon span {
+    width: 16px;
+    height: 2px;
+    background: #f2d37a;
+    border-radius: 2px;
+    display: block;
+}
+.sidebar-toggle-inside {
+    position: absolute;
+    top: -14px;
+    right: -16px;
+    z-index: 1200;
+    box-shadow: 0 6px 18px rgba(0,0,0,.35);
+}
+.pd-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:1rem; margin-bottom:1rem; }
+.pd-card { background: linear-gradient(180deg,#12253f,#0f1f35); border:1px solid rgba(200,168,75,.2); border-radius:14px; padding:1rem; color:#fff; }
+.pd-label { color:#a4b4c8; font-size:.82rem; text-transform:uppercase; letter-spacing:.06em; }
+.pd-value { font-size:1.8rem; font-weight:800; color:#f2d37a; margin-top:.35rem; }
+.pd-panels { display:grid; grid-template-columns: 1.4fr 1fr; gap:1rem; margin-top:1rem; }
+@media (max-width: 960px){ .pd-panels{ grid-template-columns:1fr; } }
+.panel { background:#112237; border:1px solid rgba(255,255,255,.08); border-radius:14px; overflow:hidden; }
+.panel-hd { padding:.85rem 1rem; border-bottom:1px solid rgba(255,255,255,.08); color:#f2d37a; font-weight:700; }
+.panel-bd { padding:.85rem 1rem; }
+.item-row { display:flex; justify-content:space-between; gap:.8rem; padding:.6rem 0; border-bottom:1px solid rgba(255,255,255,.06); color:#d8e2ef; }
+.item-row:last-child { border-bottom:none; }
+.muted { color:#9fb2c8; font-size:.85rem; }
+.acc-row { display:flex; justify-content:space-between; align-items:center; gap:.6rem; padding:.55rem 0; border-bottom:1px solid rgba(255,255,255,.06); }
+.acc-row:last-child { border-bottom:none; }
+.badge-state { font-size:.75rem; padding:.28rem .55rem; border-radius:99px; }
+.ok { background:#1e4c2f; color:#9ff0b5; }
+.no { background:#4b1f1f; color:#ffb4b4; }
 
-        /* ---------- VERTICAL NAVIGATION (SIDEBAR) - MINIMIZED STATE ---------- */
-        .vertical-nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 280px;
-            height: 100vh;
-            background: linear-gradient(180deg, #0b1428 0%, #121f2f 100%);
-            border-right: 2px solid var(--accent);
-            box-shadow: 6px 0 28px rgba(0,0,0,0.5);
-            z-index: 1100;
-            overflow-y: auto;
-            transition: width 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), transform 0.3s ease;
-            transform: translateX(0);
-        }
-        
-        /* MINIMIZED STATE - width reduces to 72px */
-        .vertical-nav.minimized {
-            width: 72px;
-        }
-        
-        /* When minimized, hide text and adjust content */
-        .vertical-nav.minimized .brand-text h3,
-        .vertical-nav.minimized .brand-text p,
-        .vertical-nav.minimized .user-info,
-        .vertical-nav.minimized .nav-item span,
-        .vertical-nav.minimized .nav-header .nav-close-btn {
-            display: none;
-        }
-        
-        .vertical-nav.minimized .nav-brand {
-            justify-content: center;
-            width: 100%;
-        }
-        
-        .vertical-nav.minimized .nav-user {
-            justify-content: center;
-            padding: 20px 0;
-        }
-        
-        .vertical-nav.minimized .user-avatar {
-            margin: 0 auto;
-        }
-        
-        .vertical-nav.minimized .nav-item {
-            justify-content: center;
-            padding: 12px 0;
-        }
-        
-        .vertical-nav.minimized .nav-item i {
-            margin: 0;
-            font-size: 1.3rem;
-        }
-        
-        .vertical-nav.minimized .nav-menu {
-            align-items: center;
-        }
-        
-        .vertical-nav.minimized .nav-header {
-            justify-content: center;
-            padding: 24px 0;
-        }
-        
-        .vertical-nav.minimized .nav-close-btn {
-            display: none;
-        }
-        
-        /* Logo image styling */
-        .church-logo-img {
-            width: 40px;
-            height: 40px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-right: 12px;
-            border: 1px solid rgba(200,168,75,0.3);
-        }
-        
-        .vertical-nav.minimized .church-logo-img {
-            width: 36px;
-            height: 36px;
-        }
-        
-        /* Church logo icon styling */
-        .church-logo {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, var(--accent) 0%, #b3943f 100%);
-            border-radius: 8px;
-            margin-right: 12px;
-            border: 1px solid rgba(200,168,75,0.3);
-            box-shadow: 0 2px 8px rgba(200,168,75,0.2);
-        }
-        
-        .church-logo i {
-            color: var(--primary);
-            font-size: 20px;
-            font-weight: 600;
-        }
-        
-        .vertical-nav.minimized .church-logo {
-            width: 36px;
-            height: 36px;
-            margin-right: 0;
-        }
-        
-        .vertical-nav.minimized .church-logo i {
-            font-size: 18px;
-        }
-        
-        /* THREE-LINE TOGGLE BUTTON - moves with navigation */
-        .nav-toggle-btn {
-            position: fixed;
-            top: 20px;
-            z-index: 1150;
-            background: rgba(200,168,75,0.15);
-            border: 1px solid rgba(200,168,75,0.4);
-            color: var(--accent);
-            width: 46px;
-            height: 46px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            backdrop-filter: blur(4px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        
-        /* Three lines styling */
-        .hamburger-line {
-            width: 22px;
-            height: 2px;
-            background: var(--accent);
-            border-radius: 2px;
-            transition: all 0.3s ease;
-        }
-        
-        /* Button position based on sidebar state */
-        .nav-toggle-btn {
-            left: 300px;
-        }
-        
-        .vertical-nav.minimized ~ .nav-toggle-btn,
-        .nav-toggle-btn.sidebar-minimized {
-            left: 92px;
-        }
-        
-        /* For mobile, adjust position */
-        @media (max-width: 780px) {
-            .nav-toggle-btn {
-                left: 20px !important;
-                top: 16px;
-            }
-        }
-        
-        .nav-toggle-btn:hover {
-            background: rgba(200,168,75,0.3);
-            transform: scale(1.02);
-        }
-        
-        /* Add a special toggle button inside sidebar for minimize/expand */
-        .minimize-toggle-inside {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(200,168,75,0.2);
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: 0.2s;
-            z-index: 1200;
-        }
-        
-        .vertical-nav.minimized .minimize-toggle-inside {
-            position: relative;
-            bottom: auto;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .vertical-nav:not(.minimized) .minimize-toggle-inside {
-            display: flex;
-            position: absolute;
-            bottom: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: 1rem;
+    padding-right: 2.1rem;
+}
+.sidebar-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid rgba(200, 168, 75, .35);
+    flex-shrink: 0;
+}
+.sidebar-brand-text { min-width: 0; }
+.nav-head { color:#c8a84b; font-family:'Cinzel',serif; font-weight:700; font-size:1rem; margin-bottom:.1rem; line-height:1.1; }
+.nav-sub { color:#7f96b0; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; line-height:1.1; }
+.nav-sec { color:#90a4ba; font-size:.72rem; text-transform:uppercase; letter-spacing:.09em; margin:.9rem .4rem .45rem; }
+.pd-sidebar .nav-sec:first-of-type { margin-top: 1.5rem; }
+.nav-link-pd {
+    display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+    color:#d3ddeb; text-decoration:none; padding:.58rem .7rem; border-radius:10px;
+    font-size:.86rem; margin-bottom:.25rem; border:1px solid transparent;
+}
+.nav-link-left { display: inline-flex; align-items: center; gap: .55rem; min-width: 0; }
+.nav-ic { width: 16px; text-align: center; color: #f2d37a; flex-shrink: 0; }
+.nav-link-pd:hover { background: rgba(200,168,75,.08); border-color: rgba(200,168,75,.25); color:#f2d37a; }
+.nav-link-pd.active { background: rgba(200,168,75,.14); border-color: rgba(200,168,75,.35); color:#f2d37a; }
+.nav-pill { background: rgba(200,168,75,.2); color:#f2d37a; border-radius:99px; padding:.1rem .5rem; font-size:.72rem; font-weight:700; }
 
-        .nav-header {
-            padding: 24px 20px;
-            border-bottom: 1px solid var(--border);
-            background: rgba(200,168,75,0.03);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-        }
+.pd-layout.sidebar-collapsed .pd-sidebar {
+    width: 78px;
+    min-width: 78px;
+    margin-right: .75rem;
+    padding: .75rem .45rem;
+    overflow: visible;
+}
+.pd-layout.sidebar-collapsed .nav-sub,
+.pd-layout.sidebar-collapsed .nav-sec,
+.pd-layout.sidebar-collapsed .nav-link-pd .nav-txt,
+.pd-layout.sidebar-collapsed .nav-pill,
+.pd-layout.sidebar-collapsed form button.btn-outline-danger,
+.pd-layout.sidebar-collapsed .sidebar-brand-text {
+    display: none;
+}
+.pd-layout.sidebar-collapsed .nav-link-pd {
+    justify-content: center;
+    padding: .65rem .3rem;
+}
+.pd-layout.sidebar-collapsed .nav-link-left { gap: 0; }
+.pd-layout.sidebar-collapsed .nav-ic { font-size: 1rem; }
+.pd-layout.sidebar-collapsed .sidebar-toggle-inside {
+    right: -14px;
+    transform: none;
+}
+.pd-layout.sidebar-collapsed .sidebar-brand {
+    justify-content: center;
+    padding-right: 0;
+}
 
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+@media (max-width: 980px) {
+    .pd-layout { flex-direction: column; }
+    .pd-sidebar { width: 100%; min-width: 100%; margin-right: 0; margin-bottom: 1rem; }
+    .pd-layout.sidebar-collapsed .pd-sidebar {
+        width: 0;
+        min-width: 0;
+        margin-bottom: 0;
+        padding: 0;
+    }
+}
+</style>
+{% endblock %}
 
-        .brand-text h3 {
-            font-family: 'Cinzel', serif;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--accent);
-            letter-spacing: 1px;
-            margin: 0;
-        }
+{% block content %}
+<div class="pd-shell">
+  <div class="pd-layout">
+    <aside class="pd-sidebar">
+      <div class="sidebar-brand">
+        <img src="/media/church-logo.jpeg" alt="Church Logo" class="sidebar-logo" onerror="this.style.display='none'">
+        <div class="sidebar-brand-text">
+          <div class="nav-head">PHM-ARCC</div>
+          <div class="nav-sub">Pastor Panel</div>
+        </div>
+      </div>
+      <button id="sidebarToggleBtn" type="button" class="hamburger-btn sidebar-toggle-inside" aria-label="Toggle menu" title="Toggle menu">
+        <span class="hamburger-icon"><span></span><span></span><span></span></span>
+      </button>
 
-        .brand-text p {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-        }
+      <div class="nav-sec">Main</div>
+      <a class="nav-link-pd active" href="{% url 'dashboard' %}">
+        <span class="nav-link-left"><i class="fas fa-gauge-high nav-ic"></i><span class="nav-txt">Dashboard</span></span>
+      </a>
+      <a class="nav-link-pd" href="{% url 'members:member_list' %}">
+        <span class="nav-link-left"><i class="fas fa-users-gear nav-ic"></i><span class="nav-txt">Manage Members</span></span><span class="nav-pill">{{ total_members }}</span>
+      </a>
+      <a class="nav-link-pd" href="{% url 'events:event_list' %}">
+        <span class="nav-link-left"><i class="fas fa-calendar-days nav-ic"></i><span class="nav-txt">Church Events</span></span>
+      </a>
+      <a class="nav-link-pd" href="{% url 'sermons:sermon_list' %}">
+        <span class="nav-link-left"><i class="fas fa-microphone nav-ic"></i><span class="nav-txt">Sermons</span></span>
+      </a>
 
-        .nav-close-btn {
-            background: rgba(255,255,255,0.05);
-            border: none;
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-            width: 32px;
-            height: 32px;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .nav-close-btn:hover { background: rgba(231,76,60,0.2); color: var(--danger); }
+      <div class="nav-sec">Communication</div>
+      <a class="nav-link-pd" href="{% url 'members:message_create' %}">
+        <span class="nav-link-left"><i class="fas fa-pen-to-square nav-ic"></i><span class="nav-txt">Create Message</span></span>
+      </a>
+      <a class="nav-link-pd" href="{% url 'members:message_list' %}">
+        <span class="nav-link-left"><i class="fas fa-paper-plane nav-ic"></i><span class="nav-txt">Sent Messages</span></span>
+      </a>
 
-        /* User block */
-        .nav-user {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+      <div class="nav-sec">Finance</div>
+      <a class="nav-link-pd" href="{% url 'donations:home' %}">
+        <span class="nav-link-left"><i class="fas fa-coins nav-ic"></i><span class="nav-txt">Donations</span></span>
+      </a>
+      <a class="nav-link-pd" href="{% url 'donations:financial_status' %}">
+        <span class="nav-link-left"><i class="fas fa-chart-line nav-ic"></i><span class="nav-txt">Financial Status</span></span>
+      </a>
 
-        .user-avatar {
-            width: 52px;
-            height: 52px;
-            border-radius: 60px;
-            background: linear-gradient(135deg, #1e3a5f, var(--accent));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.3rem;
-            font-family: 'Cinzel', serif;
-            flex-shrink: 0;
-            position: relative;
-            overflow: hidden;
-        }
+      <div class="nav-sec">Account</div>
+      <a class="nav-link-pd" href="{% url 'profile' %}">
+        <span class="nav-link-left"><i class="fas fa-user nav-ic"></i><span class="nav-txt">Profile</span></span>
+      </a>
+      <form method="post" action="{% url 'members:logout' %}" style="margin-top:.6rem;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger btn-sm w-100">Logout</button>
+      </form>
+    </aside>
 
-        .user-avatar-logo {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.3;
-            border-radius: 60px;
-        }
+    <main class="pd-main">
+      <div class="pd-top">
+        <div>
+          <h2 class="pd-title">Pastor Dashboard</h2>
+          <div class="pd-sub">Karibu {{ user.first_name }} — usimamizi wa washirika, michango na mawasiliano.</div>
+        </div>
+        <div class="pd-lang" aria-label="Language selector">
+          <a href="{% url 'members:set_language' 'en' %}" class="{% if current_language == 'en' %}active{% endif %}">EN</a>
+          <span class="sep">|</span>
+          <a href="{% url 'members:set_language' 'sw' %}" class="{% if current_language == 'sw' %}active{% endif %}">SW</a>
+        </div>
+      </div>
 
-        .user-avatar span {
-            position: relative;
-            z-index: 1;
-        }
+      <div class="pd-grid">
+        <div class="pd-card"><div class="pd-label">Total Members</div><div class="pd-value">{{ total_members }}</div></div>
+        <div class="pd-card"><div class="pd-label">Active Members</div><div class="pd-value">{{ active_members }}</div></div>
+        <div class="pd-card"><div class="pd-label">New This Month</div><div class="pd-value">{{ new_members_this_month }}</div></div>
+        <div class="pd-card"><div class="pd-label">Total Donations</div><div class="pd-value">{{ total_donations|floatformat:0 }}</div></div>
+        <div class="pd-card"><div class="pd-label">This Month Donations</div><div class="pd-value">{{ donations_this_month|floatformat:0 }}</div></div>
+        <div class="pd-card"><div class="pd-label">Active Campaigns</div><div class="pd-value">{{ active_campaigns }}</div></div>
+      </div>
 
-        .user-info .user-name {
-            font-weight: 700;
-            font-size: 1rem;
-        }
-        .user-role {
-            font-size: 0.7rem;
-            color: var(--accent);
-            background: rgba(200,168,75,0.2);
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 20px;
-            margin-top: 4px;
-        }
-
-        /* Navigation menu */
-        .nav-menu {
-            padding: 20px 0 30px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 12px 24px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: 0.2s;
-            border-left: 3px solid transparent;
-            background: none;
-            border: none;
-            width: 100%;
-            text-align: left;
-            cursor: pointer;
-        }
-
-        .nav-item i { width: 22px; font-size: 1.1rem; }
-        .nav-item:hover {
-            background: rgba(200,168,75,0.08);
-            color: var(--accent);
-            border-left-color: var(--accent);
-        }
-        .nav-item.active{background:rgba(200,168,75,0.12);color:#c8a84b;border-left:3px solid #c8a84b;margin-left:5px;padding-left:calc(1.1rem - 3px);}
-        .nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.9);}
-        .nav-item.logout-btn{background:rgba(220,53,69,0.15);color:#dc3545;border:none;}
-        .nav-item.logout-btn:hover{background:rgba(220,53,69,0.25);}
-        
-        .nav-section-divider {
-            height: 1px;
-            background: rgba(200,168,75,0.2);
-            margin: 15px 0;
-        }
-        
-        .nav-section-label {
-            font-size: 9px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.2);
-            padding: 0.6rem 1.1rem 0.3rem;
-            white-space: nowrap;
-            overflow: hidden;
-            opacity: 1;
-            max-width: 200px;
-            transition: opacity 0.2s ease, max-width 0.35s cubic-bezier(.4,0,.2,1), transform 0.25s ease;
-        }
-        
-        .vertical-nav.minimized .nav-section-label {
-            opacity: 0;
-            max-width: 0;
-        }
-
-        /* MAIN CONTENT - adjusts based on sidebar width */
-        .main-content {
-            margin-left: 280px;
-            transition: margin-left 0.3s ease;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        /* When sidebar is minimized (width 72px), main content margin adjusts */
-        .main-content.sidebar-minimized {
-            margin-left: 72px;
-        }
-
-        .dashboard-content {
-            flex: 1;
-            padding: 1rem 1.8rem 2rem;
-        }
-
-        /* stats grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .stat-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 1.5rem;
-            text-align: center;
-            backdrop-filter: blur(2px);
-        }
-        .stat-number {
-            font-family: 'Cinzel', serif;
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--accent);
-            margin-bottom: 0.5rem;
-        }
-        .stat-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-secondary);
-        }
-
-        /* panels */
-        .panel {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            margin-bottom: 1.8rem;
-            overflow: hidden;
-        }
-        .panel-hdr {
-            padding: 1rem 1.5rem;
-            background: rgba(255,255,255,0.02);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--accent);
-        }
-        .panel-hdr i { font-size: 1rem; }
-        .panel-body {
-            padding: 1.2rem 1.5rem;
-        }
-
-        /* member / donation rows */
-        .member-item, .donation-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.8rem 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        .member-avatar {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(145deg, #1e3f5f, #b58f3a);
-            border-radius: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1rem;
-        }
-        .member-name { font-weight: 600; }
-        .member-email, .member-date { font-size: 0.7rem; color: var(--text-muted); }
-        .donation-amount { font-weight: 700; color: var(--accent); }
-
-        /* campaign card */
-        .campaign-item {
-            background: rgba(255,255,255,0.03);
-            border-radius: 14px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-        .campaign-progress {
-            background: rgba(255,255,255,0.15);
-            border-radius: 8px;
-            height: 8px;
-            margin: 0.7rem 0;
-        }
-        .campaign-progress-bar {
-            background: var(--accent);
-            width: 0%;
-            height: 100%;
-            border-radius: 8px;
-        }
-        .campaign-stats {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.7rem;
-        }
-
-        /* action buttons */
-        .action-btn {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            color: var(--text-primary);
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-decoration: none;
-            margin-bottom: 0.7rem;
-            transition: 0.2s;
-        }
-        .action-btn:hover {
-            background: rgba(200,168,75,0.1);
-            color: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .action-buttons-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            margin-top: 20px;
-        }
-
-        .action-group {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .action-group:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(200, 168, 75, 0.2);
-            transform: translateY(-2px);
-        }
-
-        .action-group h4 {
-            font-family: 'Cinzel', serif;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--accent);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .action-group h4 i {
-            font-size: 16px;
-        }
-
-        .action-group .action-btn {
-            margin-bottom: 10px;
-            width: 100%;
-            justify-content: flex-start;
-        }
-
-        .action-group .action-btn:last-child {
-            margin-bottom: 0;
-        }
-
-        .action-btn i {
-            width: 16px;
-            text-align: center;
-            color: var(--accent);
-        }
-
-        /* responsive */
-        @media (max-width: 780px) {
-            .vertical-nav {
-                transform: translateX(-100%);
-                width: 280px;
-            }
-            .vertical-nav.mobile-open {
-                transform: translateX(0);
-            }
-            .main-content {
-                margin-left: 0;
-            }
-            .main-content.sidebar-minimized {
-                margin-left: 0;
-            }
-            .dashboard-content {
-                padding: 1rem;
-            }
-            /* Mobile: hide minimize inside button when closed */
-            .vertical-nav .minimize-toggle-inside {
-                display: none;
-            }
-            .vertical-nav.mobile-open .minimize-toggle-inside {
-                display: flex;
-            }
-        }
-    </style>
-</head>
-<body>
-
-    <!-- THREE-LINE HAMBURGER TOGGLE BUTTON - moves with navigation -->
-    <button class="nav-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle Menu">
-        <span class="hamburger-line"></span>
-        <span class="hamburger-line"></span>
-        <span class="hamburger-line"></span>
-    </button>
-
-    <!-- VERTICAL NAVIGATION (SIDEBAR) with ALL IMPORTANT LINKS -->
-    <nav class="vertical-nav" id="verticalNav">
-        <div class="nav-header">
-            <div class="nav-brand">
-                <!-- CHURCH LOGO IMAGE - using actual image from media folder -->
-                <img src="/media/church-logo.jpeg" alt="Church Logo" class="church-logo-img" onerror="this.onerror=null; this.style.display='none';">
-                <div class="brand-text">
-                    <h3>PHM-ARCC</h3>
-                    <p>{% church_t 'church_name_full' %}</p>
+      <div class="pd-panels">
+        <div class="panel">
+          <div class="panel-hd">Recent Donations</div>
+          <div class="panel-bd">
+            {% for d in recent_donations|slice:":8" %}
+              <div class="item-row">
+                <div>
+                  <div>{{ d.donor.full_name|default:"Unknown" }}</div>
+                  <div class="muted">{{ d.campaign.title|default:"General" }} • {{ d.donation_date|date:"M d, Y H:i" }}</div>
                 </div>
-            </div>
-            <button class="nav-close-btn" id="closeSidebarBtn"><i class="fas fa-times"></i></button>
+                <div><strong>{{ d.amount|floatformat:2 }}</strong></div>
+              </div>
+            {% empty %}
+              <div class="muted">No donations recorded yet.</div>
+            {% endfor %}
+          </div>
         </div>
 
-        <div class="nav-user">
-            <div class="user-avatar">
-                <!-- Church logo behind pastor initials -->
-                <img src="/media/church-logo.jpeg" alt="Church Logo" class="user-avatar-logo" onerror="this.onerror=null; this.style.display='none';">
-                <span>PW</span>
-            </div>
-            <div class="user-info">
-                <div class="user-name">Pastor Wilson</div>
-                <div class="user-role">{% church_t 'senior_pastor' %}</div>
-                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">{% church_t 'welcome_back_emoji' %}</div>
-                <!-- Language Selector -->
-                <div style="margin-top: 8px;">
-                    {% include 'members/language_selector.html' %}
+        <div class="panel">
+          <div class="panel-hd">Recent Members</div>
+          <div class="panel-bd">
+            {% for m in recent_members|slice:":8" %}
+              <div class="item-row">
+                <div>
+                  <div>{{ m.full_name }}</div>
+                  <div class="muted">{{ m.email }}</div>
                 </div>
-            </div>
+                <div class="muted">{{ m.date_joined|date:"M d" }}</div>
+              </div>
+            {% empty %}
+              <div class="muted">No recent members.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="pd-panels">
+        <div class="panel">
+          <div class="panel-hd">Recent Messages</div>
+          <div class="panel-bd">
+            {% for rm in recent_messages|slice:":8" %}
+              <div class="item-row">
+                <div>
+                  <div>{{ rm.message.title }}</div>
+                  <div class="muted">{{ rm.message.created_at|date:"M d, Y H:i" }}</div>
+                </div>
+                <div class="muted">to {{ rm.message.recipient_count }}</div>
+              </div>
+            {% empty %}
+              <div class="muted">No recent messages.</div>
+            {% endfor %}
+          </div>
         </div>
 
-        <div class="nav-menu">
-            <!-- All important links as per original design -->
-            <a href="#" class="nav-item active">
-                <i class="fas fa-tachometer-alt"></i> <span>{% church_t 'main_dashboard' %}</span>
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-microphone"></i> <span>{% church_t 'sermons' %}</span>
-            </a>
-            
-            <!-- PASTORAL QUICK ACTIONS -->
-            {% church_t 'quick_actions' %}
-            <div class="nav-section-label">{% church_t 'quick_actions' %}</div>
-            
-            <!-- Communication -->
-            <a href="{% url 'members:message_create' %}" class="nav-item">
-                <i class="fas fa-envelope"></i> <span>{% church_t 'create_message' %}</span>
-            </a>
-            <a href="{% url 'members:member_messages' %}" class="nav-item">
-                <i class="fas fa-inbox"></i> <span>{% church_t 'view_messages' %}</span>
-            </a>
-            
-            <!-- Events -->
-            <a href="{% url 'events:event_list' %}" class="nav-item">
-                <i class="fas fa-calendar"></i> <span>{% church_t 'events' %}</span>
-            </a>
-            {% if user.role == 'pastor' %}
-            <a href="{% url 'events:event_create' %}" class="nav-item">
-                <i class="fas fa-plus"></i> <span>{% church_t 'create_event' %}</span>
-            </a>
-            {% endif %}
-            
-            <!-- Member Management -->
-            <a href="{% url 'members:member_list' %}" class="nav-item">
-                <i class="fas fa-user-friends"></i> <span>{% church_t 'all_members' %}</span>
-            </a>
-            <a href="{% url 'profile' %}" class="nav-item">
-                <i class="fas fa-user-edit"></i> <span>{% church_t 'edit_profile' %}</span>
-            </a>
-            
-            <!-- Sermons -->
-            <a href="{% url 'sermons:sermon_list' %}" class="nav-item">
-                <i class="fas fa-microphone"></i> <span>{% church_t 'all_sermons' %}</span>
-            </a>
-            <a href="{% url 'sermons:sermon_create' %}" class="nav-item">
-                <i class="fas fa-plus"></i> <span>{% church_t 'create_sermon' %}</span>
-            </a>
-            <a href="{% url 'sermons:series_list' %}" class="nav-item">
-                <i class="fas fa-book"></i> <span>{% church_t 'series_label' %}</span>
-            </a>
-            
-            <!-- Administration -->
-            <a href="/admin/" class="nav-item">
-                <i class="fas fa-shield-alt"></i> <span>{% church_t 'admin_panel' %}</span>
-            </a>
-            
-            <form method="post" action="{% url 'members:logout' %}" style="display: contents;">
-                {% csrf_token %}
-                <button type="submit" class="nav-item logout-btn" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i> <span>{% church_t 'logout' %}</span>
-                </button>
-            </form>
+        <div class="panel">
+          <div class="panel-hd">Accountant Access Control</div>
+          <div class="panel-bd">
+            {% for acct in accountant_users %}
+              <div class="acc-row">
+                <div>
+                  <div>{{ acct.full_name }}</div>
+                  <div class="muted">{{ acct.username }}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:.5rem;">
+                  {% if acct.can_post_member_donations %}
+                    <span class="badge-state ok">Access Granted</span>
+                  {% else %}
+                    <span class="badge-state no">Access Revoked</span>
+                  {% endif %}
+                  <form method="post" action="{% url 'members:toggle_accountant_access' acct.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-warning">{% if acct.can_post_member_donations %}Revoke{% else %}Grant{% endif %}</button>
+                  </form>
+                </div>
+              </div>
+            {% empty %}
+              <div class="muted">No accountant users found.</div>
+            {% endfor %}
+          </div>
         </div>
-        
-        <!-- MINIMIZE / EXPAND BUTTON INSIDE SIDEBAR -->
-        <button class="minimize-toggle-inside" id="minimizeSidebarBtn" title="Minimize / Expand">
-            <i class="fas fa-chevron-left" id="minimizeIcon"></i>
-        </button>
-    </nav>
-
-    <!-- MAIN CONTENT AREA -->
-    <div class="main-content" id="mainContent">
-        <div class="dashboard-content">
-            
-            <!-- STATS GRID -->
-            <div class="stats-grid" id="statsGrid">
-                <!-- Stats will be rendered by JavaScript -->
-            </div>
-
-            <!-- RECENT MESSAGES -->
-            <div class="panel">
-                <div class="panel-hdr">
-                    <i class="fas fa-envelope"></i> <span>{% church_t 'recent_messages' %}</span>
-                </div>
-                <div class="panel-body">
-                    <div id="recentMessagesList">
-                        <!-- Messages will be rendered by JavaScript -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- RECENT DONATIONS -->
-            <div class="panel">
-                <div class="panel-hdr">
-                    <i class="fas fa-donate"></i> <span>{% church_t 'recent_donations_panel' %}</span>
-                </div>
-                <div class="panel-body">
-                    <div id="recentDonationsList">
-                        <!-- Donations will be rendered by JavaScript -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- ACTIVE MEMBERS -->
-            <div class="panel">
-                <div class="panel-hdr">
-                    <i class="fas fa-users"></i> <span>{% church_t 'active_members' %}</span>
-                </div>
-                <div class="panel-body">
-                    {% if active_members_list %}
-                        {% for member in active_members_list %}
-                            <div class="member-item">
-                                <div class="member-avatar">{{ member.first_name|slice:":1" }}{{ member.last_name|slice:":1" }}</div>
-                                <div class="member-info">
-                                    <div class="member-name">{{ member.first_name }} {{ member.last_name }}</div>
-                                    <div class="member-email">{{ member.email }}</div>
-                                    <div class="member-meta">
-                                        <span class="member-joined">{% church_t 'joined_label' %} {{ member.date_joined|date:"M d, Y" }}</span>
-                                        <span class="member-status active">✅ {% church_t 'active_status' %}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <p style="text-align:center;color:var(--text-muted);padding:1rem;">👥 {% church_t 'no_active_members' %}</p>
-                    {% endif %}
-                </div>
-            </div>
+      </div>
+    </main>
     </div>
+</div>
+{% endblock %}
 
-    <script>
-        // ---------- REAL DATA FROM DJANGO CONTEXT ----------
-        const dashboardData = JSON.parse('{{ dashboard_data|safe|escapejs }}');
-
-        function formatDate(isoString) {
-            const d = new Date(isoString);
-            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        }
-
-        function renderRecentMessages() {
-            const container = document.getElementById('recentMessagesList');
-            if(!dashboardData.recentMessages.length){
-                container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">📧 No messages sent yet</p>';
-                return;
-            }
-            let html = '';
-            dashboardData.recentMessages.forEach(m => {
-                const parsedDate = new Date(m.date);
-                const dateStr = parsedDate.toLocaleDateString() + ' ' + parsedDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                html += `
-                    <div class="message-item">
-                        <div style="flex:1">
-                            <div class="member-name">${m.title}</div>
-                            <div style="font-size:0.7rem;color:var(--text-secondary)">From: ${m.sender}</div>
-                            <div style="font-size:0.65rem;color:var(--text-muted)">${dateStr}</div>
-                        </div>
-                        <div class="message-status">
-                            <span style="font-size:0.8rem;">📤 ${m.recipients} recipients</span>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        function renderStats() {
-            const statsGrid = document.getElementById('statsGrid');
-            statsGrid.innerHTML = `
-                <div class="stat-card"><div class="stat-number">${dashboardData.totalMembers}</div><div class="stat-label">Total Members</div></div>
-                <div class="stat-card"><div class="stat-number">${dashboardData.activeMembers}</div><div class="stat-label">Active Members</div></div>
-                <div class="stat-card"><div class="stat-number">${dashboardData.newMembersThisMonth}</div><div class="stat-label">New This Month</div></div>
-                <div class="stat-card"><div class="stat-number">$${dashboardData.totalDonations.toLocaleString()}</div><div class="stat-label">Total Donations</div></div>
-            `;
-        }
-
-        function renderActiveMembers() {
-            const container = document.getElementById('activeMembersList');
-            if(!dashboardData.activeMembersList.length){
-                container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">👥 No active members found</p>';
-                return;
-            }
-            let html = '';
-            dashboardData.activeMembersList.forEach(m => {
-                const initials = m.firstName.charAt(0) + m.lastName.charAt(0);
-                html += `
-                    <div class="member-item">
-                        <div class="member-avatar">${initials}</div>
-                        <div class="member-info">
-                            <div class="member-name">${m.firstName} ${m.lastName}</div>
-                            <div class="member-email">${m.email}</div>
-                            <div class="member-meta">
-                                <span class="member-joined">Joined: ${formatDate(m.joined)}</span>
-                                <span class="member-status active">✅ Active</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        function renderRecentDonations() {
-            const container = document.getElementById('recentDonationsList');
-            if(!dashboardData.recentDonations.length){
-                container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">💸 No donations recorded yet</p>';
-                return;
-            }
-            let html = '';
-            dashboardData.recentDonations.forEach(d => {
-                const parsedDate = new Date(d.date);
-                const dateStr = parsedDate.toLocaleDateString() + ' ' + parsedDate.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                html += `
-                    <div class="donation-item">
-                        <div style="flex:1">
-                            <div class="member-name">${d.donor}</div>
-                            <div style="font-size:0.7rem;color:var(--text-secondary)">${d.campaign}</div>
-                            <div style="font-size:0.65rem;color:var(--text-muted)">${dateStr}</div>
-                        </div>
-                        <div class="donation-amount">$${d.amount.toLocaleString()}</div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        function renderCampaigns() {
-            const container = document.getElementById('campaignsList');
-            if(!dashboardData.campaigns.length){
-                container.innerHTML = '<p style="padding:1rem;text-align:center;color:var(--text-muted)">📢 No active campaigns</p>';
-                return;
-            }
-            let html = '';
-            dashboardData.campaigns.forEach(c => {
-                const percent = Math.min(100, Math.floor((c.raised / c.goal) * 100));
-                html += `
-                    <div class="campaign-item">
-                        <div style="font-weight:700; margin-bottom:6px;">${c.title}</div>
-                        <div style="font-size:0.75rem; color:var(--text-secondary);">${c.description}</div>
-                        <div class="campaign-progress"><div class="campaign-progress-bar" style="width: ${percent}%;"></div></div>
-                        <div class="campaign-stats">
-                            <span>💰 Raised: $${c.raised.toLocaleString()}</span>
-                            <span>🎯 Goal: $${c.goal.toLocaleString()}</span>
-                            <span>👥 ${c.donors} donors</span>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        function renderQuickActions() {
-            const container = document.getElementById('actionButtons');
-            container.innerHTML = `
-                <a href="{% url 'members:message_create' %}" class="action-btn"><i class="fas fa-envelope-open-text"></i> {% church_t 'create_message_to_congregation' %}</a>
-                <a href="#" class="action-btn"><i class="fas fa-bullhorn"></i> {% church_t 'create_announcement' %}</a>
-                <a href="#" class="action-btn"><i class="fas fa-users"></i> {% church_t 'view_all_members_directory' %}</a>
-                <a href="#" class="action-btn"><i class="fas fa-chart-pie"></i> {% church_t 'financial_reports_overview' %}</a>
-            `;
-        }
-
-        // ---------- SIDEBAR MINIMIZE/EXPAND LOGIC with MOVING TOGGLE BUTTON ----------
-        const verticalNav = document.getElementById('verticalNav');
-        const mainContent = document.getElementById('mainContent');
-        const toggleBtn = document.getElementById('sidebarToggleBtn');
-        const minimizeBtn = document.getElementById('minimizeSidebarBtn');
-        const minimizeIcon = document.getElementById('minimizeIcon');
-        const closeBtn = document.getElementById('closeSidebarBtn');
-
-        let isMinimized = false;
-
-        function updateToggleButtonPosition() {
-            if (window.innerWidth > 780) {
-                if (isMinimized) {
-                    toggleBtn.style.left = '92px';
-                    toggleBtn.classList.add('sidebar-minimized');
-                } else {
-                    toggleBtn.style.left = '300px';
-                    toggleBtn.classList.remove('sidebar-minimized');
-                }
-            } else {
-                toggleBtn.style.left = '20px';
-            }
-        }
-
-        function setMinimized(minimized) {
-            isMinimized = minimized;
-            if (window.innerWidth > 780) {
-                if (minimized) {
-                    verticalNav.classList.add('minimized');
-                    mainContent.classList.add('sidebar-minimized');
-                    minimizeIcon.classList.remove('fa-chevron-left');
-                    minimizeIcon.classList.add('fa-chevron-right');
-                } else {
-                    verticalNav.classList.remove('minimized');
-                    mainContent.classList.remove('sidebar-minimized');
-                    minimizeIcon.classList.remove('fa-chevron-right');
-                    minimizeIcon.classList.add('fa-chevron-left');
-                }
-                updateToggleButtonPosition();
-            } else {
-                if (minimized) {
-                    verticalNav.classList.add('minimized');
-                    minimizeIcon.classList.remove('fa-chevron-left');
-                    minimizeIcon.classList.add('fa-chevron-right');
-                } else {
-                    verticalNav.classList.remove('minimized');
-                    minimizeIcon.classList.remove('fa-chevron-right');
-                    minimizeIcon.classList.add('fa-chevron-left');
-                }
-            }
-        }
-
-        function toggleMinimize() {
-            setMinimized(!isMinimized);
-        }
-
-        function toggleSidebarVisibility() {
-            if (window.innerWidth <= 780) {
-                if (verticalNav.classList.contains('mobile-open')) {
-                    verticalNav.classList.remove('mobile-open');
-                } else {
-                    verticalNav.classList.add('mobile-open');
-                }
-            } else {
-                toggleMinimize();
-            }
-        }
-
-        function closeSidebarMobile() {
-            if (window.innerWidth <= 780) {
-                verticalNav.classList.remove('mobile-open');
-            } else {
-                if (!isMinimized) {
-                    setMinimized(true);
-                } else {
-                    setMinimized(false);
-                }
-            }
-        }
-
-        minimizeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleMinimize();
-        });
-        
-        toggleBtn.addEventListener('click', toggleSidebarVisibility);
-        closeBtn.addEventListener('click', closeSidebarMobile);
-        
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 780) {
-                verticalNav.classList.remove('mobile-open');
-                if (isMinimized) {
-                    verticalNav.classList.add('minimized');
-                    mainContent.classList.add('sidebar-minimized');
-                } else {
-                    verticalNav.classList.remove('minimized');
-                    mainContent.classList.remove('sidebar-minimized');
-                }
-                updateToggleButtonPosition();
-            } else {
-                mainContent.classList.remove('sidebar-minimized');
-                if (isMinimized) {
-                    verticalNav.classList.add('minimized');
-                    minimizeIcon.classList.remove('fa-chevron-left');
-                    minimizeIcon.classList.add('fa-chevron-right');
-                } else {
-                    verticalNav.classList.remove('minimized');
-                    minimizeIcon.classList.remove('fa-chevron-right');
-                    minimizeIcon.classList.add('fa-chevron-left');
-                }
-                toggleBtn.style.left = '20px';
-            }
-        });
-        
-        function initDashboard() {
-            if (window.innerWidth > 780) {
-                setMinimized(false);
-            } else {
-                verticalNav.classList.remove('mobile-open');
-            }
-            // Render all dashboard components
-            renderStats();
-            renderRecentMessages();
-            renderRecentDonations();
-            renderActiveMembers();
-        }
-        
-        initDashboard();
-    </script>
-    
-    <!-- Navigation Labels with Language Support -->
-    {% include 'members/navigation_labels.html' %}
-</body>
-</html>
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const layout = document.querySelector('.pd-layout');
+    const btn = document.getElementById('sidebarToggleBtn');
+    if (!layout || !btn) return;
+    btn.addEventListener('click', function () {
+        layout.classList.toggle('sidebar-collapsed');
+    });
+});
+</script>
+{% endblock %}

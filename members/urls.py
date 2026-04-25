@@ -26,4 +26,11 @@ urlpatterns = [
     path('messages/list/', MessageListView.as_view(), name='message_list'),
     path('messages/<int:pk>/', MessageDetailView.as_view(), name='message_detail'),
     path('messages/my/', member_messages, name='member_messages'),
+    path('groups/', views.group_list, name='group_list'),
+    path('groups/create/', views.group_create, name='group_create'),
+    path('groups/<int:pk>/', views.group_detail, name='group_detail'),
+    path('groups/<int:pk>/add-member/', views.group_add_member, name='group_add_member'),
+    path('groups/<int:pk>/add-activity/', views.group_add_activity, name='group_add_activity'),
+    path('accountants/<int:user_id>/toggle-access/', views.toggle_accountant_access, name='toggle_accountant_access'),
+    path('accountants/<int:user_id>/promote/', views.promote_to_accountant, name='promote_to_accountant'),
 ]

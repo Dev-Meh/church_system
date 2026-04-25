@@ -62,6 +62,13 @@ class DonationCampaign(models.Model):
         return self.donations.count()
 
 class Donation(models.Model):
+    DONATION_TYPE_CHOICES = [
+        ('tithe', 'Zaka'),
+        ('offering', 'Sadaka'),
+        ('special', 'Mchango Maalum'),
+        ('other', 'Mchango Mwingine'),
+    ]
+
     PAYMENT_METHOD_CHOICES = [
         ('cash', 'Cash'),
         ('bank_transfer', 'Bank Transfer'),
@@ -81,6 +88,7 @@ class Donation(models.Model):
     donor = models.ForeignKey(ChurchUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='donations')
     campaign = models.ForeignKey(DonationCampaign, on_delete=models.SET_NULL, null=True, blank=True, related_name='donations')
     category = models.ForeignKey(DonationCategory, on_delete=models.SET_NULL, null=True, related_name='donations')
+    donation_type = models.CharField(max_length=20, choices=DONATION_TYPE_CHOICES, default='other')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
@@ -90,6 +98,7 @@ class Donation(models.Model):
     donor_phone = models.CharField(max_length=20, blank=True)
     is_anonymous = models.BooleanField(default=False)
     notes = models.TextField(blank=True)
+    contribution_date = models.DateField(default=timezone.now)
     donation_date = models.DateTimeField(auto_now_add=True)
     processed_date = models.DateTimeField(null=True, blank=True)
     processed_by = models.ForeignKey(ChurchUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='processed_donations')

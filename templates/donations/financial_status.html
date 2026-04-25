@@ -476,7 +476,7 @@
                         <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
                     </div>
                     <div class="stat-label">{% church_t 'total_donations' %}</div>
-                    <div class="stat-value">${{ total_donations|floatformat:2 }}</div>
+                    <div class="stat-value">TZS {{ total_donations|floatformat:2 }}</div>
                     <div class="stat-desc">{% church_t 'all_time_contributions' %}</div>
                 </div>
                 <div class="stat-card gold">
@@ -500,7 +500,7 @@
                         <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
                     </div>
                     <div class="stat-label">{% church_t 'avg_donation' %}</div>
-                    <div class="stat-value">$0</div>
+                    <div class="stat-value">TZS 0</div>
                     <div class="stat-desc">{% church_t 'per_contribution' %}</div>
                 </div>
             </div>
@@ -528,15 +528,13 @@
                                 {% for stat in campaign_stats %}
                                 <tr>
                                     <td>{{ stat.campaign.title }}</td>
-                                    <td>${{ stat.campaign.target_amount|floatformat:2 }}</td>
-                                    <td><strong>${{ stat.total|floatformat:2 }}</strong></td>
+                                    <td>TZS {{ stat.campaign.target_amount|floatformat:2 }}</td>
+                                    <td><strong>TZS {{ stat.total|floatformat:2 }}</strong></td>
                                     <td>{{ stat.donors }}</td>
                                     <td>
-                                        {% with progress=stat.total|div:stat.campaign.target_amount|mul:100 %}
                                         <div class="progress">
-                                            <div class="progress-bar" style="width: {{ progress|floatformat:0 }}%"></div>
+                                            <div class="progress-bar" style="width: {{ stat.progress_percentage|floatformat:0 }}%"></div>
                                         </div>
-                                        {% endwith %}
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -579,7 +577,7 @@
                                 <tr>
                                     <td>{{ donation.donation_date|date:"M d, Y" }}</td>
                                     <td>{{ donation.donor.get_full_name|default:donation.donor.username }}</td>
-                                    <td><strong>${{ donation.amount|floatformat:2 }}</strong></td>
+                                    <td><strong>TZS {{ donation.amount|floatformat:2 }}</strong></td>
                                     <td>{{ donation.get_payment_method_display }}</td>
                                     <td>
                                         {% if donation.campaign %}

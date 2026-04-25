@@ -1,11 +1,14 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import ChurchUser
+from .models import ChurchUser, ChurchGroup, GroupActivity
 
 class ChurchUserRegistrationForm(UserCreationForm):
     """Unified registration form for both members and pastors"""
+    REGISTRATION_ROLE_CHOICES = [
+        choice for choice in ChurchUser.ROLE_CHOICES if choice[0] != 'accountant'
+    ]
     role = forms.ChoiceField(
-        choices=ChurchUser.ROLE_CHOICES,
+        choices=REGISTRATION_ROLE_CHOICES,
         required=True,
         widget=forms.Select(attrs={
             'class': 'form-control',
@@ -291,4 +294,27 @@ class ChurchUserUpdateForm(forms.ModelForm):
         widgets = {
             'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
             'address': forms.Textarea(attrs={'rows': 3}),
+        }
+
+
+class ChurchGroupForm(forms.ModelForm):
+    class Meta:
+        model = ChurchGroup
+        fields = ["name", "group_type", "description", "leader", "is_active"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "group_type": forms.Select(attrs={"class": "form-control"}),
+            "leader": forms.Select(attrs={"class": "form-control"}),
+        }
+
+
+class GroupActivityForm(forms.ModelForm):
+    class Meta:
+        model = GroupActivity
+        fields = ["title", "description", "activity_date"]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(attrs={"rows": 4, "class": "form-control"}),
+            "activity_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
         }

@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from .models import Event
+from .forms import EventForm
 
 class EventListView(ListView):
     """List all events"""
@@ -24,7 +25,7 @@ class EventCreateView(LoginRequiredMixin, CreateView):
     """Create new event - pastor only"""
     model = Event
     template_name = 'events/event_form.html'
-    fields = ['title', 'description', 'event_type', 'start_date', 'end_date', 'location', 'frequency', 'max_participants', 'registration_required', 'registration_deadline', 'is_published', 'image']
+    form_class = EventForm
     success_url = reverse_lazy('events:event_list')
     
     def dispatch(self, request, *args, **kwargs):
@@ -43,7 +44,7 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
     """Update event - pastor only"""
     model = Event
     template_name = 'events/event_form.html'
-    fields = ['title', 'description', 'event_type', 'start_date', 'end_date', 'location', 'frequency', 'max_participants', 'registration_required', 'registration_deadline', 'is_published', 'image']
+    form_class = EventForm
     
     def dispatch(self, request, *args, **kwargs):
         # Only allow pastors to update events

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load i18n_church %}
+
+{% block title %}Sermons - PHM-ARCC{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+      <h3 class="mb-1">{% church_t 'sermons' %}</h3>
+    </div>
+    {% if user.role == 'pastor' %}
+      <a href="{% url 'sermons:sermon_create' %}" class="btn btn-primary">Create Sermon</a>
+    {% endif %}
+  </div>
+
+  <form method="get" class="card mb-3">
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-md-4">
+          {{ search_form.query }}
+        </div>
+        <div class="col-md-3">
+          {{ search_form.speaker }}
+        </div>
+        <div class="col-md-3">
+          {{ search_form.sermon_type }}
+        </div>
+        <div class="col-md-2 d-grid">
+          <button type="submit" class="btn btn-outline-primary">Filter</button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  {% if sermons %}
+    <div class="row g-3">
+      {% for sermon in sermons %}
+        <div class="col-lg-4 col-md-6">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title mb-1">{{ sermon.title }}</h5>
+              <div class="text-muted small mb-2">
+                {{ sermon.sermon_date|date:"F d, Y" }}{% if sermon.speaker %} - {{ sermon.speaker.full_name }}{% endif %}
+              </div>
+              <p class="card-text">
+                {% if sermon.description %}
+                  {{ sermon.description|truncatechars:220 }}
+                {% else %}
+                  No description available.
+                {% endif %}
+              </p>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+              <a href="{% url 'sermons:sermon_detail' sermon.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+              {% if user.role == 'pastor' %}
+                <span>
+                  <a href="{% url 'sermons:sermon_update' sermon.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                  <a href="{% url 'sermons:sermon_delete' sermon.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                </span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">No sermons found.</div>
+  {% endif %}
+
+  {% if is_paginated %}
+    <nav class="mt-4">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% endif %}
+        <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+        {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}

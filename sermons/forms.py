@@ -33,35 +33,29 @@ class SermonForm(forms.ModelForm):
     class Meta:
         model = Sermon
         fields = [
-            'title', 'description', 'speaker', 'series', 'sermon_date', 'sermon_type',
-            'bible_references', 'audio_file', 'video_file', 'transcript', 'notes',
-            'slides', 'thumbnail', 'duration', 'is_published', 'is_featured'
+            'title', 'description', 'bible_references', 'notes', 'is_published'
         ]
         widgets = {
-            'sermon_date': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
-            'description': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'rows': 5, 'class': 'form-control'}),
             'bible_references': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
-            'transcript': forms.Textarea(attrs={'rows': 6, 'class': 'form-control'}),
-            'notes': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
-            'duration': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'notes': forms.Textarea(attrs={'rows': 5, 'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['speaker'].queryset = ChurchUser.objects.filter(
-            role__in=['pastor', 'elder', 'deacon']
+        self.fields['title'].widget.attrs['placeholder'] = 'Mfano: Nguvu ya Maombi ya Asubuhi'
+        self.fields['description'].widget.attrs['placeholder'] = (
+            'Andika mahubiri mafupi kwa lugha rahisi na inayoeleweka kwa waumini wote.'
         )
-        self.fields['series'].queryset = SermonSeries.objects.filter(is_active=True)
+        self.fields['notes'].widget.attrs['placeholder'] = (
+            'Hitimisho au ujumbe wa kuchukua nyumbani (hiari).'
+        )
 
-    def clean(self):
-        cleaned_data = super().clean()
-        audio_file = cleaned_data.get('audio_file')
-        video_file = cleaned_data.get('video_file')
-
-        if not audio_file and not video_file:
-            raise forms.ValidationError("Either audio file or video file is required.")
-
-        return cleaned_data
+    def clean_description(self):
+        description = (self.cleaned_data.get('description') or '').strip()
+        if len(description) > 1200:
+            raise forms.ValidationError("Mahubiri yawe mafupi: usizidi herufi 1200.")
+        return description
 
 class SermonCategoryForm(forms.ModelForm):
     class Meta:

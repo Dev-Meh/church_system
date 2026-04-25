@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Unda Kundi{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow-sm">
+    <div class="card-header">
+      <h4 class="mb-0">Unda Kundi la Kanisa</h4>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Hifadhi Kundi</button>
+        <a href="{% url 'members:group_list' %}" class="btn btn-secondary">Rudi</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

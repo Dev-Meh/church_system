@@ -9,6 +9,9 @@ import json
 from .models import ChurchUser
 from donations.models import Donation, DonationCampaign
 from .models_message import MessageRecipient
+from events.models import Event
+from sermons.models import Sermon
+from prayers.models import PrayerRequest
 
 @login_required(login_url='members:login')
 def dashboard(request):
@@ -70,13 +73,16 @@ def pastor_dashboard(request):
     recent_messages = MessageRecipient.objects.filter(
         message__sender=user
     ).select_related('message').order_by('-message__created_at')[:10]
+
+    accountant_users = ChurchUser.objects.filter(role='accountant').order_by('first_name', 'last_name')
     
     # Prepare data for JSON serialization
     dashboard_data = {
         'total_members': total_members,
         'active_members': active_members,
         'new_members_this_month': new_members_this_month,
-        'total_donations': total_donations,
+        'total_donations': float(total_donations),
+        'donations_this_month': float(donations_this_month),
         'recent_messages': [
             {
                 'title': msg.message.title,
@@ -98,8 +104,8 @@ def pastor_dashboard(request):
         ],
         'recent_donations': [
             {
-                'donor': donation.donor.get_full_name(),
-                'campaign': donation.campaign.title,
+                'donor': donation.donor.get_full_name() if donation.donor else 'Anonymous',
+                'campaign': donation.campaign.title if donation.campaign else 'General Fund',
                 'amount': float(donation.amount),
                 'date': donation.donation_date.strftime('%Y-%m-%d %H:%M')
             }
@@ -110,7 +116,7 @@ def pastor_dashboard(request):
                 'title': stat.campaign.title,
                 'description': stat.campaign.description,
                 'raised': float(stat.total),
-                'goal': float(stat.campaign.goal_amount),
+                'goal': float(stat.campaign.target_amount),
                 'donors': stat.donors
             }
             for stat in campaign_stats
@@ -129,6 +135,7 @@ def pastor_dashboard(request):
         'campaign_stats': campaign_stats,
         'recent_members': recent_members,
         'recent_messages': recent_messages,
+        'accountant_users': accountant_users,
         'dashboard_data': json.dumps(dashboard_data),
         'is_pastor': True,
     }
@@ -158,6 +165,14 @@ def member_dashboard(request):
     member_messages = MessageRecipient.objects.filter(
         recipient=user
     ).select_related('message', 'message__sender').order_by('-message__created_at')[:5]
+
+    # Left navigation counters
+    nav_events_count = Event.objects.filter(is_published=True).count()
+    nav_sermons_count = Sermon.objects.filter(is_published=True).count()
+    nav_prayers_count = PrayerRequest.objects.filter(
+        visibility__in=['public', 'leadership']
+    ).exclude(status='closed').count()
+    nav_messages_count = MessageRecipient.objects.filter(recipient=user).count()
     
     context = {
         'user': user,
@@ -166,6 +181,10 @@ def member_dashboard(request):
         'available_campaigns': available_campaigns,
         'unread_messages_count': unread_messages_count,
         'member_messages': member_messages,
+        'nav_events_count': nav_events_count,
+        'nav_sermons_count': nav_sermons_count,
+        'nav_prayers_count': nav_prayers_count,
+        'nav_messages_count': nav_messages_count,
         'is_pastor': False,
     }
     
@@ -180,8 +199,10 @@ class MemberListView(LoginRequiredMixin, ListView):
     login_url = '/members/login/'
     
     def get_queryset(self):
-        # Only show members, not pastors or admins
-        return ChurchUser.objects.filter(role='member').order_by('-date_joined')
+        # Show church members and accountants so pastor can manage donation access
+        return ChurchUser.objects.filter(
+            role__in=['member', 'accountant']
+        ).order_by('role', '-date_joined')
     
     def dispatch(self, request, *args, **kwargs):
         # Only allow pastors to access this view

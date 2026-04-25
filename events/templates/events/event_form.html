@@ -514,7 +514,6 @@ document.addEventListener('DOMContentLoaded', function() {
   
   const now = new Date();
   const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-  const minDate = localDateTime.toISOString().slice(0, 10);
   
   // Helper function to format date for display
   function formatDateForDisplay(dateString) {
@@ -561,8 +560,6 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Setup start date input
   if (startDateInput) {
-    startDateInput.min = minDate;
-    
     // Create helper text
     createDateHelper(startDateInput, 'start');
     
@@ -578,10 +575,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
       
-      // Update deadline minimum
-      if (deadlineInput && this.value) {
-        deadlineInput.max = this.value;
-      }
     });
   }
   
@@ -608,24 +601,8 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Setup registration deadline input
   if (deadlineInput) {
-    deadlineInput.min = minDate;
-    if (startDateInput && startDateInput.value) {
-      deadlineInput.max = startDateInput.value;
-    }
-    
     // Create helper text
     createDateHelper(deadlineInput, 'deadline');
-    
-    // Add change event for validation
-    deadlineInput.addEventListener('change', function() {
-      if (startDateInput && this.value && startDateInput.value) {
-        if (this.value >= startDateInput.value) {
-          this.setCustomValidity('Registration deadline must be before event start date');
-        } else {
-          this.setCustomValidity('');
-        }
-      }
-    });
   }
 });
 </script>

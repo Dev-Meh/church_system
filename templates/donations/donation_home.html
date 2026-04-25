@@ -492,42 +492,63 @@
             {% endif %}
 
             <div class="donation-grid">
-                <!-- Donation Form -->
+                <!-- Manual Entry / Member Notice -->
                 <div class="donation-form-card">
                     <div class="card-header">
                         <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                        <h3>{% church_t 'make_donation' %}</h3>
+                        <h3>{% if is_accountant %}Uingizaji wa Mchango (Mhasibu){% else %}Taarifa ya Michango{% endif %}</h3>
                     </div>
                     <div class="card-body">
-                        <form method="post">
-                            {% csrf_token %}
-                            
-                            <div class="form-group">
-                                <label for="{{ form.amount.id_for_label }}" class="form-label">{% church_t 'donation_amount' %}</label>
-                                {{ form.amount }}
-                                {% if form.amount.errors %}
-                                    <div class="text-danger">{{ form.amount.errors.0 }}</div>
-                                {% endif %}
-                            </div>
+                        {% if is_accountant %}
+                            <form method="post">
+                                {% csrf_token %}
 
-                            <div class="form-group">
-                                <label for="{{ form.payment_method.id_for_label }}" class="form-label">{% church_t 'payment_method' %}</label>
-                                {{ form.payment_method }}
-                                {% if form.payment_method.errors %}
-                                    <div class="text-danger">{{ form.payment_method.errors.0 }}</div>
-                                {% endif %}
-                            </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.donor.id_for_label }}">Mwanachama</label>
+                                    {{ form.donor }}
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.donation_type.id_for_label }}">Aina ya Mchango</label>
+                                    {{ form.donation_type }}
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.amount.id_for_label }}">Kiasi</label>
+                                    {{ form.amount }}
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.payment_method.id_for_label }}">Njia ya Malipo</label>
+                                    {{ form.payment_method }}
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.category.id_for_label }}">Category (si lazima)</label>
+                                    {{ form.category }}
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.campaign.id_for_label }}">Campaign (si lazima)</label>
+                                    {{ form.campaign }}
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.contribution_date.id_for_label }}">Tarehe ya Mchango</label>
+                                    {{ form.contribution_date }}
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.notes.id_for_label }}">Maelezo</label>
+                                    {{ form.notes }}
+                                </div>
 
-                            <div class="form-group">
-                                <label for="{{ form.notes.id_for_label }}" class="form-label">{% church_t 'notes_optional' %}</label>
-                                {{ form.notes }}
-                                {% if form.notes.errors %}
-                                    <div class="text-danger">{{ form.notes.errors.0 }}</div>
-                                {% endif %}
+                                <button type="submit" class="btn-donate">Hifadhi Mchango</button>
+                            </form>
+                        {% elif is_accountant_role and not has_accountant_access %}
+                            <div class="alert alert-danger mb-0">
+                                Akaunti yako ya mhasibu haina ruhusa ya kuingiza michango kwa sasa.
+                                Mchungaji au admin aende kwenye Members kisha akupe <strong>Grant Access</strong>.
                             </div>
-
-                            <button type="submit" class="btn-donate">{% church_t 'complete_donation' %}</button>
-                        </form>
+                        {% else %}
+                            <div class="alert alert-info mb-0">
+                                Michango inaingizwa na mhasibu baada ya kupokea malipo.
+                                Ukiwa member, utaona rekodi zako hapa zikiwa zimetenganishwa (Zaka, Sadaka, Maalum, na Mengine).
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -548,9 +569,9 @@
                                         <div class="progress-bar-fill" style="width: {{ campaign.progress_percentage|floatformat:0 }}%"></div>
                                     </div>
                                     <div class="campaign-stats">
-                                        <span>${{ campaign.current_amount|floatformat:0 }}</span>
+                                        <span>TZS {{ campaign.current_amount|floatformat:0 }}</span>
                                         <span>{{ campaign.progress_percentage|floatformat:0 }}%</span>
-                                        <span>${{ campaign.target_amount|floatformat:0 }}</span>
+                                        <span>TZS {{ campaign.target_amount|floatformat:0 }}</span>
                                     </div>
                                 </div>
                                 {% endfor %}
@@ -573,22 +594,71 @@
                     <div class="info-icon">
                         <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
                     </div>
-                    <div class="info-title">{% church_t 'total_donations' %}</div>
-                    <div class="info-value">$0</div>
+                    <div class="info-title">Jumla ya Michango Yangu</div>
+                    <div class="info-value">{{ total_all|floatformat:0 }}</div>
                 </div>
                 <div class="info-card" style="background: linear-gradient(135deg, #1a4a2e, #226038);">
                     <div class="info-icon">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                     </div>
-                    <div class="info-title">{% church_t 'your_donations' %}</div>
-                    <div class="info-value">0</div>
+                    <div class="info-title">Zaka</div>
+                    <div class="info-value">{{ total_tithe|floatformat:0 }}</div>
                 </div>
                 <div class="info-card" style="background: linear-gradient(135deg, #0e3a44, #165060);">
                     <div class="info-icon">
                         <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                     </div>
-                    <div class="info-title">{% church_t 'active_campaigns' %}</div>
+                    <div class="info-title">Sadaka</div>
+                    <div class="info-value">{{ total_offering|floatformat:0 }}</div>
+                </div>
+            </div>
+
+            <div class="info-cards mt-3">
+                <div class="info-card" style="background: linear-gradient(135deg, #5b2a86, #7a3fb5);">
+                    <div class="info-title">Mchango Maalum</div>
+                    <div class="info-value">{{ total_special|floatformat:0 }}</div>
+                </div>
+                <div class="info-card" style="background: linear-gradient(135deg, #3c3c3c, #5f5f5f);">
+                    <div class="info-title">Michango Mengine</div>
+                    <div class="info-value">{{ total_other|floatformat:0 }}</div>
+                </div>
+                <div class="info-card" style="background: linear-gradient(135deg, #0e3a44, #165060);">
+                    <div class="info-title">Kampeni Hai</div>
                     <div class="info-value">{{ campaigns|length }}</div>
+                </div>
+            </div>
+
+            <div class="panel mt-4">
+                <div class="panel-header">
+                    <h3>Rekodi 10 za Karibuni (Mimi)</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Tarehe</th>
+                                    <th>Aina</th>
+                                    <th>Kiasi</th>
+                                    <th>Njia ya Malipo</th>
+                                    <th>Campaign</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for donation in recent_my_donations %}
+                                <tr>
+                                    <td>{{ donation.contribution_date }}</td>
+                                    <td>{{ donation.get_donation_type_display }}</td>
+                                    <td>{{ donation.amount|floatformat:2 }}</td>
+                                    <td>{{ donation.get_payment_method_display }}</td>
+                                    <td>{% if donation.campaign %}{{ donation.campaign.title }}{% else %}-{% endif %}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-muted">Hakuna rekodi za michango bado.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

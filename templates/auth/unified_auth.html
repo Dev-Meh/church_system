@@ -96,37 +96,23 @@
         padding: 2.5rem;
     }
 
-    .auth-tabs {
-        display: flex;
-        margin-bottom: 2rem;
-        border-bottom: 2px solid #f0f0f0;
-    }
-
-    .auth-tab {
-        flex: 1;
-        padding: 1rem;
-        background: none;
-        border: none;
-        font-size: 16px;
-        font-weight: 600;
-        color: #666;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border-bottom: 3px solid transparent;
-        margin-bottom: -2px;
-    }
-
-    .auth-tab.active {
-        color: #1a3a5c;
-        border-bottom-color: #c8a84b;
-    }
-
     .auth-content {
-        display: none;
-    }
-
-    .auth-content.active {
         display: block;
+    }
+    .auth-switch-links {
+        margin-top: 1.25rem;
+        text-align: center;
+        font-size: 14px;
+        color: #555;
+    }
+    .auth-switch-links a {
+        color: #1a3a5c;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .auth-switch-links a:hover {
+        color: #c8a84b;
+        text-decoration: underline;
     }
 
     .form-section {
@@ -268,26 +254,9 @@
 </style>
 
 <script>
-function switchTab(tabName) {
-    // Hide all content
-    document.querySelectorAll('.auth-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    
-    // Remove active class from all tabs
-    document.querySelectorAll('.auth-tab').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    
-    // Show selected content
-    document.getElementById(tabName + '-content').classList.add('active');
-    
-    // Activate selected tab
-    document.getElementById(tabName + '-tab').classList.add('active');
-}
-
 function togglePastorFields() {
     const roleSelect = document.getElementById('{{ form.role.id_for_label }}');
+    if (!roleSelect) return;
     const pastorFields = document.querySelectorAll('.pastor-field');
     const pastorSection = document.getElementById('pastor-fields-section');
     
@@ -308,11 +277,13 @@ function togglePastorFields() {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Show login tab by default
-    switchTab('login');
-    
-    // Initialize pastor fields visibility
+    {% if auth_mode == 'register' %}
+    const roleSelect = document.getElementById('{{ form.role.id_for_label }}');
+    if (roleSelect) {
+        roleSelect.addEventListener('change', togglePastorFields);
+    }
     togglePastorFields();
+    {% endif %}
 });
 </script>
 
@@ -337,18 +308,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 <a href="{% url 'members:set_language' 'sw' %}" style="color:{% if current_language == 'sw' %}#c8a84b{% else %}rgba(255,255,255,0.85){% endif %};font-weight:600;text-decoration:none;">Kiswahili</a>
             </div>
             <div class="page-title">{% church_t 'welcome_church_community' %}</div>
-            <div class="page-sub">{% church_t 'login_subtitle' %}</div>
+            <div class="page-sub">
+                {% if auth_mode == 'register' %}
+                    {% church_t 'register_tab' %}
+                {% else %}
+                    {% church_t 'login_subtitle' %}
+                {% endif %}
+            </div>
         </div>
 
         <div class="auth-body">
-            <!-- Tab Navigation -->
-            <div class="auth-tabs">
-                <button class="auth-tab active" id="login-tab" onclick="switchTab('login')">{% church_t 'login_tab' %}</button>
-                <button class="auth-tab" id="register-tab" onclick="switchTab('register')">{% church_t 'register_tab' %}</button>
-            </div>
-
-            <!-- Login Content -->
-            <div class="auth-content active" id="login-content">
+            {% if auth_mode == 'login' %}
+            <div class="auth-content" id="login-content">
                 <form method="post" action="{% url 'members:login' %}">
                     {% csrf_token %}
                     
@@ -377,9 +348,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     <button type="submit" class="submit-btn">{% church_t 'login_to_account' %}</button>
                 </form>
+                <div class="auth-switch-links">
+                    {% church_t 'dont_have_account' %}
+                    <a href="{% url 'members:register' %}">{% church_t 'register_tab' %}</a>
+                </div>
             </div>
+            {% else %}
 
-            <!-- Registration Content -->
             <div class="auth-content" id="register-content">
                 <form method="post" action="{% url 'members:register' %}">
                     {% csrf_token %}
@@ -544,7 +519,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     <button type="submit" class="submit-btn">{% church_t 'create_account' %}</button>
                 </form>
+                <div class="auth-switch-links">
+                    {% church_t 'already_have_account' %}
+                    <a href="{% url 'members:login' %}">{% church_t 'login_tab' %}</a>
+                </div>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>

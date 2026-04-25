@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ group.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="mb-0">{{ group.name }}</h3>
+      <small class="text-muted">Aina: {{ group.get_group_type_display }}</small>
+    </div>
+    <a href="{% url 'members:group_list' %}" class="btn btn-outline-secondary">Makundi Yote</a>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-5 mb-3">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header"><strong>Taarifa za Kundi</strong></div>
+        <div class="card-body">
+          <p><strong>Kiongozi:</strong> {% if group.leader %}{{ group.leader.full_name }}{% else %}Hajapangwa{% endif %}</p>
+          <p class="mb-0"><strong>Maelezo:</strong> {{ group.description|default:"-" }}</p>
+        </div>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-header"><strong>Wanachama wa Kundi</strong></div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+            {% for membership in memberships %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ membership.member.full_name }}</span>
+                <span class="badge bg-secondary">{{ membership.get_role_display }}</span>
+              </li>
+            {% empty %}
+              <li class="list-group-item text-muted">Hakuna wanachama bado.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7 mb-3">
+      {% if can_manage %}
+        <div class="card shadow-sm mb-3">
+          <div class="card-header"><strong>Ongeza Mwanachama</strong></div>
+          <div class="card-body">
+            <form method="post" action="{% url 'members:group_add_member' group.pk %}">
+              {% csrf_token %}
+              <div class="row g-2">
+                <div class="col-md-7">
+                  <select name="member_id" class="form-select" required>
+                    <option value="">Chagua mwanachama</option>
+                    {% for person in available_members %}
+                      <option value="{{ person.id }}">{{ person.full_name }} ({{ person.username }})</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <select name="role" class="form-select">
+                    <option value="member">Member</option>
+                    <option value="assistant">Assistant</option>
+                    <option value="leader">Leader</option>
+                  </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                  <button type="submit" class="btn btn-primary">Ongeza</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card shadow-sm mb-3">
+          <div class="card-header"><strong>Weka Shughuli ya Kundi</strong></div>
+          <div class="card-body">
+            <form method="post" action="{% url 'members:group_add_activity' group.pk %}">
+              {% csrf_token %}
+              {{ activity_form.as_p }}
+              <button type="submit" class="btn btn-success">Hifadhi Shughuli</button>
+            </form>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="card shadow-sm">
+        <div class="card-header"><strong>Shughuli za Kundi</strong></div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+            {% for activity in activities %}
+              <li class="list-group-item">
+                <div class="d-flex justify-content-between">
+                  <strong>{{ activity.title }}</strong>
+                  <small class="text-muted">{{ activity.activity_date }}</small>
+                </div>
+                <div>{{ activity.description }}</div>
+                <small class="text-muted">Imewekwa na: {{ activity.created_by.full_name|default:"N/A" }}</small>
+              </li>
+            {% empty %}
+              <li class="list-group-item text-muted">Hakuna shughuli bado.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

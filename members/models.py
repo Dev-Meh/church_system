@@ -11,6 +11,7 @@ class ChurchUser(AbstractUser):
         ('pastor', 'Pastor'),
         ('elder', 'Church Elder'),
         ('deacon', 'Deacon'),
+        ('accountant', 'Accountant'),
         ('admin', 'Administrator'),
     ]
     
@@ -66,6 +67,10 @@ class ChurchUser(AbstractUser):
     reference_phone = models.CharField(max_length=20, blank=True, help_text="Reference phone")
     is_verified_pastor = models.BooleanField(default=False, help_text="Pastor verification status")
     pastor_verification_date = models.DateTimeField(null=True, blank=True, help_text="When pastor was verified")
+    can_post_member_donations = models.BooleanField(
+        default=False,
+        help_text="Whether this accountant can enter members' donations.",
+    )
     
     class Meta:
         verbose_name = "Church Member"
@@ -168,3 +173,79 @@ class MinistryMembership(models.Model):
     
     def __str__(self):
         return f"{self.member.full_name} - {self.ministry.name}"
+
+
+class ChurchGroup(models.Model):
+    GROUP_TYPE_CHOICES = [
+        ("youth", "Vijana"),
+        ("women", "Akina Mama"),
+        ("elders", "Wazee"),
+    ]
+
+    name = models.CharField(max_length=120, unique=True)
+    group_type = models.CharField(max_length=20, choices=GROUP_TYPE_CHOICES)
+    description = models.TextField(blank=True)
+    leader = models.ForeignKey(
+        ChurchUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="led_church_groups",
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Church Group"
+        verbose_name_plural = "Church Groups"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class GroupMembership(models.Model):
+    ROLE_CHOICES = [
+        ("leader", "Leader"),
+        ("assistant", "Assistant"),
+        ("member", "Member"),
+    ]
+
+    group = models.ForeignKey(
+        ChurchGroup, on_delete=models.CASCADE, related_name="memberships"
+    )
+    member = models.ForeignKey(
+        ChurchUser, on_delete=models.CASCADE, related_name="group_memberships"
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="member")
+    joined_at = models.DateField(default=timezone.now)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Group Membership"
+        verbose_name_plural = "Group Memberships"
+        unique_together = ["group", "member"]
+
+    def __str__(self):
+        return f"{self.member.full_name} - {self.group.name} ({self.role})"
+
+
+class GroupActivity(models.Model):
+    group = models.ForeignKey(
+        ChurchGroup, on_delete=models.CASCADE, related_name="activities"
+    )
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    activity_date = models.DateField(default=timezone.now)
+    created_by = models.ForeignKey(
+        ChurchUser, on_delete=models.SET_NULL, null=True, related_name="group_activities"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Group Activity"
+        verbose_name_plural = "Group Activities"
+        ordering = ["-activity_date", "-created_at"]
+
+    def __str__(self):
+        return f"{self.group.name} - {self.title}"
