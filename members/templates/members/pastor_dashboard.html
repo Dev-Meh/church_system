@@ -20,23 +20,6 @@ body { background: #0b1626; }
 .pd-top { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1.25rem; }
 .pd-title { color:#fff; margin:0; font-weight:700; }
 .pd-sub { color:#9fb2c8; font-size:.92rem; }
-.pd-lang {
-    display: inline-flex;
-    align-items: center;
-    gap: .45rem;
-    padding: .35rem .55rem;
-    border: 1px solid rgba(200,168,75,.3);
-    border-radius: 999px;
-    background: rgba(200,168,75,.08);
-}
-.pd-lang a {
-    color: #d7e4f3;
-    text-decoration: none;
-    font-size: .78rem;
-    font-weight: 700;
-}
-.pd-lang a.active { color: #f2d37a; }
-.pd-lang .sep { color: rgba(255,255,255,.35); font-size: .75rem; }
 .hamburger-btn {
     width: 38px;
     height: 38px;
@@ -86,6 +69,7 @@ body { background: #0b1626; }
 .badge-state { font-size:.75rem; padding:.28rem .55rem; border-radius:99px; }
 .ok { background:#1e4c2f; color:#9ff0b5; }
 .no { background:#4b1f1f; color:#ffb4b4; }
+.chart-wrap { height: 300px; }
 
 .sidebar-brand {
     display: flex;
@@ -158,6 +142,17 @@ body { background: #0b1626; }
         padding: 0;
     }
 }
+@media (max-width: 576px) {
+    .pd-shell { padding: 0.75rem 0.6rem 1.25rem; }
+    .pd-top { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .pd-title { font-size: 1.35rem; }
+    .pd-sub { font-size: 0.82rem; line-height: 1.35; }
+    .pd-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+    .pd-value { font-size: 1.45rem; }
+    .chart-wrap { height: 220px; }
+    .item-row, .acc-row { flex-direction: column; align-items: flex-start; gap: 0.35rem; }
+    .sidebar-toggle-inside { top: -10px; right: -10px; }
+}
 </style>
 {% endblock %}
 
@@ -222,11 +217,6 @@ body { background: #0b1626; }
           <h2 class="pd-title">Pastor Dashboard</h2>
           <div class="pd-sub">Karibu {{ user.first_name }} — usimamizi wa washirika, michango na mawasiliano.</div>
         </div>
-        <div class="pd-lang" aria-label="Language selector">
-          <a href="{% url 'members:set_language' 'en' %}" class="{% if current_language == 'en' %}active{% endif %}">EN</a>
-          <span class="sep">|</span>
-          <a href="{% url 'members:set_language' 'sw' %}" class="{% if current_language == 'sw' %}active{% endif %}">SW</a>
-        </div>
       </div>
 
       <div class="pd-grid">
@@ -236,6 +226,25 @@ body { background: #0b1626; }
         <div class="pd-card"><div class="pd-label">Total Donations</div><div class="pd-value">{{ total_donations|floatformat:0 }}</div></div>
         <div class="pd-card"><div class="pd-label">This Month Donations</div><div class="pd-value">{{ donations_this_month|floatformat:0 }}</div></div>
         <div class="pd-card"><div class="pd-label">Active Campaigns</div><div class="pd-value">{{ active_campaigns }}</div></div>
+      </div>
+
+      <div class="pd-panels">
+        <div class="panel">
+          <div class="panel-hd">Donation Trend (Last 6 Months)</div>
+          <div class="panel-bd">
+            <div class="chart-wrap">
+              <canvas id="pastorDonationChart"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hd">Member Registrations (Last 6 Months)</div>
+          <div class="panel-bd">
+            <div class="chart-wrap">
+              <canvas id="memberRegistrationChart"></canvas>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="pd-panels">
@@ -325,6 +334,7 @@ body { background: #0b1626; }
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const layout = document.querySelector('.pd-layout');
@@ -333,6 +343,65 @@ document.addEventListener('DOMContentLoaded', function () {
     btn.addEventListener('click', function () {
         layout.classList.toggle('sidebar-collapsed');
     });
+
+    const donationCtx = document.getElementById('pastorDonationChart');
+    const registrationCtx = document.getElementById('memberRegistrationChart');
+    const donationLabels = JSON.parse('{{ donation_chart_labels|escapejs }}');
+    const donationData = JSON.parse('{{ donation_chart_data|escapejs }}');
+    const registrationLabels = JSON.parse('{{ registration_chart_labels|escapejs }}');
+    const registrationData = JSON.parse('{{ registration_chart_data|escapejs }}');
+
+    if (donationCtx) {
+        new Chart(donationCtx, {
+            type: 'line',
+            data: {
+                labels: donationLabels,
+                datasets: [{
+                    label: 'Donations (TZS)',
+                    data: donationData,
+                    borderColor: '#f2d37a',
+                    backgroundColor: 'rgba(242, 211, 122, 0.15)',
+                    borderWidth: 2,
+                    tension: 0.35,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#d8e2ef' } } },
+                scales: {
+                    x: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                    y: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } }
+                }
+            }
+        });
+    }
+
+    if (registrationCtx) {
+        new Chart(registrationCtx, {
+            type: 'bar',
+            data: {
+                labels: registrationLabels,
+                datasets: [{
+                    label: 'New Members',
+                    data: registrationData,
+                    backgroundColor: 'rgba(46, 204, 113, 0.45)',
+                    borderColor: '#2ecc71',
+                    borderWidth: 1.5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#d8e2ef' } } },
+                scales: {
+                    x: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                    y: { ticks: { color: '#9fb2c8', precision: 0 }, grid: { color: 'rgba(255,255,255,0.08)' } }
+                }
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

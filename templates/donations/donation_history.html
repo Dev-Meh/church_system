@@ -280,7 +280,8 @@
     .panel-body { padding: 1.5rem; }
 
     .table-responsive {
-        background: rgba(255,255,255,0.02);
+        background: #0f1e2e;
+        border: 1px solid rgba(200,168,75,0.22);
         border-radius: 8px;
         overflow: hidden;
     }
@@ -292,27 +293,29 @@
     }
 
     .table th {
-        background: rgba(200,168,75,0.1);
-        color: #c8a84b;
+        background: linear-gradient(180deg, #1f3652 0%, #1a2f49 100%);
+        color: #f2d98d;
         font-weight: 700;
         letter-spacing: 0.8px;
         text-transform: uppercase;
         padding: 12px 15px;
         text-align: left;
-        border-bottom: 2px solid rgba(200,168,75,0.3);
+        border-bottom: 2px solid rgba(200,168,75,0.5);
     }
 
     .table td {
-        color: rgba(255,255,255,0.8);
+        color: #f4f7fb;
         padding: 12px 15px;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+        border-bottom: 1px solid rgba(255,255,255,0.12);
     }
 
-    .table tr:hover td { background: rgba(255,255,255,0.03); }
+    .table tbody tr:nth-child(odd) td { background: rgba(255,255,255,0.03); }
+    .table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.07); }
+    .table tr:hover td { background: rgba(200,168,75,0.14); color: #fff; }
 
     .badge {
-        background: rgba(200,168,75,0.2);
-        color: #c8a84b;
+        background: rgba(200,168,75,0.24);
+        color: #f5df9b;
         font-size: 10px;
         font-weight: 700;
         padding: 3px 8px;
@@ -387,11 +390,49 @@
         border-color: #c8a84b;
     }
 
-    @media (max-width: 768px) {
-        .sidebar { width: 64px; }
-        .sidebar .brand-text, .sidebar .user-info, .sidebar .nav-label, .sidebar .nav-badge, .sidebar .nav-section-label { opacity: 0; width: 0; pointer-events: none; }
-        .main { margin-left: 64px; }
+    @media (max-width: 992px) {
+        .layout { flex-direction: column; }
+        .sidebar {
+            position: relative;
+            left: auto;
+            top: auto;
+            width: 100% !important;
+            height: auto;
+            min-height: 0;
+            border-right: none;
+            border-bottom: 3px solid #c8a84b;
+        }
+        .sidebar.collapsed { width: 100% !important; }
+        .sidebar.collapsed .brand-text,
+        .sidebar.collapsed .user-info,
+        .sidebar.collapsed .nav-label,
+        .sidebar.collapsed .nav-badge,
+        .sidebar.collapsed .nav-section-label {
+            opacity: 1 !important;
+            width: auto !important;
+            max-width: none !important;
+            pointer-events: auto !important;
+        }
+        .main,
+        .main.collapsed { margin-left: 0 !important; width: 100%; }
+        .topbar {
+            height: auto;
+            min-height: 58px;
+            padding: 0.75rem 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .page-body { padding: 1rem 1rem 2rem; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 576px) {
         .stats-grid { grid-template-columns: 1fr; }
+        .topbar h2 { font-size: 14px; }
+        .chart-wrap { height: 240px; }
+        .table { font-size: 12px; }
+        .table th, .table td { padding: 8px 10px; }
+        .action-buttons { flex-direction: column; align-items: stretch; }
+        .btn-back, .btn-financial { justify-content: center; }
     }
 </style>
 {% endblock %}
@@ -471,7 +512,13 @@
 
         <div class="topbar">
             <div>
-                <h2>Historia ya Michango Yangu</h2>
+                <h2>
+                    {% if can_view_all_donations %}
+                        Historia ya Michango ya Waumini
+                    {% else %}
+                        Historia ya Michango Yangu
+                    {% endif %}
+                </h2>
                 <p>PHM-ARCC Iyumbu Dodoma &mdash; {% church_t 'cms_subtitle' %}</p>
             </div>
             <span class="welcome-pill">{% church_t 'welcome' %}, {{ user.first_name }} {{ user.last_name }}!</span>
@@ -536,7 +583,13 @@
                 <div class="panel">
                     <div class="panel-header">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        <h3>{% church_t 'your_donation_records' %}</h3>
+                        <h3>
+                            {% if can_view_all_donations %}
+                                Rekodi za Michango ya Waumini
+                            {% else %}
+                                {% church_t 'your_donation_records' %}
+                            {% endif %}
+                        </h3>
                     </div>
                     <div class="panel-body">
                         <div class="table-responsive">
@@ -544,6 +597,9 @@
                                 <thead>
                                     <tr>
                                         <th>{% church_t 'table_date' %}</th>
+                                        {% if can_view_all_donations %}
+                                        <th>Muumini</th>
+                                        {% endif %}
                                         <th>Aina</th>
                                         <th>{% church_t 'table_amount' %}</th>
                                         <th>{% church_t 'table_payment_method' %}</th>
@@ -556,6 +612,17 @@
                                     {% for donation in donations %}
                                     <tr>
                                         <td>{{ donation.contribution_date|date:"M d, Y" }}</td>
+                                        {% if can_view_all_donations %}
+                                        <td>
+                                            {% if donation.donor %}
+                                                {{ donation.donor.full_name }}
+                                            {% elif donation.donor_name %}
+                                                {{ donation.donor_name }}
+                                            {% else %}
+                                                Anonymous
+                                            {% endif %}
+                                        </td>
+                                        {% endif %}
                                         <td>{{ donation.get_donation_type_display }}</td>
                                         <td><strong>TZS {{ donation.amount|floatformat:2 }}</strong></td>
                                         <td>{{ donation.get_payment_method_display }}</td>

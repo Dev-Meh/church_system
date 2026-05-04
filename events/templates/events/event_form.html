@@ -206,6 +206,42 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   border-color: #c8a84b;
   box-shadow: 0 0 0 2px rgba(200,168,75,0.1);
 }
+
+@media (max-width: 992px) {
+  .layout { flex-direction: column; }
+  .sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: auto;
+    position: relative;
+    top: auto;
+    border-right: none;
+    border-bottom: 3px solid #c8a84b;
+  }
+  .sidebar.collapsed { width: 100% !important; min-width: 100% !important; }
+  .sidebar.collapsed .brand-text,
+  .sidebar.collapsed .user-info,
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .nav-badge,
+  .sidebar.collapsed .nav-section-label {
+    opacity: 1 !important;
+    width: auto !important;
+    max-width: none !important;
+    pointer-events: auto !important;
+    transform: none !important;
+  }
+  .main { width: 100%; min-width: 0; }
+  .page-body { padding: 1rem 1rem 2rem; }
+  .topbar { height: auto; min-height: 58px; padding: 0.75rem 1rem; flex-wrap: wrap; gap: 0.35rem; }
+  .welcome-pill { white-space: normal; text-align: center; }
+  .event-form-container { padding: 1.25rem; }
+}
+@media (max-width: 576px) {
+  .form-row { flex-direction: column; }
+  .form-actions { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+  .btn { width: 100%; text-align: center; }
+  .form-title { font-size: 20px; }
+}
 </style>
 {% endblock %}
 

@@ -67,6 +67,66 @@
             color: #0d4f7a;
             border-left-color: #0277bd;
         }
+        img, video, iframe {
+            max-width: 100%;
+            height: auto;
+        }
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        body {
+            overflow-x: hidden;
+        }
+        /* Bootstrap grid / flex: allow columns to shrink instead of forcing horizontal scroll */
+        .row > [class*="col-"] {
+            min-width: 0;
+        }
+        pre,
+        code {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        table {
+            max-width: 100%;
+        }
+        input:not([type="checkbox"]):not([type="radio"]),
+        select,
+        textarea {
+            max-width: 100%;
+        }
+        /* Stacked toolbars on phones when you add class cm-stack-sm to the flex row */
+        @media (max-width: 576px) {
+            .cm-stack-sm {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 0.75rem !important;
+            }
+            .cm-stack-sm > .btn,
+            .cm-stack-sm > a.btn {
+                width: 100%;
+                text-align: center;
+            }
+            .hero-section {
+                padding: 48px 0;
+            }
+            .hero-section .display-3 {
+                font-size: 1.75rem;
+            }
+            .hero-section .lead {
+                font-size: 1rem;
+            }
+            .container,
+            .container-fluid {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+            .alert {
+                border-radius: 10px;
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+        }
         @keyframes toastIn {
             from {
                 opacity: 0;
@@ -84,7 +144,7 @@
     {% if messages %}
     <div class="container mt-3">
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert" data-auto-dismiss="true">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
@@ -97,7 +157,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const alerts = document.querySelectorAll('.alert');
+            const alerts = document.querySelectorAll('.alert[data-auto-dismiss="true"]');
             alerts.forEach(function (alertEl) {
                 setTimeout(function () {
                     if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {

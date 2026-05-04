@@ -2,8 +2,22 @@
 
 {% block title %}Message Details - PHM-ARCC Iyumbu Dodoma{% endblock %}
 
+{% block extra_css %}
+<style>
+@media (max-width: 767.98px) {
+  .message-detail-page .display-4 { font-size: 2rem; }
+  .message-detail-page .msg-stat-divider {
+    border-left: none !important;
+    border-top: 1px solid #dee2e6;
+    padding-top: 1rem;
+    margin-top: 0.25rem;
+  }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-4 message-detail-page">
     <div class="mb-4">
         <a href="{% url 'members:message_list' %}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Back to Sent Messages
@@ -26,16 +40,16 @@
             </div>
 
             <h4>Delivery Statistics</h4>
-            <div class="row text-center my-4">
+            <div class="row text-center my-4 g-3 flex-column flex-md-row">
                 <div class="col-md-4">
                     <div class="display-4">{{ total_count }}</div>
                     <div class="text-muted">Total Recipients</div>
                 </div>
-                <div class="col-md-4 border-start">
+                <div class="col-md-4 border-start msg-stat-divider">
                     <div class="display-4 text-success">{{ read_count }}</div>
                     <div class="text-muted">Read</div>
                 </div>
-                <div class="col-md-4 border-start">
+                <div class="col-md-4 border-start msg-stat-divider">
                     <div class="display-4 text-warning">{{ unread_count }}</div>
                     <div class="text-muted">Unread</div>
                 </div>
@@ -48,6 +62,7 @@
             <h5 class="mb-0">Recipient List</h5>
         </div>
         <div class="card-body">
+            <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
@@ -74,6 +89,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </div>

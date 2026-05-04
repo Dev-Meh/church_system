@@ -1,12 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Template Switch Test</title>
     <style>
-        body { background: #0f1e2e; color: white; font-family: Arial; padding: 20px; }
+        body { background: #0f1e2e; color: white; font-family: Arial; padding: 20px; max-width: 100%; overflow-x: hidden; box-sizing: border-box; }
+        *, *::before, *::after { box-sizing: inherit; }
         .test-box { background: rgba(200,168,75,0.2); padding: 20px; border-radius: 8px; margin: 10px 0; }
         .swahili { color: #c8a84b; font-size: 18px; font-weight: bold; }
         .english { color: #4a90e2; font-size: 18px; font-weight: bold; }
+        @media (max-width: 576px) {
+            body { padding: 12px; }
+            h1 { font-size: 1.35rem; word-break: break-word; }
+            .test-box { padding: 14px; }
+        }
     </style>
 </head>
 <body>

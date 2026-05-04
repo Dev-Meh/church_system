@@ -173,9 +173,39 @@ html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; mar
 .stat-item .small{font-size:10px;color:rgba(255,255,255,0.35);margin-top:3px;text-transform:uppercase;letter-spacing:0.5px;}
 .dash-footer{text-align:center;font-size:10px;color:rgba(255,255,255,0.18);letter-spacing:0.5px;padding-top:1.2rem;}
 
-@media(max-width:768px){
-  .stat-grid{grid-template-columns:1fr 1fr;}
-  .bottom-grid{grid-template-columns:1fr;}
+@media (max-width: 992px) {
+  .layout { flex-direction: column; }
+  .sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: auto;
+    position: relative;
+    top: auto;
+    border-right: none;
+    border-bottom: 3px solid #c8a84b;
+  }
+  .sidebar.collapsed { width: 100% !important; min-width: 100% !important; }
+  .sidebar.collapsed .brand-text,
+  .sidebar.collapsed .user-info,
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .nav-badge,
+  .sidebar.collapsed .nav-section-label {
+    opacity: 1 !important;
+    width: auto !important;
+    max-width: none !important;
+    pointer-events: auto !important;
+    transform: none !important;
+  }
+  .main { width: 100%; min-width: 0; }
+  .page-body { padding: 1rem 1rem 2rem; }
+  .topbar { height: auto; min-height: 58px; padding: 0.75rem 1rem; flex-wrap: wrap; gap: 0.35rem; }
+  .welcome-pill { white-space: normal; text-align: center; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .bottom-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 576px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .topbar h2 { font-size: 14px; }
 }
 </style>
 {% endblock %}

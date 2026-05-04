@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n_church %}
 
 {% block title %}Message Center - PHM-ARCC Iyumbu Church Management System{% endblock %}
 
@@ -154,6 +155,40 @@ html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; mar
 .action-btn{display:flex;align-items:center;gap:8px;width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;text-decoration:none;transition:all 0.2s;margin-bottom:0.5rem;}
 .action-btn:hover{background:rgba(255,255,255,0.1);color:#c8a84b;}
 .action-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;}
+
+@media (max-width: 992px) {
+  .layout { flex-direction: column; }
+  .sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: auto;
+    position: relative;
+    top: auto;
+    border-right: none;
+    border-bottom: 3px solid #c8a84b;
+  }
+  .sidebar.collapsed { width: 100% !important; min-width: 100% !important; }
+  .sidebar.collapsed .brand-text,
+  .sidebar.collapsed .user-info,
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .nav-section-label {
+    opacity: 1 !important;
+    width: auto !important;
+    max-width: none !important;
+    pointer-events: auto !important;
+    transform: none !important;
+  }
+  .main { width: 100%; min-width: 0; }
+  .page-body { padding: 1rem 1rem 2rem; }
+  .topbar { height: auto; min-height: 58px; padding: 0.75rem 1rem; flex-wrap: wrap; gap: 0.35rem; }
+  .welcome-pill { white-space: normal; text-align: center; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .message-meta { flex-direction: column; align-items: flex-start; gap: 0.35rem; }
+  .message-stats { flex-wrap: wrap; gap: 0.75rem; }
+}
+@media (max-width: 576px) {
+  .topbar h2 { font-size: 14px; }
+}
 </style>
 {% endblock %}
 

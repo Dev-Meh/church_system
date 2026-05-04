@@ -370,11 +370,47 @@
 
     .alert-info { background: rgba(52,152,219,0.1); border: 1px solid rgba(52,152,219,0.3); color: #87ceeb; }
 
-    @media (max-width: 768px) {
-        .sidebar { width: 64px; }
-        .sidebar .brand-text, .sidebar .user-info, .sidebar .nav-label, .sidebar .nav-badge, .sidebar .nav-section-label { opacity: 0; width: 0; pointer-events: none; }
-        .main { margin-left: 64px; }
-        .stats-grid { grid-template-columns: repeat(2,1fr); }
+    @media (max-width: 992px) {
+        .layout { flex-direction: column; }
+        .sidebar {
+            position: relative;
+            left: auto;
+            top: auto;
+            width: 100% !important;
+            height: auto;
+            min-height: 0;
+            border-right: none;
+            border-bottom: 3px solid #c8a84b;
+        }
+        .sidebar.collapsed { width: 100% !important; }
+        .sidebar.collapsed .brand-text,
+        .sidebar.collapsed .user-info,
+        .sidebar.collapsed .nav-label,
+        .sidebar.collapsed .nav-badge,
+        .sidebar.collapsed .nav-section-label {
+            opacity: 1 !important;
+            width: auto !important;
+            max-width: none !important;
+            pointer-events: auto !important;
+        }
+        .main,
+        .main.collapsed { margin-left: 0 !important; width: 100%; }
+        .topbar {
+            height: auto;
+            min-height: 58px;
+            padding: 0.75rem 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .page-body { padding: 1rem 1rem 2rem; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 576px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .topbar h2 { font-size: 14px; }
+        .table { font-size: 12px; }
+        .table th, .table td { padding: 8px 10px; }
+        .progress-bar-container { height: 6px; }
     }
 </style>
 {% endblock %}
@@ -454,7 +490,7 @@
 
         <div class="topbar">
             <div>
-                <h2>{% church_t 'financial_status' %}</h2>
+                <h2>{% church_t 'financial_status' %} / Hali ya Fedha</h2>
                 <p>PHM-ARCC Iyumbu Dodoma &mdash; {% church_t 'cms_subtitle' %}</p>
             </div>
             <span class="welcome-pill">{% church_t 'welcome' %}, {{ user.first_name }} {{ user.last_name }}!</span>
@@ -475,7 +511,7 @@
                     <div class="stat-icon">
                         <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
                     </div>
-                    <div class="stat-label">{% church_t 'total_donations' %}</div>
+                    <div class="stat-label">{% church_t 'total_donations' %} / Jumla ya Michango</div>
                     <div class="stat-value">TZS {{ total_donations|floatformat:2 }}</div>
                     <div class="stat-desc">{% church_t 'all_time_contributions' %}</div>
                 </div>
@@ -483,7 +519,7 @@
                     <div class="stat-icon">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                     </div>
-                    <div class="stat-label">{% church_t 'active_donors' %}</div>
+                    <div class="stat-label">{% church_t 'active_donors' %} / Wachangiaji Hai</div>
                     <div class="stat-value">{{ recent_donations|length }}</div>
                     <div class="stat-desc">{% church_t 'recent_contributors' %}</div>
                 </div>
@@ -491,7 +527,7 @@
                     <div class="stat-icon">
                         <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                     </div>
-                    <div class="stat-label">{% church_t 'active_campaigns' %}</div>
+                    <div class="stat-label">{% church_t 'active_campaigns' %} / Kampeni Hai</div>
                     <div class="stat-value">{{ campaign_stats|length }}</div>
                     <div class="stat-desc">{% church_t 'ongoing_campaigns' %}</div>
                 </div>
@@ -499,7 +535,7 @@
                     <div class="stat-icon">
                         <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
                     </div>
-                    <div class="stat-label">{% church_t 'avg_donation' %}</div>
+                    <div class="stat-label">{% church_t 'avg_donation' %} / Wastani wa Mchango</div>
                     <div class="stat-value">TZS 0</div>
                     <div class="stat-desc">{% church_t 'per_contribution' %}</div>
                 </div>
@@ -509,7 +545,7 @@
             <div class="panel">
                 <div class="panel-header">
                     <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    <h3>{% church_t 'campaign_performance' %}</h3>
+                    <h3>{% church_t 'campaign_performance' %} / Ufanisi wa Kampeni</h3>
                 </div>
                 <div class="panel-body">
                     {% if campaign_stats %}
@@ -517,11 +553,11 @@
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>{% church_t 'table_campaign' %}</th>
-                                    <th>{% church_t 'table_target' %}</th>
-                                    <th>{% church_t 'table_raised' %}</th>
-                                    <th>{% church_t 'table_donors' %}</th>
-                                    <th>{% church_t 'table_progress' %}</th>
+                                    <th>{% church_t 'table_campaign' %} / Kampeni</th>
+                                    <th>{% church_t 'table_target' %} / Lengo</th>
+                                    <th>{% church_t 'table_raised' %} / Kilichokusanywa</th>
+                                    <th>{% church_t 'table_donors' %} / Wachangiaji</th>
+                                    <th>{% church_t 'table_progress' %} / Maendeleo</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -548,56 +584,6 @@
                             <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2"/>
                         </svg>
                         {% church_t 'no_active_campaigns' %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Recent Donations -->
-            <div class="panel">
-                <div class="panel-header">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <h3>{% church_t 'recent_donations_panel' %}</h3>
-                </div>
-                <div class="panel-body">
-                    {% if recent_donations %}
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>{% church_t 'table_date' %}</th>
-                                    <th>{% church_t 'table_donor' %}</th>
-                                    <th>{% church_t 'table_amount' %}</th>
-                                    <th>{% church_t 'table_method' %}</th>
-                                    <th>{% church_t 'table_campaign' %}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for donation in recent_donations %}
-                                <tr>
-                                    <td>{{ donation.donation_date|date:"M d, Y" }}</td>
-                                    <td>{{ donation.donor.get_full_name|default:donation.donor.username }}</td>
-                                    <td><strong>TZS {{ donation.amount|floatformat:2 }}</strong></td>
-                                    <td>{{ donation.get_payment_method_display }}</td>
-                                    <td>
-                                        {% if donation.campaign %}
-                                            {{ donation.campaign.title }}
-                                        {% else %}
-                                            <span class="badge">{% church_t 'general' %}</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="alert alert-info">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-right: 8px;">
-                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                            <path d="M12 16v-4M12 8h.01" stroke="currentColor" stroke-width="2"/>
-                        </svg>
-                        {% church_t 'no_donations_recorded' %}
                     </div>
                     {% endif %}
                 </div>

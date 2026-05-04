@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}List ya Zaka - PHM-ARCC{% endblock %}
+
+{% block extra_css %}
+<style>
+    body { background: #0f1e2e; color: #eaf2ff; }
+    .wrap { max-width: 1200px; margin: 24px auto; padding: 0 14px; }
+    .panel {
+        background: #152333;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .panel-head {
+        padding: 14px 18px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .panel-head h3 {
+        margin: 0;
+        font-size: 15px;
+        color: #f2d27a;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+    }
+    .btn-back {
+        display: inline-block;
+        text-decoration: none;
+        color: #fff;
+        font-size: 12px;
+        padding: 7px 11px;
+        border-radius: 7px;
+        border: 1px solid rgba(255,255,255,0.22);
+        background: rgba(255,255,255,0.08);
+    }
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    thead th {
+        background: rgba(11, 25, 42, 0.75);
+        color: #f2d27a;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        border-bottom: 1px solid rgba(200,168,75,0.5);
+        padding: 10px 12px;
+        text-align: left;
+    }
+    tbody td {
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+        font-size: 13px;
+    }
+    tbody tr:nth-child(odd) td { background: rgba(255,255,255,0.03); }
+    tbody tr:nth-child(even) td { background: rgba(255,255,255,0.06); }
+    .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+    }
+    .money { background: rgba(39, 174, 96, 0.2); color: #6df0a5; }
+    .asset { background: rgba(241, 196, 15, 0.2); color: #f6d86d; }
+    .muted { color: rgba(255,255,255,0.6); }
+    .pagination { display: flex; gap: 8px; justify-content: center; padding: 14px; }
+    .pagination a, .pagination span {
+        min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 6px; text-decoration: none; color: #dce8fb; border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.07); font-size: 12px;
+    }
+    .pagination .active { background: #c8a84b; color: #0f1e2e; border-color: #c8a84b; }
+    @media (max-width: 992px) {
+        .wrap { margin: 16px auto; padding: 0 10px; }
+        table { font-size: 12px; }
+        th, td { padding: 8px 10px; }
+    }
+    @media (max-width: 576px) {
+        .wrap { margin: 12px auto; padding: 0 8px; }
+        table { font-size: 11px; }
+        th, td { padding: 6px 8px; }
+        .panel-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+    <div class="panel">
+        <div class="panel-head">
+            <h3>List ya Waliotoa Zaka</h3>
+            <a href="{% url 'donations:home' %}" class="btn-back">Rudi Donations</a>
+        </div>
+        <div class="tbl-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Na.</th>
+                        <th>Tarehe</th>
+                        <th>Jina Kamili</th>
+                        <th>Aina ya Zaka</th>
+                        <th>Kiasi cha Zaka</th>
+                        <th>Aina Nyingine ya Zaka</th>
+                        <th>Maelezo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in tithe_donations %}
+                    <tr>
+                        <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                        <td>{{ d.contribution_date }}</td>
+                        <td>
+                            {% if d.donor %}
+                                {{ d.donor.full_name|default:d.donor.username }}
+                            {% else %}
+                                <span class="muted">Haijatajwa</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if d.tithe_gift_type == 'asset' %}
+                                <span class="badge asset">Mali</span>
+                            {% else %}
+                                <span class="badge money">Pesa</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if d.tithe_gift_type == 'money' %}
+                                TZS {{ d.amount|floatformat:2 }}
+                            {% else %}
+                                <span class="muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if d.tithe_gift_type == 'asset' and d.tithe_asset_description %}
+                                {{ d.tithe_asset_description }}
+                            {% else %}
+                                <span class="muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{% if d.notes %}{{ d.notes|truncatewords:12 }}{% else %}<span class="muted">-</span>{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="muted">Hakuna rekodi za zaka bado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if is_paginated %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}">←</a>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                    <span class="active">{{ num }}</span>
+                {% else %}
+                    <a href="?page={{ num }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">→</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

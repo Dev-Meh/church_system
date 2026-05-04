@@ -5,6 +5,8 @@ from django.views.generic import ListView
 from django.db.models import Count, Sum, Q
 from django.utils import timezone
 from django.http import JsonResponse
+from django.db.models.functions import TruncMonth
+from datetime import timedelta
 import json
 from .models import ChurchUser
 from donations.models import Donation, DonationCampaign
@@ -76,6 +78,29 @@ def pastor_dashboard(request):
 
     accountant_users = ChurchUser.objects.filter(role='accountant').order_by('first_name', 'last_name')
     
+    # Donation trend (last 6 months)
+    six_months_ago = timezone.now().date() - timedelta(days=180)
+    donation_monthly = (
+        Donation.objects.filter(contribution_date__gte=six_months_ago)
+        .annotate(month=TruncMonth('contribution_date'))
+        .values('month')
+        .annotate(total=Sum('amount'))
+        .order_by('month')
+    )
+    donation_chart_labels = [item['month'].strftime('%b %Y') for item in donation_monthly if item['month']]
+    donation_chart_data = [float(item['total'] or 0) for item in donation_monthly]
+
+    # Member registration trend (last 6 months)
+    registration_monthly = (
+        ChurchUser.objects.filter(role='member', date_joined__date__gte=six_months_ago)
+        .annotate(month=TruncMonth('date_joined'))
+        .values('month')
+        .annotate(total=Count('id'))
+        .order_by('month')
+    )
+    registration_chart_labels = [item['month'].strftime('%b %Y') for item in registration_monthly if item['month']]
+    registration_chart_data = [int(item['total'] or 0) for item in registration_monthly]
+
     # Prepare data for JSON serialization
     dashboard_data = {
         'total_members': total_members,
@@ -120,7 +145,11 @@ def pastor_dashboard(request):
                 'donors': stat.donors
             }
             for stat in campaign_stats
-        ]
+        ],
+        'donation_chart_labels': donation_chart_labels,
+        'donation_chart_data': donation_chart_data,
+        'registration_chart_labels': registration_chart_labels,
+        'registration_chart_data': registration_chart_data,
     }
     
     context = {
@@ -138,6 +167,10 @@ def pastor_dashboard(request):
         'accountant_users': accountant_users,
         'dashboard_data': json.dumps(dashboard_data),
         'is_pastor': True,
+        'donation_chart_labels': json.dumps(donation_chart_labels),
+        'donation_chart_data': json.dumps(donation_chart_data),
+        'registration_chart_labels': json.dumps(registration_chart_labels),
+        'registration_chart_data': json.dumps(registration_chart_data),
     }
     
     return render(request, 'members/pastor_dashboard.html', context)
@@ -173,6 +206,18 @@ def member_dashboard(request):
         visibility__in=['public', 'leadership']
     ).exclude(status='closed').count()
     nav_messages_count = MessageRecipient.objects.filter(recipient=user).count()
+
+    # Member personal donation trend (last 6 months)
+    six_months_ago = timezone.now().date() - timedelta(days=180)
+    my_monthly_donations = (
+        Donation.objects.filter(donor=user, contribution_date__gte=six_months_ago)
+        .annotate(month=TruncMonth('contribution_date'))
+        .values('month')
+        .annotate(total=Sum('amount'))
+        .order_by('month')
+    )
+    member_donation_chart_labels = [item['month'].strftime('%b %Y') for item in my_monthly_donations if item['month']]
+    member_donation_chart_data = [float(item['total'] or 0) for item in my_monthly_donations]
     
     context = {
         'user': user,
@@ -186,6 +231,8 @@ def member_dashboard(request):
         'nav_prayers_count': nav_prayers_count,
         'nav_messages_count': nav_messages_count,
         'is_pastor': False,
+        'member_donation_chart_labels': json.dumps(member_donation_chart_labels),
+        'member_donation_chart_data': json.dumps(member_donation_chart_data),
     }
     
     return render(request, 'members/member_dashboard.html', context)

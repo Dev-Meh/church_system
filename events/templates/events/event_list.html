@@ -159,6 +159,42 @@ html, body { height:100%; background:#0f1e2e; font-family:'Lato',sans-serif; mar
 .empty-icon{font-size:48px;margin-bottom:1rem;}
 .empty-title{font-size:18px;font-weight:600;color:#fff;margin-bottom:0.5rem;}
 .empty-text{font-size:14px;color:rgba(255,255,255,0.6);max-width:400px;margin:0 auto;}
+
+@media (max-width: 992px) {
+  .layout { flex-direction: column; }
+  .sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: auto;
+    position: relative;
+    top: auto;
+    border-right: none;
+    border-bottom: 3px solid #c8a84b;
+  }
+  .sidebar.collapsed { width: 100% !important; min-width: 100% !important; }
+  .sidebar.collapsed .brand-text,
+  .sidebar.collapsed .user-info,
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .nav-badge,
+  .sidebar.collapsed .nav-section-label {
+    opacity: 1 !important;
+    width: auto !important;
+    max-width: none !important;
+    pointer-events: auto !important;
+    transform: none !important;
+  }
+  .main { width: 100%; min-width: 0; }
+  .page-body { padding: 1rem 1rem 2rem; }
+  .topbar { height: auto; min-height: 58px; padding: 0.75rem 1rem; flex-wrap: wrap; gap: 0.35rem; }
+  .welcome-pill { white-space: normal; text-align: center; }
+}
+@media (max-width: 576px) {
+  .topbar h2 { font-size: 14px; line-height: 1.25; }
+  .event-header { flex-direction: column; align-items: flex-start; gap: 0.35rem; }
+  .event-footer { flex-direction: column; align-items: flex-start; gap: 0.35rem; }
+  .event-image { height: 180px; object-fit: contain; }
+  .event-title { font-size: 16px; }
+}
 </style>
 {% endblock %}
 

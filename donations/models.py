@@ -84,6 +84,10 @@ class Donation(models.Model):
         ('failed', 'Failed'),
         ('refunded', 'Refunded'),
     ]
+    TITHE_GIFT_TYPE_CHOICES = [
+        ('money', 'Pesa'),
+        ('asset', 'Mali'),
+    ]
     
     donor = models.ForeignKey(ChurchUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='donations')
     campaign = models.ForeignKey(DonationCampaign, on_delete=models.SET_NULL, null=True, blank=True, related_name='donations')
@@ -98,6 +102,8 @@ class Donation(models.Model):
     donor_phone = models.CharField(max_length=20, blank=True)
     is_anonymous = models.BooleanField(default=False)
     notes = models.TextField(blank=True)
+    tithe_gift_type = models.CharField(max_length=10, choices=TITHE_GIFT_TYPE_CHOICES, default='money')
+    tithe_asset_description = models.CharField(max_length=255, blank=True)
     contribution_date = models.DateField(default=timezone.now)
     donation_date = models.DateTimeField(auto_now_add=True)
     processed_date = models.DateTimeField(null=True, blank=True)
@@ -111,6 +117,66 @@ class Donation(models.Model):
     def __str__(self):
         donor_name = self.donor_name or (self.donor.full_name if self.donor else 'Anonymous')
         return f"{donor_name} - {self.amount}"
+
+
+class DonationNotice(models.Model):
+    """Time-bound donation notice shown to members."""
+    title = models.CharField(max_length=180)
+    message = models.TextField()
+    target_member = models.ForeignKey(
+        ChurchUser,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='donation_notices',
+        help_text="Leave blank to show to all members."
+    )
+    start_date = models.DateField(default=timezone.now)
+    end_date = models.DateField()
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(
+        ChurchUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_donation_notices'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Donation Notice"
+        verbose_name_plural = "Donation Notices"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class CashBookEntry(models.Model):
+    ENTRY_TYPE_CHOICES = [
+        ('dr', 'Kuweka (DR)'),
+        ('cr', 'Kutoa (CR)'),
+    ]
+
+    entry_date = models.DateField(default=timezone.now)
+    entry_type = models.CharField(max_length=2, choices=ENTRY_TYPE_CHOICES)
+    description = models.CharField(max_length=255)
+    cash_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    bank_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    created_by = models.ForeignKey(
+        ChurchUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='cash_book_entries'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Cash Book Entry"
+        verbose_name_plural = "Cash Book Entries"
+        ordering = ['-entry_date', '-created_at']
+
+    def __str__(self):
+        return f"{self.get_entry_type_display()} - {self.entry_date} - {self.description}"
 
 class Pledge(models.Model):
     STATUS_CHOICES = [

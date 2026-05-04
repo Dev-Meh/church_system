@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Taarifa ya Mapato na Matumizi{% endblock %}
+
+{% block extra_css %}
+<style>
+    body { background: #0f1e2e; color: #eaf2ff; }
+    .wrap { max-width: 1100px; margin: 24px auto; padding: 0 14px; }
+    .panel { background:#152333; border:1px solid rgba(255,255,255,.08); border-radius:12px; overflow:hidden; margin-bottom:14px; }
+    .head { padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.08); display:flex; justify-content:space-between; align-items:center; }
+    .head h3 { margin:0; color:#f2d27a; font-size:15px; letter-spacing:.6px; text-transform:uppercase; }
+    .body { padding:14px 16px; }
+    .grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; }
+    .form-group label { display:block; font-size:11px; margin-bottom:4px; text-transform:uppercase; color:#f2d27a; }
+    .form-control { width:100%; background:#0f1e2e; border:1px solid rgba(255,255,255,.18); color:#fff; border-radius:8px; padding:8px 10px; }
+    .btn { border:none; border-radius:8px; padding:10px 14px; font-size:12px; font-weight:700; background:linear-gradient(135deg,#c8a84b,#a07820); color:#fff; cursor:pointer; }
+    .stat-row { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:10px; }
+    .stat { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12); border-radius:8px; padding:10px; }
+    .k { color:#9db4cd; font-size:11px; }
+    .v { margin-top:3px; font-size:18px; font-weight:700; color:#fff; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.12); }
+    th { background: rgba(11,25,42,.75); color:#f2d27a; text-transform:uppercase; letter-spacing:.5px; font-size:11px; }
+    .right { text-align:right; }
+    .muted { color:rgba(255,255,255,.65); }
+    .action a { color:#dce8fa; text-decoration:none; font-size:12px; border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:7px 10px; background:rgba(255,255,255,.06); }
+    @media (max-width: 992px) {
+        .grid { grid-template-columns: 1fr 1fr; }
+        .stat-row { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 576px) {
+        .wrap { margin: 14px auto; padding: 0 8px; }
+        .grid, .stat-row { grid-template-columns: 1fr; }
+        .head { flex-direction: column; align-items: flex-start; gap: 8px; }
+        .body { padding: 10px 12px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+    <div class="panel">
+        <div class="head">
+            <h3>Taarifa ya Mapato na Matumizi</h3>
+            <div class="action"><a href="{% url 'donations:home' %}">Rudi Donations</a></div>
+        </div>
+        <div class="body">
+            <form method="get">
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="{{ form.start_date.id_for_label }}">Tarehe ya Kuanza</label>
+                        {{ form.start_date }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.end_date.id_for_label }}">Tarehe ya Mwisho</label>
+                        {{ form.end_date }}
+                    </div>
+                    <div class="form-group" style="align-self:end;">
+                        <button type="submit" class="btn">Generate Report</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if report %}
+    <div class="panel">
+        <div class="head">
+            <h3>Muhtasari wa Mapato ({{ report.start_date }} - {{ report.end_date }})</h3>
+        </div>
+        <div class="body">
+            <div class="stat-row">
+                <div class="stat"><div class="k">Zaka</div><div class="v">TZS {{ report.total_zaka|floatformat:2 }}</div></div>
+                <div class="stat"><div class="k">Sadaka</div><div class="v">TZS {{ report.total_sadaka|floatformat:2 }}</div></div>
+                <div class="stat"><div class="k">Mapato Mengineyo</div><div class="v">TZS {{ report.total_mapato_mengineyo|floatformat:2 }}</div></div>
+                <div class="stat"><div class="k">Jumla ya Mapato</div><div class="v">TZS {{ report.total_mapato|floatformat:2 }}</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="head">
+            <h3>Mgawanyo kwa Percent</h3>
+        </div>
+        <div class="body">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kundi</th>
+                        <th class="right">Percent</th>
+                        <th class="right">Kiasi (TZS)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in report.allocation_rows %}
+                    <tr>
+                        <td>{{ row.name }}</td>
+                        <td class="right">{{ row.percent }}%</td>
+                        <td class="right"><strong>{{ row.amount|floatformat:2 }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p class="muted" style="margin-top:10px;">Makundi: Posho ya Mchungaji 65%, Ofisi Kuu 10%, Elimu ya Vyuo 5%, Akiba Mafao 5%, Matumizi ya Kanisa 15%.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

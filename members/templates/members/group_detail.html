@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap cm-stack-sm">
     <div>
       <h3 class="mb-0">{{ group.name }}</h3>
       <small class="text-muted">Aina: {{ group.get_group_type_display }}</small>
@@ -88,7 +88,7 @@
           <ul class="list-group list-group-flush">
             {% for activity in activities %}
               <li class="list-group-item">
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-start flex-wrap cm-stack-sm gap-2">
                   <strong>{{ activity.title }}</strong>
                   <small class="text-muted">{{ activity.activity_date }}</small>
                 </div>

@@ -41,11 +41,14 @@ class CustomLoginView(LoginView):
         context['auth_mode'] = 'login'
         return context
 
-@require_POST  # 👈 logout only works with POST, not GET
 def custom_logout(request):
     logout(request)
+    response = redirect('members:login')
+    # Reset language preference at logout; user chooses again on login page.
+    request.session.pop('django_language', None)
+    response.delete_cookie(settings.LANGUAGE_COOKIE_NAME)
     messages.success(request, 'You have been successfully logged out.')
-    return redirect('members:login')
+    return response
 
 class RegisterView(CreateView):
     model = ChurchUser

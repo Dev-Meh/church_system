@@ -3,8 +3,22 @@
 
 {% block title %}Sermons - PHM-ARCC{% endblock %}
 
+{% block extra_css %}
+<style>
+@media (max-width: 576px) {
+  .sermon-list-page.container { padding-left: 12px; padding-right: 12px; }
+  .sermon-list-page .card-footer.d-flex {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 0.5rem;
+  }
+  .sermon-list-page .card-footer .btn { width: 100%; text-align: center; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-4">
+<div class="sermon-list-page container py-4">
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
     <div>
       <h3 class="mb-1">{% church_t 'sermons' %}</h3>

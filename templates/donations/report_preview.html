@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ report_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .report-page { max-width: 1100px; margin: 20px auto; }
+  .report-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .report-header { padding: 20px 24px; border-bottom: 1px solid #e9ecef; }
+  .report-title { margin: 0; font-size: 1.3rem; font-weight: 700; color: #1f2d3d; }
+  .report-meta { margin-top: 6px; color: #5a6a7a; font-size: 0.92rem; }
+  .report-actions { padding: 14px 24px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn-action { border: none; border-radius: 8px; padding: 9px 16px; font-weight: 600; cursor: pointer; text-decoration: none; }
+  .btn-print { background: #17406d; color: #fff; }
+  .btn-back { background: #eef2f7; color: #223; }
+  .table-wrap { padding: 0 24px 24px; overflow-x: auto; }
+  .table { width: 100%; border-collapse: collapse; min-width: 720px; }
+  .table th, .table td { border: 1px solid #dfe6ee; padding: 10px 12px; font-size: 0.92rem; }
+  .table th { background: #f7fafc; text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.03em; }
+  @media print {
+    .report-actions, .navbar, .alert { display: none !important; }
+    .report-page { margin: 0; max-width: none; }
+    .report-card { box-shadow: none; border-radius: 0; }
+    body { background: #fff !important; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container report-page">
+  <div class="report-card">
+    <div class="report-header">
+      <h1 class="report-title">{{ report_title }}</h1>
+      <div class="report-meta">{{ church_name }} | Tarehe ya report: {{ report_date }}</div>
+    </div>
+    <div class="report-actions">
+      <button class="btn-action btn-print" onclick="window.print()">Download PDF</button>
+      <a class="btn-action btn-back" href="{% url 'donations:home' %}">Rudi kwenye Donations</a>
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            {% for col in columns %}
+              <th>{{ col }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              {% for key, value in row.items %}
+                <td>{{ value }}</td>
+              {% endfor %}
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="{{ columns|length }}">Hakuna data ya kuonyesha.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

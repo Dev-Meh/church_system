@@ -132,6 +132,57 @@ html, body { height: 100%; background: #0a1628; font-family: 'Lato', sans-serif;
     background: #152333; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05);
     overflow: hidden; margin-bottom: 2rem;
 }
+.chart-wrap { height: 320px; }
+
+@media (max-width: 992px) {
+    .layout { flex-direction: column; }
+    .sidebar {
+        width: 100% !important;
+        min-width: 100% !important;
+        height: auto;
+        min-height: 0;
+        position: relative;
+        top: auto;
+        border-right: none;
+        border-bottom: 2px solid rgba(200, 168, 75, 0.4);
+    }
+    .sidebar.collapsed {
+        width: 100% !important;
+        min-width: 100% !important;
+    }
+    .sidebar.collapsed .brand-text,
+    .sidebar.collapsed .nav-section-label,
+    .sidebar.collapsed .nav-item span,
+    .sidebar.collapsed .nav-count,
+    .sidebar.collapsed .btn-logout span {
+        display: revert !important;
+    }
+    .sidebar.collapsed .nav-item {
+        justify-content: flex-start;
+        padding: 12px 15px;
+        gap: 12px;
+    }
+    .sidebar.collapsed .sidebar-header button {
+        display: inline-flex;
+    }
+    .main { width: 100%; min-width: 0; }
+    .topnav {
+        height: auto;
+        min-height: 64px;
+        padding: 0.75rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+    .page-body { padding: 1rem 1rem 1.5rem; max-width: none; }
+    .chart-wrap { height: 260px; }
+}
+@media (max-width: 576px) {
+    .topnav-title-block h1 { font-size: 16px !important; line-height: 1.25; }
+    .chart-wrap { height: 210px; }
+    .stat-card { padding: 1.25rem; }
+    .page-body { padding: 0.85rem 0.65rem 1.25rem; }
+}
 </style>
 {% endblock %}
 
@@ -238,6 +289,17 @@ html, body { height: 100%; background: #0a1628; font-family: 'Lato', sans-serif;
 
       <div class="panel">
                 <div style="padding: 1.2rem 1.5rem; background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #c8a84b; font-weight: 700;">
+                    Donation Trend (Last 6 Months)
+                </div>
+                <div style="padding: 1.5rem;">
+                    <div class="chart-wrap">
+                        <canvas id="memberDonationChart"></canvas>
+                    </div>
+                </div>
+      </div>
+
+      <div class="panel">
+                <div style="padding: 1.2rem 1.5rem; background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #c8a84b; font-weight: 700;">
                     {% church_t 'recent_donations_panel' %}
                 </div>
                 <div style="padding: 1.5rem;">
@@ -289,6 +351,7 @@ html, body { height: 100%; background: #0a1628; font-family: 'Lato', sans-serif;
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('collapsed');
@@ -300,5 +363,38 @@ function expandSidebar(){
         // sb.classList.remove('collapsed'); // Uncomment if you want click-to-open
     }
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const chartCtx = document.getElementById('memberDonationChart');
+    const labels = JSON.parse('{{ member_donation_chart_labels|escapejs }}');
+    const data = JSON.parse('{{ member_donation_chart_data|escapejs }}');
+
+    if (chartCtx) {
+        new Chart(chartCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'My Donations (TZS)',
+                    data: data,
+                    borderColor: '#c8a84b',
+                    backgroundColor: 'rgba(200, 168, 75, 0.18)',
+                    borderWidth: 2,
+                    tension: 0.35,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#d8e2ef' } } },
+                scales: {
+                    x: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                    y: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } }
+                }
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

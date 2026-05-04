@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Donation, DonationCampaign, DonationCategory
+from .models import Donation, DonationCampaign, DonationCategory, CashBookEntry
 
 
 @admin.register(Donation)
@@ -9,6 +9,8 @@ class DonationAdmin(admin.ModelAdmin):
         'id',
         'donor',
         'donation_type',
+        'tithe_gift_type',
+        'tithe_asset_description',
         'amount',
         'payment_method',
         'status',
@@ -31,3 +33,10 @@ class DonationCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'is_active', 'created_at')
     list_filter = ('is_active',)
     search_fields = ('name',)
+
+
+@admin.register(CashBookEntry)
+class CashBookEntryAdmin(admin.ModelAdmin):
+    list_display = ('entry_date', 'entry_type', 'description', 'cash_amount', 'bank_amount', 'created_by')
+    list_filter = ('entry_type', 'entry_date')
+    search_fields = ('description', 'created_by__username', 'created_by__first_name', 'created_by__last_name')

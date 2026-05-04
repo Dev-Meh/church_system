@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load i18n_church %}
+
+{% block title %}{{ sermon.title }} - {% church_t 'sermons' %}{% endblock %}
+
+{% block extra_css %}
+<style>
+@media (max-width: 576px) {
+  .sermon-detail-page { padding-left: 12px; padding-right: 12px; }
+  .sermon-detail-page .d-flex.justify-content-between.align-items-start {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 0.75rem;
+  }
+  .sermon-detail-page .d-flex.gap-2 {
+    flex-direction: column;
+    width: 100%;
+  }
+  .sermon-detail-page .d-flex.gap-2 .btn { width: 100%; text-align: center; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sermon-detail-page container py-4">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+    <div>
+      <h3 class="mb-1">{{ sermon.title }}</h3>
+      <div class="text-muted small">
+        {{ sermon.sermon_date|date:"F d, Y H:i" }}
+        {% if sermon.speaker %} - {{ sermon.speaker.full_name }}{% endif %}
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'sermons:sermon_list' %}" class="btn btn-outline-secondary btn-sm">Back</a>
+      {% if user.role == 'pastor' %}
+        <a href="{% url 'sermons:sermon_update' sermon.pk %}" class="btn btn-outline-primary btn-sm">Edit</a>
+        <a href="{% url 'sermons:sermon_delete' sermon.pk %}" class="btn btn-outline-danger btn-sm">Delete</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      {% if sermon.bible_references %}
+        <h6 class="text-muted mb-2">Bible References</h6>
+        <p class="mb-3">{{ sermon.bible_references }}</p>
+      {% endif %}
+
+      <h6 class="text-muted mb-2">Message</h6>
+      <div class="mb-3">{{ sermon.description|linebreaks }}</div>
+
+      {% if sermon.notes %}
+        <h6 class="text-muted mb-2">Notes</h6>
+        <div>{{ sermon.notes|linebreaks }}</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

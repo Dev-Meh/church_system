@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Cash Book - PHM-ARCC{% endblock %}
+
+{% block extra_css %}
+<style>
+    body { background: #0f1e2e; color: #eaf2ff; }
+    .wrap { max-width: 1250px; margin: 22px auto; padding: 0 14px; }
+    .panel { background: #152333; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+    .head { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:space-between; }
+    .head h3 { margin: 0; color: #f2d27a; font-size: 14px; text-transform: uppercase; letter-spacing: .6px; }
+    .body { padding: 14px 18px; }
+    .grid { display:grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 12px; }
+    .stat { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:10px; }
+    .stat .k { color:#9ab2cc; font-size:11px; }
+    .stat .v { color:#fff; font-size:18px; font-weight:700; margin-top:3px; }
+    .form-grid { display:grid; grid-template-columns: repeat(5,1fr); gap:10px; align-items:end; }
+    .form-group label { display:block; font-size:11px; color:#f2d27a; margin-bottom:4px; text-transform:uppercase; }
+    .form-control, .form-select { width:100%; background:#0f1e2e; border:1px solid rgba(255,255,255,.15); color:#fff; border-radius:8px; padding:8px 10px; }
+    .btn { border:none; border-radius:8px; padding:10px 14px; font-size:12px; font-weight:700; background:linear-gradient(135deg,#c8a84b,#a07820); color:#fff; cursor:pointer; }
+    .tbl-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse: collapse; min-width: 1200px; }
+    thead th { background: rgba(11,25,42,.75); color:#f2d27a; border-bottom:1px solid rgba(200,168,75,.5); padding:10px 12px; font-size:11px; text-transform:uppercase; }
+    tbody td { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.12); font-size:13px; }
+    tbody tr:nth-child(odd) td { background: rgba(255,255,255,.03); }
+    tbody tr:nth-child(even) td { background: rgba(255,255,255,.06); }
+    .right { text-align:right; }
+    .muted { color: rgba(255,255,255,.6); }
+    .badge-dr, .badge-cr { padding:3px 8px; border-radius:999px; font-size:10px; font-weight:700; }
+    .badge-dr { background: rgba(39,174,96,.2); color:#7cf3b1; }
+    .badge-cr { background: rgba(231,76,60,.2); color:#ffa19a; }
+    .actions a { color:#d9e7ff; text-decoration:none; font-size:12px; border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:7px 10px; background:rgba(255,255,255,.06);}
+    @media (max-width: 992px) {
+        .grid { grid-template-columns: repeat(2, 1fr); }
+        .form-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 576px) {
+        .wrap { margin: 14px auto; padding: 0 8px; }
+        .grid,
+        .form-grid { grid-template-columns: 1fr; }
+        .head { flex-direction: column; align-items: flex-start; gap: 8px; }
+        .body { padding: 10px 12px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+    <div class="panel">
+        <div class="head">
+            <h3>Daftari la Fedha (Cash Book) - Kuweka (DR) / Kutoa (CR)</h3>
+            <div class="actions">
+                <a href="{% url 'donations:report_preview' 'cash_book' %}">Preview Report</a>
+                <a href="{% url 'donations:export_cash_book_csv' %}">Download Report (CSV)</a>
+                <a href="{% url 'donations:home' %}">Rudi Donations</a>
+            </div>
+        </div>
+        <div class="body">
+            <div class="grid">
+                <div class="stat"><div class="k">Jumla Kuweka Cash</div><div class="v">TZS {{ total_dr_cash|floatformat:2 }}</div></div>
+                <div class="stat"><div class="k">Jumla Kutoa Cash</div><div class="v">TZS {{ total_cr_cash|floatformat:2 }}</div></div>
+                <div class="stat"><div class="k">Jumla Kuweka Bank</div><div class="v">TZS {{ total_dr_bank|floatformat:2 }}</div></div>
+                <div class="stat"><div class="k">Jumla Kutoa Bank</div><div class="v">TZS {{ total_cr_bank|floatformat:2 }}</div></div>
+            </div>
+            <div class="grid">
+                <div class="stat"><div class="k">Cash Balance</div><div class="v">TZS {{ cash_balance|floatformat:2 }}</div></div>
+                <div class="stat"><div class="k">Bank Balance</div><div class="v">TZS {{ bank_balance|floatformat:2 }}</div></div>
+            </div>
+            {% if can_manage_cash_book %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-group"><label for="{{ form.entry_date.id_for_label }}">Tarehe</label>{{ form.entry_date }}</div>
+                    <div class="form-group"><label for="{{ form.entry_type.id_for_label }}">Aina</label>{{ form.entry_type }}</div>
+                    <div class="form-group"><label for="{{ form.description.id_for_label }}">Maelezo</label>{{ form.description }}</div>
+                    <div class="form-group"><label for="{{ form.cash_amount.id_for_label }}">Cash</label>{{ form.cash_amount }}</div>
+                    <div class="form-group"><label for="{{ form.bank_amount.id_for_label }}">Bank</label>{{ form.bank_amount }}</div>
+                </div>
+                <div style="margin-top:10px;"><button class="btn" type="submit">Hifadhi Cash Book Entry</button></div>
+            </form>
+            {% else %}
+            <p class="muted">Una ruhusa ya kuona tu. Mhasibu mwenye access ndiye anaweza kuingiza entry.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="head"><h3>Rekodi za Cash Book</h3></div>
+        <div class="body">
+            <div class="tbl-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tarehe</th>
+                            <th>Aina</th>
+                            <th>Maelezo</th>
+                            <th class="right">Kuweka Cash (DR)</th>
+                            <th class="right">Kuweka Bank (DR)</th>
+                            <th class="right">Kutoa Cash (CR)</th>
+                            <th class="right">Kutoa Bank (CR)</th>
+                            <th>Aliyeweka</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in entries %}
+                        <tr>
+                            <td>{{ e.entry_date }}</td>
+                            <td>{% if e.entry_type == 'dr' %}<span class="badge-dr">DR</span>{% else %}<span class="badge-cr">CR</span>{% endif %}</td>
+                            <td>{{ e.description }}</td>
+                            <td class="right">{% if e.entry_type == 'dr' and e.cash_amount > 0 %}{{ e.cash_amount|floatformat:2 }}{% else %}<span class="muted">-</span>{% endif %}</td>
+                            <td class="right">{% if e.entry_type == 'dr' and e.bank_amount > 0 %}{{ e.bank_amount|floatformat:2 }}{% else %}<span class="muted">-</span>{% endif %}</td>
+                            <td class="right">{% if e.entry_type == 'cr' and e.cash_amount > 0 %}{{ e.cash_amount|floatformat:2 }}{% else %}<span class="muted">-</span>{% endif %}</td>
+                            <td class="right">{% if e.entry_type == 'cr' and e.bank_amount > 0 %}{{ e.bank_amount|floatformat:2 }}{% else %}<span class="muted">-</span>{% endif %}</td>
+                            <td>{% if e.created_by %}{{ e.created_by.full_name|default:e.created_by.username }}{% else %}<span class="muted">-</span>{% endif %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="8" class="muted">Hakuna cash book entries bado.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.utils import translation
 from django.contrib import messages
+from .i18n_strings import EXTRA_EN, EXTRA_SW
 
 class LanguageManager:
     """Manage language switching and translations"""
@@ -130,6 +131,13 @@ class LanguageManager:
         'total_donations': {'en': 'Total Donations', 'sw': 'Jumla ya Michango'},
         'this_month': {'en': 'This Month', 'sw': 'Mwezi Huu'},
     }
+
+    # Merge extended app-wide translations from i18n_strings.py
+    for _key in set(EXTRA_EN.keys()) | set(EXTRA_SW.keys()):
+        TRANSLATIONS[_key] = {
+            'en': EXTRA_EN.get(_key, _key),
+            'sw': EXTRA_SW.get(_key, EXTRA_EN.get(_key, _key)),
+        }
     
     @classmethod
     def get_supported_languages(cls):
