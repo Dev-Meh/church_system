@@ -74,10 +74,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'church_management.wsgi.application'
 
+_db_engine = os.getenv('DB_ENGINE', 'django.db.backends.sqlite3')
+if _db_engine == 'django.db.backends.sqlite3':
+    _db_name = BASE_DIR / os.getenv('DB_NAME', 'db.sqlite3')
+else:
+    _db_name = os.getenv('DB_NAME', 'church')
+
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
-        'NAME': BASE_DIR / (os.getenv('DB_NAME', 'db.sqlite3') if os.getenv('DB_ENGINE') == 'django.db.backends.sqlite3' else os.getenv('DB_NAME', 'church')),
+        'ENGINE': _db_engine,
+        'NAME': _db_name,
         'USER': os.getenv('DB_USER', 'postgres'),
         'PASSWORD': os.getenv('DB_PASSWORD', '12345'),
         'HOST': os.getenv('DB_HOST', 'localhost'),
@@ -105,9 +111,8 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
+_static_dir = BASE_DIR / 'static'
+STATICFILES_DIRS = [_static_dir] if _static_dir.is_dir() else []
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
