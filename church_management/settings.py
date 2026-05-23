@@ -57,9 +57,12 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
+                'django.template.context_processors.media',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'members.context_processors.language_context',  # Add language context
+                'members.context_processors.language_context',
+                'members.context_processors.church_permissions_context',
+                'members.context_processors.app_shell_context',
             ],
         },
     },
@@ -115,6 +118,18 @@ AUTH_USER_MODEL = 'members.ChurchUser'
 LOGIN_URL = '/members/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/members/login/'
+
+# Email (password reset) — console in development
+EMAIL_BACKEND = os.getenv(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.console.EmailBackend',
+)
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'PHM-ARCC <noreply@phm-arcc.local>')
 
 # ── SESSION SECURITY ────────────────────────────
 SESSION_COOKIE_AGE = 1800              # session expires after 30 minutes

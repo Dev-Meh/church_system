@@ -1,0 +1,38 @@
+"""Map URL names to sidebar active keys."""
+
+ACTIVE_NAV_MAP = {
+    ('', 'dashboard'): 'dashboard',
+    ('members', 'message_center'): 'message_center',
+    ('members', 'message_create'): 'message_create',
+    ('members', 'message_list'): 'message_list',
+    ('members', 'message_detail'): 'message_list',
+    ('members', 'member_messages'): 'inbox',
+    ('members', 'announcement_create'): 'announcement_create',
+    ('members', 'member_list'): 'member_list',
+    ('members', 'admin_reset_password'): 'member_list',
+    ('events', 'event_list'): 'events',
+    ('events', 'event_form'): 'events',
+    ('events', 'event_create'): 'events',
+    ('events', 'event_update'): 'events',
+    ('events', 'event_delete'): 'events',
+    ('sermons', 'sermon_list'): 'sermons',
+    ('sermons', 'sermon_detail'): 'sermons',
+    ('sermons', 'sermon_create'): 'sermons',
+    ('sermons', 'sermon_update'): 'sermons',
+    ('sermons', 'sermon_delete'): 'sermons',
+    ('donations', 'home'): 'donations',
+    ('donations', 'financial_status'): 'financial_status',
+    ('donations', 'history'): 'donation_history',
+    ('donations', 'financial_status'): 'financial_status',
+    ('', 'profile_edit'): 'profile',
+    ('', 'profile'): 'profile',
+    ('donations', 'tithe_list'): 'tithe_list',
+    ('donations', 'cash_book'): 'cash_book',
+    ('donations', 'income_allocation_report'): 'income_allocation',
+    ('', 'profile'): 'profile',
+    ('', 'profile_edit'): 'profile',
+}
+
+
+def resolve_active_nav(app_name, url_name):
+    return ACTIVE_NAV_MAP.get((app_name or '', url_name or ''), '')

@@ -3,7 +3,7 @@
 <html lang="{{ current_language|default:'en' }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>{% block title %}PHM-ARCC Church Management System{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -138,6 +138,7 @@
             }
         }
     </style>
+    {% include 'church_layout/_responsive_global.html' %}
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -154,8 +155,54 @@
 
     {% block content %}{% endblock %}
 
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+    <button type="button" class="cm-mobile-menu-fab" id="cmMobileMenuFab" aria-label="Fungua menyu" title="Menyu" style="display:none;">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function toggleMobileNav() {
+            var sidebar = document.getElementById('sidebar');
+            var backdrop = document.getElementById('sidebarBackdrop');
+            if (!sidebar) return;
+            sidebar.classList.toggle('mobile-open');
+            if (backdrop) backdrop.classList.toggle('visible');
+            document.body.classList.toggle('nav-open');
+        }
+        function closeMobileNav() {
+            var sidebar = document.getElementById('sidebar');
+            var backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar) sidebar.classList.remove('mobile-open');
+            if (backdrop) backdrop.classList.remove('visible');
+            document.body.classList.remove('nav-open');
+        }
+        window.toggleMobileNav = toggleMobileNav;
+        window.closeMobileNav = closeMobileNav;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var sidebar = document.getElementById('sidebar');
+            var fab = document.getElementById('cmMobileMenuFab');
+            var backdrop = document.getElementById('sidebarBackdrop');
+            function syncMobileChrome() {
+                var mobile = window.innerWidth < 992;
+                var hasTopnavBtn = document.querySelector('.topnav-menu-btn');
+                if (fab) fab.style.display = (mobile && sidebar && !hasTopnavBtn) ? 'inline-flex' : 'none';
+                if (!mobile) closeMobileNav();
+            }
+            syncMobileChrome();
+            window.addEventListener('resize', syncMobileChrome);
+            if (fab) fab.addEventListener('click', toggleMobileNav);
+            if (backdrop) backdrop.addEventListener('click', closeMobileNav);
+            if (sidebar) {
+                sidebar.querySelectorAll('a').forEach(function (link) {
+                    link.addEventListener('click', function () {
+                        if (window.innerWidth < 992) closeMobileNav();
+                    });
+                });
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function () {
             const alerts = document.querySelectorAll('.alert[data-auto-dismiss="true"]');
             alerts.forEach(function (alertEl) {

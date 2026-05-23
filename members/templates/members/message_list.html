@@ -1,62 +1,77 @@
-{% extends 'base.html' %}
+{% extends 'church_layout/app_shell.html' %}
 {% load i18n_church %}
 
-{% block title %}Sent Messages - PHM-ARCC Iyumbu Dodoma{% endblock %}
+{% block title %}{% church_t 'sent_messages_nav' %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_t 'sent_messages_nav' %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">PHM-ARCC {% church_t 'church_name_full' %}</p>{% endblock %}
 
-{% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap cm-stack-sm">
-        <h2><i class="fas fa-paper-plane text-primary"></i> Sent Messages</h2>
-        <a href="{% url 'members:message_create' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Create New Message
-        </a>
-    </div>
+{% block page_extra_css %}
+<style>
+.msg-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+.msg-list-header h2 { font-family: 'Cinzel', serif; font-size: 1.25rem; color: #c8a84b; margin: 0; }
+.panel { background: #152333; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; overflow: hidden; }
+.panel-bd { padding: 1.5rem; }
+.table { width: 100%; color: rgba(255,255,255,0.85); }
+.table thead th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.5); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0.75rem; }
+.table tbody td { padding: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+.badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.badge-urgent { background: rgba(231,76,60,0.2); color: #e74c3c; }
+.badge-high { background: rgba(243,156,18,0.2); color: #f39c12; }
+.badge-normal { background: rgba(52,152,219,0.2); color: #3498db; }
+.btn-outline { padding: 6px 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff; font-size: 12px; text-decoration: none; }
+.btn-outline:hover { border-color: #c8a84b; color: #c8a84b; }
+.btn-primary-sm { padding: 10px 16px; background: linear-gradient(135deg,#c8a84b,#b39843); color: #fff; border-radius: 8px; font-weight: 700; font-size: 12px; text-decoration: none; text-transform: uppercase; }
+.empty-state { text-align: center; padding: 3rem 1rem; color: rgba(255,255,255,0.5); }
+</style>
+{% endblock %}
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            {% if messages %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Date</th>
-                                <th>Title</th>
-                                <th>Priority</th>
-                                <th>Recipients</th>
-                                <th>Read</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for msg in messages %}
-                                <tr>
-                                    <td>{{ msg.created_at|date:"M d, Y H:i" }}</td>
-                                    <td><strong>{{ msg.title }}</strong></td>
-                                    <td>
-                                        <span class="badge {% if msg.priority == 'urgent' %}bg-danger{% elif msg.priority == 'high' %}bg-warning{% else %}bg-info{% endif %}">
-                                            {{ msg.get_priority_display }}
-                                        </span>
-                                    </td>
-                                    <td>{{ msg.recipient_count }}</td>
-                                    <td>{{ msg.read_count }}</td>
-                                    <td>
-                                        <a href="{% url 'members:message_detail' msg.pk %}" class="btn btn-sm btn-outline-secondary">
-                                            <i class="fas fa-eye"></i> Details
-                                        </a>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-envelope-open text-muted fa-3x mb-3"></i>
-                    <h4>No messages sent yet</h4>
-                    <p class="text-muted">Broadcast important updates to your church members from here.</p>
-                </div>
-            {% endif %}
-        </div>
+{% block page_content %}
+<div class="msg-list-header">
+  <h2><i class="fas fa-paper-plane"></i> {% church_t 'sent_messages_nav' %}</h2>
+  <a href="{% url 'members:message_create' %}" class="btn-primary-sm"><i class="fas fa-plus"></i> {% church_t 'new_message_nav' %}</a>
+</div>
+<div class="panel">
+  <div class="panel-bd">
+    {% if messages %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>{% church_t 'message_title_label' %}</th>
+            <th>{% church_t 'priority_level_label' %}</th>
+            <th>{% church_t 'recipients' %}</th>
+            <th>Read</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for msg in messages %}
+          <tr>
+            <td>{{ msg.created_at|date:"M d, Y H:i" }}</td>
+            <td><strong>{{ msg.title }}</strong></td>
+            <td>
+              <span class="badge {% if msg.priority == 'urgent' %}badge-urgent{% elif msg.priority == 'high' %}badge-high{% else %}badge-normal{% endif %}">
+                {{ msg.get_priority_display }}
+              </span>
+            </td>
+            <td>{{ msg.recipient_count }}</td>
+            <td>{{ msg.read_count }}</td>
+            <td>
+              <a href="{% url 'members:message_detail' msg.pk %}" class="btn-outline"><i class="fas fa-eye"></i> Details</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="fas fa-envelope-open fa-3x mb-3" style="opacity:0.4;"></i>
+      <h4>No messages sent yet</h4>
+      <p>Broadcast important updates to your church members from here.</p>
+    </div>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

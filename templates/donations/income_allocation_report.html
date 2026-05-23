@@ -67,6 +67,9 @@
     <div class="panel">
         <div class="head">
             <h3>Muhtasari wa Mapato ({{ report.start_date }} - {{ report.end_date }})</h3>
+            <div class="action">
+                <a href="{% url 'donations:income_allocation_print' %}?start_date={{ report.start_date|date:'Y-m-d' }}&end_date={{ report.end_date|date:'Y-m-d' }}" target="_blank">Preview / Print</a>
+            </div>
         </div>
         <div class="body">
             <div class="stat-row">

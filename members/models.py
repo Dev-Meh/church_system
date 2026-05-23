@@ -9,6 +9,7 @@ class ChurchUser(AbstractUser):
     ROLE_CHOICES = [
         ('member', 'Church Member'),
         ('pastor', 'Pastor'),
+        ('secretary', 'Church Secretary'),
         ('elder', 'Church Elder'),
         ('deacon', 'Deacon'),
         ('accountant', 'Accountant'),

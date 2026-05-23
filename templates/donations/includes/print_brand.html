@@ -1,0 +1,40 @@
+<style>
+  .print-brand-header {
+    text-align: center;
+    margin: 0 0 14px;
+  }
+  .print-church-logo {
+    height: 72px;
+    width: auto;
+    max-width: 130px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 8px;
+  }
+  .print-church-name {
+    margin: 0;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.4px;
+    color: #000;
+  }
+  @media print {
+    .print-church-logo {
+      height: 64px;
+      max-width: 120px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+</style>
+<header class="print-brand-header">
+  <img
+    src="{{ church_logo_url }}"
+    alt="Logo ya Kanisa"
+    class="print-church-logo"
+    onerror="this.onerror=null;this.src='/media/church-logo.jpeg';this.onerror=function(){this.src='/media/church-logo.png';this.onerror=function(){this.style.display='none';};};"
+  >
+  {% if church_name %}
+  <p class="print-church-name">{{ church_name }}</p>
+  {% endif %}
+</header>

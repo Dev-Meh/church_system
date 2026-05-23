@@ -1,8 +1,11 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 from django.db.models import Count, Sum, Q
+from django.db.models.functions import Concat
+from django.db.models import Value, CharField
 from django.utils import timezone
 from django.http import JsonResponse
 from django.db.models.functions import TruncMonth
@@ -11,6 +14,15 @@ import json
 from .models import ChurchUser
 from donations.models import Donation, DonationCampaign
 from .models_message import MessageRecipient
+from .permissions import (
+    can_manage_church_communications,
+    can_create_church_announcements,
+    can_manage_members,
+    can_promote_to_pastor,
+    can_promote_to_admin,
+    has_church_leadership,
+    is_verified_pastor,
+)
 from events.models import Event
 from sermons.models import Sermon
 from prayers.models import PrayerRequest
@@ -19,11 +31,20 @@ from prayers.models import PrayerRequest
 def dashboard(request):
     """Role-based dashboard that adapts to user role"""
     user = request.user
-    
-    if user.role == 'pastor':
+
+    if user.role == 'admin':
         return pastor_dashboard(request)
-    else:
+
+    if user.role == 'pastor':
+        if is_verified_pastor(user):
+            return pastor_dashboard(request)
+        messages.warning(
+            request,
+            'Akaunti yako ya mchungaji inasubiri uthibitisho. Wasiliana na msimamizi wa kanisa.',
+        )
         return member_dashboard(request)
+
+    return member_dashboard(request)
 
 def pastor_dashboard(request):
     """Pastor-specific dashboard with member and donation oversight"""
@@ -77,6 +98,7 @@ def pastor_dashboard(request):
     ).select_related('message').order_by('-message__created_at')[:10]
 
     accountant_users = ChurchUser.objects.filter(role='accountant').order_by('first_name', 'last_name')
+    secretary_users = ChurchUser.objects.filter(role='secretary').order_by('first_name', 'last_name')
     
     # Donation trend (last 6 months)
     six_months_ago = timezone.now().date() - timedelta(days=180)
@@ -165,6 +187,7 @@ def pastor_dashboard(request):
         'recent_members': recent_members,
         'recent_messages': recent_messages,
         'accountant_users': accountant_users,
+        'secretary_users': secretary_users,
         'dashboard_data': json.dumps(dashboard_data),
         'is_pastor': True,
         'donation_chart_labels': json.dumps(donation_chart_labels),
@@ -174,6 +197,7 @@ def pastor_dashboard(request):
     }
     
     return render(request, 'members/pastor_dashboard.html', context)
+
 
 def member_dashboard(request):
     """Member-specific dashboard"""
@@ -218,9 +242,19 @@ def member_dashboard(request):
     )
     member_donation_chart_labels = [item['month'].strftime('%b %Y') for item in my_monthly_donations if item['month']]
     member_donation_chart_data = [float(item['total'] or 0) for item in my_monthly_donations]
-    
+
+    sent_messages_count = 0
+    if can_manage_church_communications(user):
+        from .models_message import Message
+        sent_messages_count = Message.objects.filter(sender=user).count()
+
+    pastor_pending_verification = (
+        user.role == 'pastor' and not bool(getattr(user, 'is_verified_pastor', False))
+    )
+
     context = {
         'user': user,
+        'pastor_pending_verification': pastor_pending_verification,
         'user_donations': user_donations,
         'total_user_donations': total_user_donations,
         'available_campaigns': available_campaigns,
@@ -231,6 +265,9 @@ def member_dashboard(request):
         'nav_prayers_count': nav_prayers_count,
         'nav_messages_count': nav_messages_count,
         'is_pastor': False,
+        'can_manage_communications': can_manage_church_communications(user),
+        'can_create_announcements': can_create_church_announcements(user),
+        'sent_messages_count': sent_messages_count,
         'member_donation_chart_labels': json.dumps(member_donation_chart_labels),
         'member_donation_chart_data': json.dumps(member_donation_chart_data),
     }
@@ -238,23 +275,72 @@ def member_dashboard(request):
     return render(request, 'members/member_dashboard.html', context)
 
 class MemberListView(LoginRequiredMixin, ListView):
-    """Pastor-only view to see all members"""
+    """Pastor/admin: list, search, and manage members."""
     model = ChurchUser
     template_name = 'members/member_list.html'
     context_object_name = 'members'
     paginate_by = 20
     login_url = '/members/login/'
-    
-    def get_queryset(self):
-        # Show church members and accountants so pastor can manage donation access
-        return ChurchUser.objects.filter(
-            role__in=['member', 'accountant']
-        ).order_by('role', '-date_joined')
-    
+
     def dispatch(self, request, *args, **kwargs):
-        # Only allow pastors to access this view
-        if not request.user.role == 'pastor':
+        if request.user.is_authenticated and not can_manage_members(request.user):
             from django.contrib import messages
-            messages.error(request, 'Access denied. Pastor privileges required.')
+            messages.error(request, 'Ni mchungaji tu anaweza kusimamia wanachama.')
             return redirect('dashboard')
         return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        qs = ChurchUser.objects.filter(
+            role__in=['member', 'accountant', 'secretary', 'pastor']
+        )
+
+        q = (self.request.GET.get('q') or '').strip()
+        role = (self.request.GET.get('role') or '').strip()
+        status = (self.request.GET.get('status') or '').strip()
+
+        if q:
+            qs = qs.annotate(
+                full_name_search=Concat(
+                    'first_name', Value(' '), 'last_name',
+                    output_field=CharField(),
+                )
+            ).filter(
+                Q(full_name_search__icontains=q)
+                | Q(first_name__icontains=q)
+                | Q(last_name__icontains=q)
+                | Q(username__icontains=q)
+                | Q(email__icontains=q)
+                | Q(phone_number__icontains=q)
+            )
+
+        if role in ('member', 'accountant', 'secretary', 'pastor'):
+            qs = qs.filter(role=role)
+
+        if status == 'active':
+            qs = qs.filter(is_active=True, is_active_member=True)
+        elif status == 'inactive':
+            qs = qs.filter(Q(is_active=False) | Q(is_active_member=False))
+
+        return qs.order_by('role', 'first_name', 'last_name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_q'] = (self.request.GET.get('q') or '').strip()
+        context['filter_role'] = (self.request.GET.get('role') or '').strip()
+        context['filter_status'] = (self.request.GET.get('status') or '').strip()
+        context['role_choices'] = [
+            ('', 'Roles zote'),
+            ('member', 'Member'),
+            ('pastor', 'Mchungaji'),
+            ('secretary', 'Katibu'),
+            ('accountant', 'Accountant'),
+        ]
+        context['can_promote_pastor'] = can_promote_to_pastor(self.request.user)
+        context['can_promote_admin'] = can_promote_to_admin(self.request.user)
+        context['has_leadership'] = has_church_leadership(self.request.user)
+        context['status_choices'] = [
+            ('', 'Hali zote'),
+            ('active', 'Hai (active)'),
+            ('inactive', 'Imesimamishwa'),
+        ]
+        return context

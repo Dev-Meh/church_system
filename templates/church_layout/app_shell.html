@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load i18n_church %}
+
+{% block extra_css %}
+{% include 'church_layout/_shell_styles.html' %}
+{% block page_extra_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="layout">
+  {% include 'church_layout/_sidebar.html' %}
+
+  <div class="main">
+    <header class="topnav">
+      <button type="button" class="topnav-menu-btn" onclick="toggleMobileNav()" aria-label="Menyu">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="topnav-title-block">
+        <h1 class="topnav-title">{% block page_title %}{% endblock %}</h1>
+        {% block page_subtitle %}<p class="topnav-subtitle">PHM-ARCC Iyumbu Dodoma</p>{% endblock %}
+      </div>
+      <div class="topnav-actions">
+        {% block page_header_actions %}
+        {% include 'members/language_selector.html' %}
+        <span class="welcome-pill">{{ user.first_name }} {{ user.last_name }}</span>
+        {% endblock %}
+      </div>
+    </header>
+
+    <div class="page-body">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+      {% block page_content %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleAppSidebar() {
+  if (window.innerWidth < 992) {
+    if (typeof toggleMobileNav === 'function') toggleMobileNav();
+    return;
+  }
+  var sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.classList.toggle('collapsed');
+}
+</script>
+{% block page_extra_js %}{% endblock %}
+{% endblock %}

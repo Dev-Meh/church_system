@@ -85,7 +85,7 @@ class Donation(models.Model):
         ('refunded', 'Refunded'),
     ]
     TITHE_GIFT_TYPE_CHOICES = [
-        ('money', 'Pesa'),
+        ('money', 'Fedha'),
         ('asset', 'Mali'),
     ]
     

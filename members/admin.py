@@ -5,8 +5,15 @@ from .models import ChurchUser, ChurchGroup, GroupMembership, GroupActivity
 
 @admin.register(ChurchUser)
 class ChurchUserAdmin(admin.ModelAdmin):
-    list_display = ("username", "first_name", "last_name", "role", "is_active_member")
-    list_filter = ("role", "is_active_member", "is_staff")
+    list_display = (
+        "username",
+        "first_name",
+        "last_name",
+        "role",
+        "is_verified_pastor",
+        "is_active_member",
+    )
+    list_filter = ("role", "is_verified_pastor", "is_active_member", "is_staff")
     search_fields = ("username", "first_name", "last_name", "email", "phone_number")
 
 

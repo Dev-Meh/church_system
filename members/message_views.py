@@ -11,13 +11,13 @@ from .models import ChurchUser
 from .models_message import Message, MessageRecipient, Announcement
 from .message_forms import MessageForm, AnnouncementForm
 from .sms_service import sms_service
+from .permissions import can_manage_church_communications, can_create_church_announcements
 
 @login_required(login_url='members:login')
 def message_center(request):
-    """Main message center for pastors"""
-    # Only allow pastors to access message center
-    if request.user.role not in ['pastor', 'admin']:
-        messages.error(request, 'Access denied. Pastor privileges required.')
+    """Message center for pastor and church secretary."""
+    if not can_manage_church_communications(request.user):
+        messages.error(request, 'Huna ruhusa. Ni mchungaji au katibu tu.')
         return redirect('dashboard')
     
     # Get statistics
@@ -45,9 +45,8 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
     login_url = '/members/login/'
     
     def dispatch(self, request, *args, **kwargs):
-        # Only allow pastors to send messages
-        if request.user.role not in ['pastor', 'admin']:
-            messages.error(request, 'Access denied. Pastor privileges required.')
+        if not can_manage_church_communications(request.user):
+            messages.error(request, 'Huna ruhusa. Ni mchungaji au katibu tu.')
             return redirect('dashboard')
         return super().dispatch(request, *args, **kwargs)
     
@@ -106,8 +105,8 @@ class MessageListView(LoginRequiredMixin, ListView):
     login_url = '/members/login/'
     
     def dispatch(self, request, *args, **kwargs):
-        if request.user.role not in ['pastor', 'admin']:
-            messages.error(request, 'Access denied. Pastor privileges required.')
+        if not can_manage_church_communications(request.user):
+            messages.error(request, 'Huna ruhusa. Ni mchungaji au katibu tu.')
             return redirect('dashboard')
         return super().dispatch(request, *args, **kwargs)
     
@@ -126,8 +125,8 @@ class MessageDetailView(LoginRequiredMixin, DetailView):
     login_url = '/members/login/'
     
     def dispatch(self, request, *args, **kwargs):
-        if request.user.role not in ['pastor', 'admin']:
-            messages.error(request, 'Access denied. Pastor privileges required.')
+        if not can_manage_church_communications(request.user):
+            messages.error(request, 'Huna ruhusa. Ni mchungaji au katibu tu.')
             return redirect('dashboard')
         return super().dispatch(request, *args, **kwargs)
     
@@ -186,13 +185,13 @@ class AnnouncementCreateView(LoginRequiredMixin, CreateView):
     """Create public announcements"""
     model = Announcement
     form_class = AnnouncementForm
-    template_name = 'members/announcement_create.html'
+    template_name = 'members/create_announcement.html'
     login_url = '/members/login/'
-    success_url = reverse_lazy('members:message_center')
+    success_url = reverse_lazy('dashboard')
     
     def dispatch(self, request, *args, **kwargs):
-        if request.user.role not in ['pastor', 'admin']:
-            messages.error(request, 'Access denied. Pastor privileges required.')
+        if not can_create_church_announcements(request.user):
+            messages.error(request, 'Huna ruhusa ya kuunda tangazo. Ni mchungaji tu.')
             return redirect('dashboard')
         return super().dispatch(request, *args, **kwargs)
     
@@ -201,5 +200,5 @@ class AnnouncementCreateView(LoginRequiredMixin, CreateView):
         announcement.author = self.request.user
         announcement.save()
         
-        messages.success(self.request, 'Announcement created successfully!')
+        messages.success(self.request, 'Tangazo limetumwa kikamilifu!')
         return super().form_valid(form)

@@ -1,60 +1,95 @@
-{% extends "base.html" %}
+{% extends 'church_layout/app_shell.html' %}
 {% load i18n_church %}
 
 {% block title %}{{ sermon.title }} - {% church_t 'sermons' %}{% endblock %}
+{% block page_title %}{{ sermon.title|truncatechars:48 }}{% endblock %}
+{% block page_subtitle %}
+<p class="topnav-subtitle">
+  {{ sermon.sermon_date|date:"F d, Y" }}{% if sermon.speaker %} — {{ sermon.speaker.full_name }}{% endif %}
+</p>
+{% endblock %}
 
-{% block extra_css %}
+{% block page_header_actions %}
+<a href="{% url 'dashboard' %}" class="btn-back-dashboard">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  {% church_t 'back_to_dashboard' %}
+</a>
+<a href="{% url 'sermons:sermon_list' %}" class="btn-back-dashboard" style="border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);">
+  {% church_t 'sermons' %}
+</a>
+{% include 'members/language_selector.html' %}
+<span class="welcome-pill">{{ user.first_name }}</span>
+{% endblock %}
+
+{% block page_extra_css %}
 <style>
-@media (max-width: 576px) {
-  .sermon-detail-page { padding-left: 12px; padding-right: 12px; }
-  .sermon-detail-page .d-flex.justify-content-between.align-items-start {
-    flex-direction: column;
-    align-items: stretch !important;
-    gap: 0.75rem;
-  }
-  .sermon-detail-page .d-flex.gap-2 {
-    flex-direction: column;
-    width: 100%;
-  }
-  .sermon-detail-page .d-flex.gap-2 .btn { width: 100%; text-align: center; }
+.btn-back-dashboard {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(200,168,75,0.35);
+  border-radius: 8px;
+  color: #c8a84b;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-right: 0.5rem;
 }
+.btn-back-dashboard:hover { background: rgba(200,168,75,0.12); color: #f2d98d; }
+.sermon-detail-panel {
+  background: #152333;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+.sermon-detail-panel h6 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #c8a84b;
+  margin-bottom: 0.5rem;
+}
+.sermon-detail-panel p,
+.sermon-detail-panel div { color: rgba(255,255,255,0.85); line-height: 1.6; font-size: 14px; }
+.sermon-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.btn-sermon {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  background: rgba(255,255,255,0.06);
+}
+.btn-sermon:hover { border-color: #c8a84b; color: #c8a84b; }
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="sermon-detail-page container py-4">
-  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-    <div>
-      <h3 class="mb-1">{{ sermon.title }}</h3>
-      <div class="text-muted small">
-        {{ sermon.sermon_date|date:"F d, Y H:i" }}
-        {% if sermon.speaker %} - {{ sermon.speaker.full_name }}{% endif %}
-      </div>
-    </div>
-    <div class="d-flex gap-2">
-      <a href="{% url 'sermons:sermon_list' %}" class="btn btn-outline-secondary btn-sm">Back</a>
-      {% if user.role == 'pastor' %}
-        <a href="{% url 'sermons:sermon_update' sermon.pk %}" class="btn btn-outline-primary btn-sm">Edit</a>
-        <a href="{% url 'sermons:sermon_delete' sermon.pk %}" class="btn btn-outline-danger btn-sm">Delete</a>
-      {% endif %}
-    </div>
-  </div>
+{% block page_content %}
+{% if user.role == 'pastor' and user.is_verified_pastor or user.role == 'admin' %}
+<div class="sermon-actions">
+  <a href="{% url 'sermons:sermon_update' sermon.pk %}" class="btn-sermon">Edit</a>
+  <a href="{% url 'sermons:sermon_delete' sermon.pk %}" class="btn-sermon">Delete</a>
+</div>
+{% endif %}
 
-  <div class="card">
-    <div class="card-body">
-      {% if sermon.bible_references %}
-        <h6 class="text-muted mb-2">Bible References</h6>
-        <p class="mb-3">{{ sermon.bible_references }}</p>
-      {% endif %}
+<div class="sermon-detail-panel">
+  {% if sermon.bible_references %}
+  <h6>Bible References</h6>
+  <p class="mb-3">{{ sermon.bible_references }}</p>
+  {% endif %}
 
-      <h6 class="text-muted mb-2">Message</h6>
-      <div class="mb-3">{{ sermon.description|linebreaks }}</div>
+  <h6>Message</h6>
+  <div class="mb-3">{{ sermon.description|linebreaks }}</div>
 
-      {% if sermon.notes %}
-        <h6 class="text-muted mb-2">Notes</h6>
-        <div>{{ sermon.notes|linebreaks }}</div>
-      {% endif %}
-    </div>
-  </div>
+  {% if sermon.notes %}
+  <h6>Notes</h6>
+  <div>{{ sermon.notes|linebreaks }}</div>
+  {% endif %}
 </div>
 {% endblock %}

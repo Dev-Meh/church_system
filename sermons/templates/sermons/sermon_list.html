@@ -1,99 +1,178 @@
-{% extends "base.html" %}
+{% extends 'church_layout/app_shell.html' %}
 {% load i18n_church %}
 
-{% block title %}Sermons - PHM-ARCC{% endblock %}
+{% block title %}{% church_t 'sermons' %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_t 'sermons' %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">PHM-ARCC Iyumbu Dodoma</p>{% endblock %}
 
-{% block extra_css %}
+{% block page_header_actions %}
+<a href="{% url 'dashboard' %}" class="btn-back-dashboard">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  {% church_t 'back_to_dashboard' %}
+</a>
+{% include 'members/language_selector.html' %}
+<span class="welcome-pill">{{ user.first_name }}</span>
+{% endblock %}
+
+{% block page_extra_css %}
 <style>
+.btn-back-dashboard {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(200,168,75,0.35);
+  border-radius: 8px;
+  color: #c8a84b;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-right: 0.5rem;
+}
+.btn-back-dashboard:hover { background: rgba(200,168,75,0.12); color: #f2d98d; }
+.sermon-filter {
+  background: #152333;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.sermon-filter .form-control,
+.sermon-filter .form-select {
+  background: #0f1e2e;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+}
+.sermon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.sermon-card {
+  background: #152333;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.sermon-card-body { padding: 1.2rem; flex: 1; }
+.sermon-card-title { font-family: 'Cinzel', serif; font-size: 15px; color: #fff; margin: 0 0 0.5rem; }
+.sermon-card-meta { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 0.75rem; }
+.sermon-card-text { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.5; }
+.sermon-card-footer {
+  padding: 0.85rem 1.2rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.btn-sermon {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  background: rgba(255,255,255,0.06);
+}
+.btn-sermon:hover { border-color: #c8a84b; color: #c8a84b; }
+.btn-sermon-primary { border-color: rgba(200,168,75,0.4); color: #c8a84b; }
+.btn-sermon-create {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #c8a84b, #b39843);
+  color: #0a1628;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  text-decoration: none;
+}
+.pagination-sermon { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; flex-wrap: wrap; }
+.pagination-sermon a, .pagination-sermon span {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  text-decoration: none;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.pagination-sermon .current { background: #c8a84b; color: #0a1628; border-color: #c8a84b; }
+.empty-sermon {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(255,255,255,0.45);
+  background: #152333;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.07);
+}
 @media (max-width: 576px) {
-  .sermon-list-page.container { padding-left: 12px; padding-right: 12px; }
-  .sermon-list-page .card-footer.d-flex {
-    flex-direction: column;
-    align-items: stretch !important;
-    gap: 0.5rem;
-  }
-  .sermon-list-page .card-footer .btn { width: 100%; text-align: center; }
+  .sermon-card-footer { flex-direction: column; align-items: stretch; }
+  .btn-sermon { text-align: center; }
 }
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="sermon-list-page container py-4">
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-    <div>
-      <h3 class="mb-1">{% church_t 'sermons' %}</h3>
-    </div>
-    {% if user.role == 'pastor' %}
-      <a href="{% url 'sermons:sermon_create' %}" class="btn btn-primary">Create Sermon</a>
-    {% endif %}
-  </div>
-
-  <form method="get" class="card mb-3">
-    <div class="card-body">
-      <div class="row g-2">
-        <div class="col-md-4">
-          {{ search_form.query }}
-        </div>
-        <div class="col-md-3">
-          {{ search_form.speaker }}
-        </div>
-        <div class="col-md-3">
-          {{ search_form.sermon_type }}
-        </div>
-        <div class="col-md-2 d-grid">
-          <button type="submit" class="btn btn-outline-primary">Filter</button>
-        </div>
-      </div>
-    </div>
-  </form>
-
-  {% if sermons %}
-    <div class="row g-3">
-      {% for sermon in sermons %}
-        <div class="col-lg-4 col-md-6">
-          <div class="card h-100">
-            <div class="card-body">
-              <h5 class="card-title mb-1">{{ sermon.title }}</h5>
-              <div class="text-muted small mb-2">
-                {{ sermon.sermon_date|date:"F d, Y" }}{% if sermon.speaker %} - {{ sermon.speaker.full_name }}{% endif %}
-              </div>
-              <p class="card-text">
-                {% if sermon.description %}
-                  {{ sermon.description|truncatechars:220 }}
-                {% else %}
-                  No description available.
-                {% endif %}
-              </p>
-            </div>
-            <div class="card-footer d-flex justify-content-between align-items-center">
-              <a href="{% url 'sermons:sermon_detail' sermon.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
-              {% if user.role == 'pastor' %}
-                <span>
-                  <a href="{% url 'sermons:sermon_update' sermon.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
-                  <a href="{% url 'sermons:sermon_delete' sermon.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
-                </span>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
+{% block page_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  {% if user.role == 'pastor' and user.is_verified_pastor or user.role == 'admin' %}
+  <a href="{% url 'sermons:sermon_create' %}" class="btn-sermon-create">Create Sermon</a>
   {% else %}
-    <div class="alert alert-info">No sermons found.</div>
-  {% endif %}
-
-  {% if is_paginated %}
-    <nav class="mt-4">
-      <ul class="pagination">
-        {% if page_obj.has_previous %}
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
-        {% endif %}
-        <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
-        {% if page_obj.has_next %}
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
-        {% endif %}
-      </ul>
-    </nav>
+  <span></span>
   {% endif %}
 </div>
+
+<form method="get" class="sermon-filter">
+  <div class="row g-2">
+    <div class="col-md-4">{{ search_form.query }}</div>
+    <div class="col-md-3">{{ search_form.speaker }}</div>
+    <div class="col-md-3">{{ search_form.sermon_type }}</div>
+    <div class="col-md-2 d-grid">
+      <button type="submit" class="btn btn-outline-warning btn-sm">Filter</button>
+    </div>
+  </div>
+</form>
+
+{% if sermons %}
+<div class="sermon-grid">
+  {% for sermon in sermons %}
+  <article class="sermon-card">
+    <div class="sermon-card-body">
+      <h2 class="sermon-card-title">{{ sermon.title }}</h2>
+      <div class="sermon-card-meta">
+        {{ sermon.sermon_date|date:"F d, Y" }}{% if sermon.speaker %} — {{ sermon.speaker.full_name }}{% endif %}
+      </div>
+      <p class="sermon-card-text">
+        {% if sermon.description %}{{ sermon.description|truncatechars:220 }}{% else %}No description available.{% endif %}
+      </p>
+    </div>
+    <div class="sermon-card-footer">
+      <a href="{% url 'sermons:sermon_detail' sermon.pk %}" class="btn-sermon">View</a>
+      {% if user.role == 'pastor' and user.is_verified_pastor or user.role == 'admin' %}
+      <span style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+        <a href="{% url 'sermons:sermon_update' sermon.pk %}" class="btn-sermon btn-sermon-primary">Edit</a>
+        <a href="{% url 'sermons:sermon_delete' sermon.pk %}" class="btn-sermon">Delete</a>
+      </span>
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<p class="empty-sermon">No sermons found.</p>
+{% endif %}
+
+{% if is_paginated %}
+<nav class="pagination-sermon" aria-label="Sermon pages">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+  {% endif %}
+  <span class="current">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}">Next</a>
+  {% endif %}
+</nav>
+{% endif %}
 {% endblock %}

@@ -93,7 +93,11 @@
     <div class="panel">
         <div class="panel-head">
             <h3>List ya Waliotoa Zaka</h3>
-            <a href="{% url 'donations:home' %}" class="btn-back">Rudi Donations</a>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <a href="{% url 'donations:tithe_list_print' %}" class="btn-back" target="_blank">Preview / Print</a>
+                <a href="{% url 'donations:export_tithe_csv' %}" class="btn-back">Pakua CSV</a>
+                <a href="{% url 'donations:home' %}" class="btn-back">Rudi Donations</a>
+            </div>
         </div>
         <div class="tbl-wrap">
             <table>
@@ -124,7 +128,7 @@
                             {% if d.tithe_gift_type == 'asset' %}
                                 <span class="badge asset">Mali</span>
                             {% else %}
-                                <span class="badge money">Pesa</span>
+                                <span class="badge money">Fedha</span>
                             {% endif %}
                         </td>
                         <td>

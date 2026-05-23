@@ -6,6 +6,7 @@ from django.views.generic import CreateView, ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 from django.db.models.functions import TruncMonth
 from datetime import timedelta
@@ -13,6 +14,7 @@ import csv
 import json
 from members.models import ChurchUser
 from .models import Donation, DonationCampaign, DonationCategory, DonationNotice, CashBookEntry, Pledge
+from .print_branding import church_print_context
 from .forms import (
     DonationForm,
     AccountantDonationEntryForm,
@@ -28,15 +30,18 @@ def _is_accountant(user):
 
 
 def _can_view_all_donations(user):
-    return user.role in {'accountant', 'pastor'}
+    from members.permissions import has_church_leadership
+    return _is_accountant(user) or has_church_leadership(user)
 
 
 def _can_publish_donation_notice(user):
-    return user.role == 'pastor' or _is_accountant(user)
+    from members.permissions import can_publish_donation_notice
+    return can_publish_donation_notice(user)
 
 
 def _can_view_tithe_list(user):
-    return user.role in {'pastor', 'accountant'}
+    from members.permissions import has_church_leadership
+    return has_church_leadership(user) or _is_accountant(user)
 
 
 def _can_manage_cash_book(user):
@@ -44,17 +49,51 @@ def _can_manage_cash_book(user):
 
 
 def _can_view_cash_book(user):
-    return user.role in {'pastor', 'accountant'}
+    from members.permissions import has_church_leadership
+    return has_church_leadership(user) or _is_accountant(user)
 
 
 def _can_view_income_allocation(user):
-    return user.role in {'pastor', 'accountant'}
+    from members.permissions import has_church_leadership
+    return has_church_leadership(user) or _is_accountant(user)
 
 
 def _csv_response(filename):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
+
+
+def _cash_book_row_from_entry(entry):
+    cash = int(entry.cash_amount or 0)
+    bank = int(entry.bank_amount or 0)
+    return {
+        'tarehe': entry.entry_date,
+        'maelezo': entry.description,
+        'cash': cash if cash else '',
+        'bank': bank if bank else '',
+    }
+
+
+def _build_cash_book_sheet_rows():
+    """Two-column cash book: DR (left) and CR (right), one row per side-aligned entry only."""
+    empty = {'tarehe': '', 'maelezo': '', 'cash': '', 'bank': ''}
+    dr_list = [
+        _cash_book_row_from_entry(e)
+        for e in CashBookEntry.objects.filter(entry_type='dr').order_by('entry_date', 'created_at')
+    ]
+    cr_list = [
+        _cash_book_row_from_entry(e)
+        for e in CashBookEntry.objects.filter(entry_type='cr').order_by('entry_date', 'created_at')
+    ]
+    total_rows = max(len(dr_list), len(cr_list))
+    sheet_rows = []
+    for i in range(total_rows):
+        sheet_rows.append({
+            'dr': dr_list[i] if i < len(dr_list) else empty.copy(),
+            'cr': cr_list[i] if i < len(cr_list) else empty.copy(),
+        })
+    return sheet_rows
 
 
 def _get_accountant_sheet_rows():
@@ -274,12 +313,14 @@ def donation_home(request):
         sheet_form = AccountantSheetEntryForm() if is_accountant else None
         notice_form = DonationNoticeForm() if can_publish_notice else None
 
-    # Show active donation notices to every logged-in user.
+    # Show active donation notices (all members, or targeted member only).
     active_notices = DonationNotice.objects.filter(
         is_active=True,
         start_date__lte=today,
-        end_date__gte=today
-    ).select_related('created_by').order_by('-created_at')
+        end_date__gte=today,
+    ).filter(
+        Q(target_member__isnull=True) | Q(target_member=request.user)
+    ).select_related('created_by', 'target_member').order_by('-created_at')
 
     my_donations = Donation.objects.filter(donor=request.user)
     totals = my_donations.values('donation_type').annotate(total=models.Sum('amount'))
@@ -380,6 +421,14 @@ class DonationHistoryView(LoginRequiredMixin, ListView):
         return context
 
 
+def _tithe_donations_queryset():
+    return (
+        Donation.objects.filter(donation_type='tithe')
+        .select_related('donor')
+        .order_by('-contribution_date', '-donation_date')
+    )
+
+
 class TitheContributionListView(LoginRequiredMixin, ListView):
     model = Donation
     template_name = 'donations/tithe_contribution_list.html'
@@ -393,11 +442,27 @@ class TitheContributionListView(LoginRequiredMixin, ListView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        return (
-            Donation.objects.filter(donation_type='tithe')
-            .select_related('donor')
-            .order_by('-contribution_date', '-donation_date')
-        )
+        return _tithe_donations_queryset()
+
+
+@login_required
+def tithe_list_print(request):
+    if not _can_view_tithe_list(request.user):
+        messages.error(request, 'Ni mhasibu au mchungaji tu anaweza kuona list ya zaka.')
+        return redirect('donations:home')
+
+    tithe_donations = list(_tithe_donations_queryset())
+    total_money = sum(
+        int(donation.amount or 0)
+        for donation in tithe_donations
+        if donation.tithe_gift_type == 'money'
+    )
+    return render(request, 'donations/tithe_list_print.html', church_print_context(
+        tithe_donations=tithe_donations,
+        report_date=timezone.localdate(),
+        total_count=len(tithe_donations),
+        total_money=total_money,
+    ))
 
 
 @login_required
@@ -447,6 +512,45 @@ def cash_book_view(request):
     })
 
 
+def _build_income_allocation_report(start_date, end_date):
+    period_qs = Donation.objects.filter(
+        contribution_date__range=(start_date, end_date),
+        status='completed',
+    )
+
+    total_zaka = period_qs.filter(donation_type='tithe').aggregate(total=models.Sum('amount'))['total'] or 0
+    total_sadaka = period_qs.filter(donation_type='offering').aggregate(total=models.Sum('amount'))['total'] or 0
+    total_mapato_mengineyo = period_qs.filter(
+        donation_type__in=['other', 'special']
+    ).aggregate(total=models.Sum('amount'))['total'] or 0
+    total_mapato = total_zaka + total_sadaka + total_mapato_mengineyo
+
+    allocations = [
+        ('Posho ya Mchungaji', 65),
+        ('Zaka ya Ofisi Kuu', 10),
+        ('Elimu ya Vyuo', 5),
+        ('Akiba Mafao ya Mchungaji', 5),
+        ('Matumizi ya Kanisa', 15),
+    ]
+    allocation_rows = []
+    for name, percent in allocations:
+        allocation_rows.append({
+            'name': name,
+            'percent': percent,
+            'amount': (total_mapato * percent) / 100 if total_mapato else 0,
+        })
+
+    return {
+        'start_date': start_date,
+        'end_date': end_date,
+        'total_zaka': total_zaka,
+        'total_sadaka': total_sadaka,
+        'total_mapato_mengineyo': total_mapato_mengineyo,
+        'total_mapato': total_mapato,
+        'allocation_rows': allocation_rows,
+    }
+
+
 @login_required
 def income_allocation_report_view(request):
     if not _can_view_income_allocation(request.user):
@@ -457,49 +561,36 @@ def income_allocation_report_view(request):
     report = None
 
     if form.is_valid():
-        start_date = form.cleaned_data['start_date']
-        end_date = form.cleaned_data['end_date']
-        period_qs = Donation.objects.filter(
-            contribution_date__range=(start_date, end_date),
-            status='completed',
+        report = _build_income_allocation_report(
+            form.cleaned_data['start_date'],
+            form.cleaned_data['end_date'],
         )
-
-        total_zaka = period_qs.filter(donation_type='tithe').aggregate(total=models.Sum('amount'))['total'] or 0
-        total_sadaka = period_qs.filter(donation_type='offering').aggregate(total=models.Sum('amount'))['total'] or 0
-        total_mapato_mengineyo = period_qs.filter(
-            donation_type__in=['other', 'special']
-        ).aggregate(total=models.Sum('amount'))['total'] or 0
-        total_mapato = total_zaka + total_sadaka + total_mapato_mengineyo
-
-        allocations = [
-            ('Posho ya Mchungaji', 65),
-            ('Zaka ya Ofisi Kuu', 10),
-            ('Elimu ya Vyuo', 5),
-            ('Akiba Mafao ya Mchungaji', 5),
-            ('Matumizi ya Kanisa', 15),
-        ]
-        allocation_rows = []
-        for name, percent in allocations:
-            allocation_rows.append({
-                'name': name,
-                'percent': percent,
-                'amount': (total_mapato * percent) / 100 if total_mapato else 0,
-            })
-
-        report = {
-            'start_date': start_date,
-            'end_date': end_date,
-            'total_zaka': total_zaka,
-            'total_sadaka': total_sadaka,
-            'total_mapato_mengineyo': total_mapato_mengineyo,
-            'total_mapato': total_mapato,
-            'allocation_rows': allocation_rows,
-        }
 
     return render(request, 'donations/income_allocation_report.html', {
         'form': form,
         'report': report,
     })
+
+
+@login_required
+def income_allocation_report_print(request):
+    if not _can_view_income_allocation(request.user):
+        messages.error(request, 'Ni mhasibu au mchungaji tu anaweza kuona report hii.')
+        return redirect('donations:home')
+
+    form = IncomeAllocationReportForm(request.GET or None)
+    if not form.is_valid():
+        messages.error(request, 'Chagua tarehe sahihi kisha generate report kabla ya print.')
+        return redirect('donations:income_allocation_report')
+
+    report = _build_income_allocation_report(
+        form.cleaned_data['start_date'],
+        form.cleaned_data['end_date'],
+    )
+    return render(request, 'donations/income_allocation_print.html', church_print_context(
+        report=report,
+        report_date=timezone.localdate(),
+    ))
 
 @login_required
 def financial_status(request):
@@ -564,7 +655,7 @@ def export_tithe_list_csv(request):
         messages.error(request, 'Ni mhasibu au mchungaji tu anaweza kupakua report ya zaka.')
         return redirect('donations:home')
 
-    qs = Donation.objects.filter(donation_type='tithe').select_related('donor').order_by('-contribution_date', '-donation_date')
+    qs = _tithe_donations_queryset()
     response = _csv_response('tithe_contributions_report.csv')
     writer = csv.writer(response)
     writer.writerow(['Date', 'Member', 'Tithe Type', 'Amount', 'Asset Description', 'Notes'])
@@ -572,7 +663,7 @@ def export_tithe_list_csv(request):
         writer.writerow([
             donation.contribution_date,
             donation.donor.full_name if donation.donor else (donation.donor_name or ''),
-            'Mali' if donation.tithe_gift_type == 'asset' else 'Pesa',
+            'Mali' if donation.tithe_gift_type == 'asset' else 'Fedha',
             int(donation.amount or 0),
             donation.tithe_asset_description or '',
             donation.notes or '',
@@ -672,13 +763,12 @@ def export_cash_book_csv(request):
 @login_required
 def donation_report_preview(request, report_type):
     report_date = timezone.localdate()
-    context = {
-        'report_type': report_type,
-        'report_date': report_date,
-        'church_name': 'PHM-ARCC Iyumbu Dodoma',
-        'rows': [],
-        'columns': [],
-    }
+    context = church_print_context(
+        report_type=report_type,
+        report_date=report_date,
+        rows=[],
+        columns=[],
+    )
 
     if report_type == 'accountant_sheet':
         if not _is_accountant(request.user):
@@ -720,19 +810,10 @@ def donation_report_preview(request, report_type):
         if not _can_view_cash_book(request.user):
             messages.error(request, 'Ni mhasibu au mchungaji tu anaweza kuona cash book report.')
             return redirect('donations:home')
-        entries = CashBookEntry.objects.select_related('created_by').order_by('-entry_date', '-created_at')[:400]
-        context.update({
-            'report_title': 'Cash Book Report',
-            'columns': ['Tarehe', 'Aina', 'Maelezo', 'Cash', 'Bank', 'Muingizaji'],
-            'rows': [{
-                'tarehe': e.entry_date,
-                'aina': e.get_entry_type_display(),
-                'maelezo': e.description,
-                'cash': int(e.cash_amount or 0),
-                'bank': int(e.bank_amount or 0),
-                'muingizaji': e.created_by.full_name if e.created_by else '-',
-            } for e in entries],
-        })
+        return render(request, 'donations/cash_book_print.html', church_print_context(
+            sheet_rows=_build_cash_book_sheet_rows(),
+            report_date=report_date,
+        ))
     else:
         messages.error(request, 'Aina ya report haijatambulika.')
         return redirect('donations:home')

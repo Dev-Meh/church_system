@@ -1,63 +1,23 @@
-{% extends "base.html" %}
+{% extends 'church_layout/app_shell.html' %}
 {% load i18n_church %}
 
-{% block title %}Pastor Dashboard - PHM-ARCC{% endblock %}
+{% block title %}{% church_t 'pastor_dashboard_title' %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_t 'pastor_dashboard_title' %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">Karibu {{ user.first_name }} — usimamizi wa washirika, michango na mawasiliano.</p>{% endblock %}
 
-{% block extra_css %}
+{% block page_header_actions %}
+{% include 'members/language_selector.html' %}
+<span class="welcome-pill">{{ user.first_name }}</span>
+{% endblock %}
+
+{% block page_extra_css %}
 <style>
-body { background: #0b1626; }
-.pd-layout { display: flex; min-height: calc(100vh - 120px); }
-.pd-sidebar {
-    width: 260px; min-width: 260px; background: linear-gradient(180deg, #0d2340 0%, #071221 100%);
-    border-right: 2px solid rgba(200, 168, 75, 0.35); padding: 1rem .8rem;
-    border-radius: 14px; margin-right: 1rem; position: relative;
-    transition: width .25s ease, min-width .25s ease, margin-right .25s ease, padding .25s ease;
-    overflow: visible;
-    z-index: 20;
-}
-.pd-main { flex: 1; }
-.pd-shell { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1rem 2rem; }
-.pd-top { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1.25rem; }
-.pd-title { color:#fff; margin:0; font-weight:700; }
-.pd-sub { color:#9fb2c8; font-size:.92rem; }
-.hamburger-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    border: 1px solid rgba(200,168,75,.45);
-    background: rgba(200,168,75,.08);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all .2s ease;
-}
-.hamburger-btn:hover { background: rgba(200,168,75,.18); }
-.hamburger-icon {
-    display: inline-flex;
-    flex-direction: column;
-    gap: 4px;
-}
-.hamburger-icon span {
-    width: 16px;
-    height: 2px;
-    background: #f2d37a;
-    border-radius: 2px;
-    display: block;
-}
-.sidebar-toggle-inside {
-    position: absolute;
-    top: -14px;
-    right: -16px;
-    z-index: 1200;
-    box-shadow: 0 6px 18px rgba(0,0,0,.35);
-}
-.pd-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:1rem; margin-bottom:1rem; }
-.pd-card { background: linear-gradient(180deg,#12253f,#0f1f35); border:1px solid rgba(200,168,75,.2); border-radius:14px; padding:1rem; color:#fff; }
+.pd-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem; margin-bottom:1rem; }
+.pd-card { background:linear-gradient(180deg,#12253f,#0f1f35); border:1px solid rgba(200,168,75,.2); border-radius:14px; padding:1rem; color:#fff; }
 .pd-label { color:#a4b4c8; font-size:.82rem; text-transform:uppercase; letter-spacing:.06em; }
 .pd-value { font-size:1.8rem; font-weight:800; color:#f2d37a; margin-top:.35rem; }
-.pd-panels { display:grid; grid-template-columns: 1.4fr 1fr; gap:1rem; margin-top:1rem; }
-@media (max-width: 960px){ .pd-panels{ grid-template-columns:1fr; } }
+.pd-panels { display:grid; grid-template-columns:1.4fr 1fr; gap:1rem; margin-top:1rem; }
+@media (max-width:960px){ .pd-panels{ grid-template-columns:1fr; } }
 .panel { background:#112237; border:1px solid rgba(255,255,255,.08); border-radius:14px; overflow:hidden; }
 .panel-hd { padding:.85rem 1rem; border-bottom:1px solid rgba(255,255,255,.08); color:#f2d37a; font-weight:700; }
 .panel-bd { padding:.85rem 1rem; }
@@ -65,285 +25,105 @@ body { background: #0b1626; }
 .item-row:last-child { border-bottom:none; }
 .muted { color:#9fb2c8; font-size:.85rem; }
 .acc-row { display:flex; justify-content:space-between; align-items:center; gap:.6rem; padding:.55rem 0; border-bottom:1px solid rgba(255,255,255,.06); }
-.acc-row:last-child { border-bottom:none; }
 .badge-state { font-size:.75rem; padding:.28rem .55rem; border-radius:99px; }
 .ok { background:#1e4c2f; color:#9ff0b5; }
 .no { background:#4b1f1f; color:#ffb4b4; }
-.chart-wrap { height: 300px; }
-
-.sidebar-brand {
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-    margin-bottom: 1rem;
-    padding-right: 2.1rem;
-}
-.sidebar-logo {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    object-fit: cover;
-    border: 1px solid rgba(200, 168, 75, .35);
-    flex-shrink: 0;
-}
-.sidebar-brand-text { min-width: 0; }
-.nav-head { color:#c8a84b; font-family:'Cinzel',serif; font-weight:700; font-size:1rem; margin-bottom:.1rem; line-height:1.1; }
-.nav-sub { color:#7f96b0; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; line-height:1.1; }
-.nav-sec { color:#90a4ba; font-size:.72rem; text-transform:uppercase; letter-spacing:.09em; margin:.9rem .4rem .45rem; }
-.pd-sidebar .nav-sec:first-of-type { margin-top: 1.5rem; }
-.nav-link-pd {
-    display:flex; align-items:center; justify-content:space-between; gap:.5rem;
-    color:#d3ddeb; text-decoration:none; padding:.58rem .7rem; border-radius:10px;
-    font-size:.86rem; margin-bottom:.25rem; border:1px solid transparent;
-}
-.nav-link-left { display: inline-flex; align-items: center; gap: .55rem; min-width: 0; }
-.nav-ic { width: 16px; text-align: center; color: #f2d37a; flex-shrink: 0; }
-.nav-link-pd:hover { background: rgba(200,168,75,.08); border-color: rgba(200,168,75,.25); color:#f2d37a; }
-.nav-link-pd.active { background: rgba(200,168,75,.14); border-color: rgba(200,168,75,.35); color:#f2d37a; }
-.nav-pill { background: rgba(200,168,75,.2); color:#f2d37a; border-radius:99px; padding:.1rem .5rem; font-size:.72rem; font-weight:700; }
-
-.pd-layout.sidebar-collapsed .pd-sidebar {
-    width: 78px;
-    min-width: 78px;
-    margin-right: .75rem;
-    padding: .75rem .45rem;
-    overflow: visible;
-}
-.pd-layout.sidebar-collapsed .nav-sub,
-.pd-layout.sidebar-collapsed .nav-sec,
-.pd-layout.sidebar-collapsed .nav-link-pd .nav-txt,
-.pd-layout.sidebar-collapsed .nav-pill,
-.pd-layout.sidebar-collapsed form button.btn-outline-danger,
-.pd-layout.sidebar-collapsed .sidebar-brand-text {
-    display: none;
-}
-.pd-layout.sidebar-collapsed .nav-link-pd {
-    justify-content: center;
-    padding: .65rem .3rem;
-}
-.pd-layout.sidebar-collapsed .nav-link-left { gap: 0; }
-.pd-layout.sidebar-collapsed .nav-ic { font-size: 1rem; }
-.pd-layout.sidebar-collapsed .sidebar-toggle-inside {
-    right: -14px;
-    transform: none;
-}
-.pd-layout.sidebar-collapsed .sidebar-brand {
-    justify-content: center;
-    padding-right: 0;
-}
-
-@media (max-width: 980px) {
-    .pd-layout { flex-direction: column; }
-    .pd-sidebar { width: 100%; min-width: 100%; margin-right: 0; margin-bottom: 1rem; }
-    .pd-layout.sidebar-collapsed .pd-sidebar {
-        width: 0;
-        min-width: 0;
-        margin-bottom: 0;
-        padding: 0;
-    }
-}
-@media (max-width: 576px) {
-    .pd-shell { padding: 0.75rem 0.6rem 1.25rem; }
-    .pd-top { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-    .pd-title { font-size: 1.35rem; }
-    .pd-sub { font-size: 0.82rem; line-height: 1.35; }
-    .pd-grid { grid-template-columns: 1fr; gap: 0.75rem; }
-    .pd-value { font-size: 1.45rem; }
-    .chart-wrap { height: 220px; }
-    .item-row, .acc-row { flex-direction: column; align-items: flex-start; gap: 0.35rem; }
-    .sidebar-toggle-inside { top: -10px; right: -10px; }
-}
+.chart-wrap { height:300px; }
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="pd-shell">
-  <div class="pd-layout">
-    <aside class="pd-sidebar">
-      <div class="sidebar-brand">
-        <img src="/media/church-logo.jpeg" alt="Church Logo" class="sidebar-logo" onerror="this.style.display='none'">
-        <div class="sidebar-brand-text">
-          <div class="nav-head">PHM-ARCC</div>
-          <div class="nav-sub">Pastor Panel</div>
-        </div>
+{% block page_content %}
+<div class="pd-grid">
+  <div class="pd-card"><div class="pd-label">Total Members</div><div class="pd-value">{{ total_members }}</div></div>
+  <div class="pd-card"><div class="pd-label">Active Members</div><div class="pd-value">{{ active_members }}</div></div>
+  <div class="pd-card"><div class="pd-label">New This Month</div><div class="pd-value">{{ new_members_this_month }}</div></div>
+  <div class="pd-card"><div class="pd-label">Total Donations</div><div class="pd-value">{{ total_donations|floatformat:0 }}</div></div>
+  <div class="pd-card"><div class="pd-label">This Month Donations</div><div class="pd-value">{{ donations_this_month|floatformat:0 }}</div></div>
+  <div class="pd-card"><div class="pd-label">Active Campaigns</div><div class="pd-value">{{ active_campaigns }}</div></div>
+</div>
+
+<div class="pd-panels">
+  <div class="panel">
+    <div class="panel-hd">Donation Trend (Last 6 Months)</div>
+    <div class="panel-bd"><div class="chart-wrap"><canvas id="pastorDonationChart"></canvas></div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-hd">Member Registrations (Last 6 Months)</div>
+    <div class="panel-bd"><div class="chart-wrap"><canvas id="memberRegistrationChart"></canvas></div></div>
+  </div>
+</div>
+
+<div class="pd-panels">
+  <div class="panel">
+    <div class="panel-hd">Recent Donations</div>
+    <div class="panel-bd">
+      {% for d in recent_donations|slice:":8" %}
+      <div class="item-row">
+        <div><div>{{ d.donor.full_name|default:"Unknown" }}</div><div class="muted">{{ d.campaign.title|default:"General" }} • {{ d.donation_date|date:"M d, Y H:i" }}</div></div>
+        <div><strong>{{ d.amount|floatformat:2 }}</strong></div>
       </div>
-      <button id="sidebarToggleBtn" type="button" class="hamburger-btn sidebar-toggle-inside" aria-label="Toggle menu" title="Toggle menu">
-        <span class="hamburger-icon"><span></span><span></span><span></span></span>
-      </button>
-
-      <div class="nav-sec">Main</div>
-      <a class="nav-link-pd active" href="{% url 'dashboard' %}">
-        <span class="nav-link-left"><i class="fas fa-gauge-high nav-ic"></i><span class="nav-txt">Dashboard</span></span>
-      </a>
-      <a class="nav-link-pd" href="{% url 'members:member_list' %}">
-        <span class="nav-link-left"><i class="fas fa-users-gear nav-ic"></i><span class="nav-txt">Manage Members</span></span><span class="nav-pill">{{ total_members }}</span>
-      </a>
-      <a class="nav-link-pd" href="{% url 'events:event_list' %}">
-        <span class="nav-link-left"><i class="fas fa-calendar-days nav-ic"></i><span class="nav-txt">Church Events</span></span>
-      </a>
-      <a class="nav-link-pd" href="{% url 'sermons:sermon_list' %}">
-        <span class="nav-link-left"><i class="fas fa-microphone nav-ic"></i><span class="nav-txt">Sermons</span></span>
-      </a>
-
-      <div class="nav-sec">Communication</div>
-      <a class="nav-link-pd" href="{% url 'members:message_create' %}">
-        <span class="nav-link-left"><i class="fas fa-pen-to-square nav-ic"></i><span class="nav-txt">Create Message</span></span>
-      </a>
-      <a class="nav-link-pd" href="{% url 'members:message_list' %}">
-        <span class="nav-link-left"><i class="fas fa-paper-plane nav-ic"></i><span class="nav-txt">Sent Messages</span></span>
-      </a>
-
-      <div class="nav-sec">Finance</div>
-      <a class="nav-link-pd" href="{% url 'donations:home' %}">
-        <span class="nav-link-left"><i class="fas fa-coins nav-ic"></i><span class="nav-txt">Donations</span></span>
-      </a>
-      <a class="nav-link-pd" href="{% url 'donations:financial_status' %}">
-        <span class="nav-link-left"><i class="fas fa-chart-line nav-ic"></i><span class="nav-txt">Financial Status</span></span>
-      </a>
-
-      <div class="nav-sec">Account</div>
-      <a class="nav-link-pd" href="{% url 'profile' %}">
-        <span class="nav-link-left"><i class="fas fa-user nav-ic"></i><span class="nav-txt">Profile</span></span>
-      </a>
-      <form method="post" action="{% url 'members:logout' %}" style="margin-top:.6rem;">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-outline-danger btn-sm w-100">Logout</button>
-      </form>
-    </aside>
-
-    <main class="pd-main">
-      <div class="pd-top">
-        <div>
-          <h2 class="pd-title">Pastor Dashboard</h2>
-          <div class="pd-sub">Karibu {{ user.first_name }} — usimamizi wa washirika, michango na mawasiliano.</div>
-        </div>
-      </div>
-
-      <div class="pd-grid">
-        <div class="pd-card"><div class="pd-label">Total Members</div><div class="pd-value">{{ total_members }}</div></div>
-        <div class="pd-card"><div class="pd-label">Active Members</div><div class="pd-value">{{ active_members }}</div></div>
-        <div class="pd-card"><div class="pd-label">New This Month</div><div class="pd-value">{{ new_members_this_month }}</div></div>
-        <div class="pd-card"><div class="pd-label">Total Donations</div><div class="pd-value">{{ total_donations|floatformat:0 }}</div></div>
-        <div class="pd-card"><div class="pd-label">This Month Donations</div><div class="pd-value">{{ donations_this_month|floatformat:0 }}</div></div>
-        <div class="pd-card"><div class="pd-label">Active Campaigns</div><div class="pd-value">{{ active_campaigns }}</div></div>
-      </div>
-
-      <div class="pd-panels">
-        <div class="panel">
-          <div class="panel-hd">Donation Trend (Last 6 Months)</div>
-          <div class="panel-bd">
-            <div class="chart-wrap">
-              <canvas id="pastorDonationChart"></canvas>
-            </div>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="panel-hd">Member Registrations (Last 6 Months)</div>
-          <div class="panel-bd">
-            <div class="chart-wrap">
-              <canvas id="memberRegistrationChart"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="pd-panels">
-        <div class="panel">
-          <div class="panel-hd">Recent Donations</div>
-          <div class="panel-bd">
-            {% for d in recent_donations|slice:":8" %}
-              <div class="item-row">
-                <div>
-                  <div>{{ d.donor.full_name|default:"Unknown" }}</div>
-                  <div class="muted">{{ d.campaign.title|default:"General" }} • {{ d.donation_date|date:"M d, Y H:i" }}</div>
-                </div>
-                <div><strong>{{ d.amount|floatformat:2 }}</strong></div>
-              </div>
-            {% empty %}
-              <div class="muted">No donations recorded yet.</div>
-            {% endfor %}
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-hd">Recent Members</div>
-          <div class="panel-bd">
-            {% for m in recent_members|slice:":8" %}
-              <div class="item-row">
-                <div>
-                  <div>{{ m.full_name }}</div>
-                  <div class="muted">{{ m.email }}</div>
-                </div>
-                <div class="muted">{{ m.date_joined|date:"M d" }}</div>
-              </div>
-            {% empty %}
-              <div class="muted">No recent members.</div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-
-      <div class="pd-panels">
-        <div class="panel">
-          <div class="panel-hd">Recent Messages</div>
-          <div class="panel-bd">
-            {% for rm in recent_messages|slice:":8" %}
-              <div class="item-row">
-                <div>
-                  <div>{{ rm.message.title }}</div>
-                  <div class="muted">{{ rm.message.created_at|date:"M d, Y H:i" }}</div>
-                </div>
-                <div class="muted">to {{ rm.message.recipient_count }}</div>
-              </div>
-            {% empty %}
-              <div class="muted">No recent messages.</div>
-            {% endfor %}
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-hd">Accountant Access Control</div>
-          <div class="panel-bd">
-            {% for acct in accountant_users %}
-              <div class="acc-row">
-                <div>
-                  <div>{{ acct.full_name }}</div>
-                  <div class="muted">{{ acct.username }}</div>
-                </div>
-                <div style="display:flex; align-items:center; gap:.5rem;">
-                  {% if acct.can_post_member_donations %}
-                    <span class="badge-state ok">Access Granted</span>
-                  {% else %}
-                    <span class="badge-state no">Access Revoked</span>
-                  {% endif %}
-                  <form method="post" action="{% url 'members:toggle_accountant_access' acct.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-warning">{% if acct.can_post_member_donations %}Revoke{% else %}Grant{% endif %}</button>
-                  </form>
-                </div>
-              </div>
-            {% empty %}
-              <div class="muted">No accountant users found.</div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-    </main>
+      {% empty %}<div class="muted">No donations recorded yet.</div>{% endfor %}
     </div>
+  </div>
+  <div class="panel">
+    <div class="panel-hd">Recent Members</div>
+    <div class="panel-bd">
+      {% for m in recent_members|slice:":8" %}
+      <div class="item-row">
+        <div><div>{{ m.full_name }}</div><div class="muted">{{ m.email }}</div></div>
+        <div class="muted">{{ m.date_joined|date:"M d" }}</div>
+      </div>
+      {% empty %}<div class="muted">No recent members.</div>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="pd-panels">
+  <div class="panel">
+    <div class="panel-hd">Recent Messages</div>
+    <div class="panel-bd">
+      {% for rm in recent_messages|slice:":8" %}
+      <div class="item-row">
+        <div><div>{{ rm.message.title }}</div><div class="muted">{{ rm.message.created_at|date:"M d, Y H:i" }}</div></div>
+        <div class="muted">to {{ rm.message.recipient_count }}</div>
+      </div>
+      {% empty %}<div class="muted">No recent messages.</div>{% endfor %}
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-hd">Katibu wa Kanisa</div>
+    <div class="panel-bd">
+      {% for sec in secretary_users %}
+      <div class="acc-row">
+        <div><div>{{ sec.full_name }}</div><div class="muted">{{ sec.username }} • {{ sec.email|default:"-" }}</div></div>
+        <form method="post" action="{% url 'members:demote_from_secretary' sec.id %}">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-secondary">Ondoa Katibu</button></form>
+      </div>
+      {% empty %}<div class="muted">Hakuna katibu aliyeteuliwa. Nenda Manage Members na ubofye "Teua Katibu".</div>{% endfor %}
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-hd">Accountant Access Control</div>
+    <div class="panel-bd">
+      {% for acct in accountant_users %}
+      <div class="acc-row">
+        <div><div>{{ acct.full_name }}</div><div class="muted">{{ acct.username }}</div></div>
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          {% if acct.can_post_member_donations %}<span class="badge-state ok">Access Granted</span>{% else %}<span class="badge-state no">Access Revoked</span>{% endif %}
+          <form method="post" action="{% url 'members:toggle_accountant_access' acct.id %}">{% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-warning">{% if acct.can_post_member_donations %}Revoke{% else %}Grant{% endif %}</button>
+          </form>
+        </div>
+      </div>
+      {% empty %}<div class="muted">No accountant users found.</div>{% endfor %}
+    </div>
+  </div>
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block page_extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const layout = document.querySelector('.pd-layout');
-    const btn = document.getElementById('sidebarToggleBtn');
-    if (!layout || !btn) return;
-    btn.addEventListener('click', function () {
-        layout.classList.toggle('sidebar-collapsed');
-    });
-
     const donationCtx = document.getElementById('pastorDonationChart');
     const registrationCtx = document.getElementById('memberRegistrationChart');
     const donationLabels = JSON.parse('{{ donation_chart_labels|escapejs }}');
@@ -354,52 +134,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (donationCtx) {
         new Chart(donationCtx, {
             type: 'line',
-            data: {
-                labels: donationLabels,
-                datasets: [{
-                    label: 'Donations (TZS)',
-                    data: donationData,
-                    borderColor: '#f2d37a',
-                    backgroundColor: 'rgba(242, 211, 122, 0.15)',
-                    borderWidth: 2,
-                    tension: 0.35,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#d8e2ef' } } },
-                scales: {
-                    x: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } },
-                    y: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } }
-                }
-            }
+            data: { labels: donationLabels, datasets: [{ label: 'Donations (TZS)', data: donationData, borderColor: '#f2d37a', backgroundColor: 'rgba(242, 211, 122, 0.15)', borderWidth: 2, tension: 0.35, fill: true }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#d8e2ef' } } }, scales: { x: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } }, y: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } } } }
         });
     }
-
     if (registrationCtx) {
         new Chart(registrationCtx, {
             type: 'bar',
-            data: {
-                labels: registrationLabels,
-                datasets: [{
-                    label: 'New Members',
-                    data: registrationData,
-                    backgroundColor: 'rgba(46, 204, 113, 0.45)',
-                    borderColor: '#2ecc71',
-                    borderWidth: 1.5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#d8e2ef' } } },
-                scales: {
-                    x: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } },
-                    y: { ticks: { color: '#9fb2c8', precision: 0 }, grid: { color: 'rgba(255,255,255,0.08)' } }
-                }
-            }
+            data: { labels: registrationLabels, datasets: [{ label: 'New Members', data: registrationData, backgroundColor: 'rgba(46, 204, 113, 0.45)', borderColor: '#2ecc71', borderWidth: 1.5 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#d8e2ef' } } }, scales: { x: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } }, y: { ticks: { color: '#9fb2c8', precision: 0 }, grid: { color: 'rgba(255,255,255,0.08)' } } } }
         });
     }
 });

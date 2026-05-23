@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Taarifa ya Mapato na Matumizi{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #e8e8e8; }
+  .print-toolbar {
+    max-width: 900px;
+    margin: 16px auto 0;
+    padding: 0 12px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .print-toolbar .btn {
+    border: none;
+    border-radius: 6px;
+    padding: 9px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 13px;
+  }
+  .btn-print { background: #1a3a5c; color: #fff; }
+  .btn-back { background: #fff; color: #333; border: 1px solid #ccc; }
+
+  .print-page {
+    max-width: 900px;
+    margin: 12px auto 24px;
+    padding: 20px 24px;
+    background: #fff;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+    color: #000;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .org-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.4px;
+    margin: 0 0 6px;
+  }
+
+  .report-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    margin: 0 0 4px;
+  }
+
+  .report-period {
+    text-align: center;
+    font-size: 12px;
+    margin: 0 0 18px;
+    color: #333;
+  }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 16px 0 8px;
+    letter-spacing: 0.4px;
+  }
+
+  .summary-table,
+  .allocation-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+    font-size: 11px;
+  }
+
+  .summary-table th,
+  .summary-table td,
+  .allocation-table th,
+  .allocation-table td {
+    border: 1px solid #000;
+    padding: 7px 10px;
+  }
+
+  .summary-table th,
+  .allocation-table th {
+    background: #f5f5f5;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+
+  .right { text-align: right; }
+
+  @media print {
+    body { background: #fff !important; margin: 0; }
+    .print-toolbar,
+    .navbar,
+    .alert,
+    .container.mt-3 { display: none !important; }
+    .print-page {
+      max-width: none;
+      margin: 0;
+      padding: 12mm 14mm;
+      box-shadow: none;
+    }
+    @page { margin: 10mm; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="print-toolbar">
+  <button type="button" class="btn btn-print" onclick="window.print()">Download PDF</button>
+  <a class="btn btn-back" href="{% url 'donations:income_allocation_report' %}?start_date={{ report.start_date|date:'Y-m-d' }}&end_date={{ report.end_date|date:'Y-m-d' }}">Rudi Report</a>
+</div>
+<div class="print-page">
+  {% include 'donations/includes/print_brand.html' %}
+  <h2 class="report-title">TAARIFA YA MAPATO NA MATUMIZI</h2>
+  <p class="report-period">
+    Kipindi: {{ report.start_date|date:"d/m/Y" }} — {{ report.end_date|date:"d/m/Y" }}
+    | Tarehe ya chapisho: {{ report_date|date:"d/m/Y" }}
+  </p>
+
+  <h3 class="section-title">Muhtasari wa Mapato</h3>
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>Aina ya Mapato</th>
+        <th class="right">Kiasi (TZS)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Zaka</td>
+        <td class="right">{{ report.total_zaka|floatformat:0 }}</td>
+      </tr>
+      <tr>
+        <td>Sadaka</td>
+        <td class="right">{{ report.total_sadaka|floatformat:0 }}</td>
+      </tr>
+      <tr>
+        <td>Mapato Mengineyo</td>
+        <td class="right">{{ report.total_mapato_mengineyo|floatformat:0 }}</td>
+      </tr>
+      <tr>
+        <td><strong>Jumla ya Mapato</strong></td>
+        <td class="right"><strong>{{ report.total_mapato|floatformat:0 }}</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 class="section-title">Mgawanyo wa Mapato</h3>
+  <table class="allocation-table">
+    <thead>
+      <tr>
+        <th>Kundi</th>
+        <th class="right">Kiasi (TZS)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in report.allocation_rows %}
+      <tr>
+        <td>{{ row.name }}</td>
+        <td class="right">{{ row.amount|floatformat:0 }}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+        <td><strong>Jumla</strong></td>
+        <td class="right"><strong>{{ report.total_mapato|floatformat:0 }}</strong></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

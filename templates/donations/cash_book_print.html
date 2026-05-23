@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}Daftari la Fedha (Cash Book){% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #e8e8e8; }
+  .cash-book-toolbar {
+    max-width: 1200px;
+    margin: 16px auto 0;
+    padding: 0 12px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .cash-book-toolbar .btn {
+    border: none;
+    border-radius: 6px;
+    padding: 9px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 13px;
+  }
+  .btn-print { background: #1a3a5c; color: #fff; }
+  .btn-back { background: #fff; color: #333; border: 1px solid #ccc; }
+
+  .cash-book-page {
+    max-width: 1200px;
+    margin: 12px auto 24px;
+    padding: 12px;
+    background: #fff;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+  }
+
+  .cash-book-sheet {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    color: #000;
+  }
+
+  .cash-book-sheet th,
+  .cash-book-sheet td {
+    border: 1px solid #000;
+    padding: 4px 6px;
+    vertical-align: middle;
+    word-wrap: break-word;
+  }
+
+  .org-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    padding: 10px 8px !important;
+    border-bottom: 1px solid #000 !important;
+  }
+
+  .book-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 8px !important;
+    border-bottom: 1px solid #000 !important;
+  }
+
+  .side-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 6px !important;
+    background: #fff;
+  }
+
+  .col-head {
+    text-align: center;
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    padding: 5px 4px !important;
+    background: #fff;
+  }
+
+  .col-tarehe { width: 11%; }
+  .col-maelezo { width: 22%; }
+  .col-cash { width: 9%; text-align: right; }
+  .col-bank { width: 9%; text-align: right; }
+
+  .data-row td {
+    height: 22px;
+    font-size: 10.5px;
+  }
+
+  .data-row .num {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .data-row .date {
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .mid-divider {
+    border-left: 2px solid #000 !important;
+  }
+
+  @media print {
+    body { background: #fff !important; margin: 0; }
+    .cash-book-toolbar,
+    .navbar,
+    .alert,
+    .container.mt-3 { display: none !important; }
+    .cash-book-page {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+    @page {
+      size: landscape;
+      margin: 8mm;
+    }
+    .cash-book-sheet {
+      font-size: 10px;
+    }
+    .data-row td {
+      height: 20px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cash-book-toolbar">
+  <button type="button" class="btn btn-print" onclick="window.print()">Download PDF</button>
+  <a class="btn btn-back" href="{% url 'donations:cash_book' %}">Rudi Cash Book</a>
+</div>
+<div class="cash-book-page">
+  {% include 'donations/includes/print_brand.html' %}
+  <table class="cash-book-sheet">
+    <thead>
+      <tr>
+        <th colspan="8" class="book-title">DAFTARI LA FEDHA [CASH BOOK]</th>
+      </tr>
+      <tr>
+        <th colspan="4" class="side-title">KUWEKA (DR)</th>
+        <th colspan="4" class="side-title mid-divider">KUTOA (CR)</th>
+      </tr>
+      <tr>
+        <th class="col-head col-tarehe">TAREHE</th>
+        <th class="col-head col-maelezo">MAELEZO</th>
+        <th class="col-head col-cash">CASH</th>
+        <th class="col-head col-bank">BANK</th>
+        <th class="col-head col-tarehe mid-divider">TAREHE</th>
+        <th class="col-head col-maelezo">MAELEZO</th>
+        <th class="col-head col-cash">CASH</th>
+        <th class="col-head col-bank">BANK</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in sheet_rows %}
+      <tr class="data-row">
+        <td class="date">{{ row.dr.tarehe|default:"" }}</td>
+        <td>{{ row.dr.maelezo|default:"" }}</td>
+        <td class="num">{% if row.dr.cash %}{{ row.dr.cash }}{% endif %}</td>
+        <td class="num">{% if row.dr.bank %}{{ row.dr.bank }}{% endif %}</td>
+        <td class="date mid-divider">{% if row.cr.tarehe %}{{ row.cr.tarehe }}{% endif %}</td>
+        <td>{{ row.cr.maelezo|default:"" }}</td>
+        <td class="num">{% if row.cr.cash %}{{ row.cr.cash }}{% endif %}</td>
+        <td class="num">{% if row.cr.bank %}{{ row.cr.bank }}{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,83 +1,295 @@
-{% extends 'base.html' %}
+{% extends 'church_layout/app_shell.html' %}
 {% load i18n_church %}
 
-{% block title %}All Members - PHM-ARCC{% endblock %}
+{% block title %}Manage Members - PHM-ARCC{% endblock %}
+{% block page_title %}Manage Members{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">Tafuta, simamisha, na simamia akaunti za wanachama</p>{% endblock %}
 
-{% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap cm-stack-sm">
-        <h3><i class="fas fa-users"></i> All Members</h3>
-        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
+{% block page_extra_css %}
+<style>
+.filter-bar {
+  background: #152333;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.filter-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+.filter-row input, .filter-row select {
+  background: #0f1e2e;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  width: 100%;
+}
+.filter-row label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 4px;
+}
+.btn-filter {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #c8a84b, #b39843);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-clear {
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  font-size: 12px;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+.panel { background: #152333; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; overflow: hidden; }
+.panel-bd { padding: 0; }
+.table { width: 100%; color: rgba(255,255,255,0.88); margin: 0; }
+.table thead th {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.45);
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  white-space: nowrap;
+}
+.table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  vertical-align: middle;
+  font-size: 13px;
+}
+.badge-ok { background: rgba(39,174,96,0.2); color: #2ecc71; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+.badge-off { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.55); padding: 3px 8px; border-radius: 6px; font-size: 10px; }
+.actions-cell { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.btn-xs {
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-xs:hover { border-color: #c8a84b; color: #c8a84b; }
+.btn-xs-primary { border-color: rgba(52,152,219,0.4); color: #5dade2; }
+.btn-xs-warn { border-color: rgba(243,156,18,0.4); color: #f39c12; }
+.btn-xs-danger { border-color: rgba(231,76,60,0.4); color: #e74c3c; }
+.btn-xs-success { border-color: rgba(39,174,96,0.4); color: #2ecc71; }
+.role-action-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+  max-width: 220px;
+}
+.role-action-wrap select {
+  background: #0f1e2e;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 11px;
+  width: 100%;
+}
+.role-action-wrap .role-action-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.role-action-wrap .role-action-row .btn-xs {
+  flex-shrink: 0;
+}
+.pagination-bar { padding: 1rem; display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; }
+.pagination-bar a, .pagination-bar span {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  text-decoration: none;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.pagination-bar .current { background: #c8a84b; color: #0a1628; border-color: #c8a84b; }
+@media (max-width: 992px) {
+  .filter-row { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<form method="get" class="filter-bar">
+  <div class="filter-row">
+    <div>
+      <label for="q">Tafuta (jina, simu, username, email)</label>
+      <input type="search" name="q" id="q" value="{{ search_q }}" placeholder="Andika kutafuta...">
     </div>
-
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    <div>
+      <label for="role">Role</label>
+      <select name="role" id="role">
+        {% for val, label in role_choices %}
+        <option value="{{ val }}" {% if filter_role == val %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
-    {% endif %}
-
-    <div class="card shadow-sm">
-        <div class="card-body">
-            {% if members %}
-                <div class="table-responsive">
-                    <table class="table table-striped align-middle">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Accountant Access</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for member in members %}
-                                <tr>
-                                    <td>{{ member.full_name|default:member.username }}</td>
-                                    <td>{{ member.username }}</td>
-                                    <td>{{ member.email|default:"-" }}</td>
-                                    <td>{{ member.phone_number|default:"-" }}</td>
-                                    <td>
-                                        {{ member.get_role_display }}
-                                        {% if member.role == 'member' %}
-                                            <form method="post" action="{% url 'members:promote_to_accountant' member.id %}" style="display:inline-block; margin-left:8px;">
-                                                {% csrf_token %}
-                                                <button class="btn btn-sm btn-outline-primary" type="submit">Make Accountant</button>
-                                            </form>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if member.is_active_member %}
-                                            <span class="badge bg-success">Active</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">Inactive</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if member.role == 'accountant' %}
-                                            <form method="post" action="{% url 'members:toggle_accountant_access' member.id %}">
-                                                {% csrf_token %}
-                                                {% if member.can_post_member_donations %}
-                                                    <button class="btn btn-sm btn-warning" type="submit">Revoke Access</button>
-                                                {% else %}
-                                                    <button class="btn btn-sm btn-success" type="submit">Grant Access</button>
-                                                {% endif %}
-                                            </form>
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <p class="mb-0 text-muted">No members found.</p>
-            {% endif %}
-        </div>
+      </select>
     </div>
+    <div>
+      <label for="status">Hali</label>
+      <select name="status" id="status">
+        {% for val, label in status_choices %}
+        <option value="{{ val }}" {% if filter_status == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+      <button type="submit" class="btn-filter">Chuja</button>
+      <a href="{% url 'members:member_list' %}" class="btn-clear">Futa</a>
+    </div>
+  </div>
+</form>
+
+<div class="panel">
+  <div class="panel-bd">
+    {% if members %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Jina</th>
+            <th>Username</th>
+            <th>Simu</th>
+            <th>Role</th>
+            <th>Hali</th>
+            <th>Vitendo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for member in members %}
+          <tr>
+            <td>{{ member.full_name|default:member.username }}</td>
+            <td>{{ member.username }}</td>
+            <td>{{ member.phone_number|default:"—" }}</td>
+            <td>
+              <div>{{ member.get_role_display }}</div>
+              {% if member.role == 'pastor' %}
+                {% if member.is_verified_pastor %}<span class="badge-ok">Verified</span>{% else %}<span class="badge-off">Pending</span>{% endif %}
+              {% endif %}
+              {% if has_leadership %}
+              <div class="role-action-wrap" style="margin-top:6px;">
+                <form method="post" class="role-action-form" action="">
+                  {% csrf_token %}
+                  <select class="role-action-select" aria-label="Chagua kitendo cha cheo">
+                    <option value="">— Chagua cheo / kitendo —</option>
+                    {% if member.role == 'member' %}
+                      {% if can_promote_pastor %}
+                      <option value="{% url 'members:promote_to_pastor' member.id %}" data-confirm="Teua {{ member.full_name }} kuwa Mchungaji?">Teua: Mchungaji</option>
+                      {% endif %}
+                      {% if can_promote_admin %}
+                      <option value="{% url 'members:promote_to_admin' member.id %}" data-confirm="Teua {{ member.full_name }} kuwa Admin?">Teua: Admin</option>
+                      {% endif %}
+                      <option value="{% url 'members:promote_to_secretary' member.id %}" data-confirm="Teua {{ member.full_name }} kuwa Katibu?">Teua: Katibu (Secretary)</option>
+                      <option value="{% url 'members:promote_to_accountant' member.id %}" data-confirm="Teua {{ member.full_name }} kuwa Accountant?">Teua: Accountant</option>
+                    {% elif member.role == 'pastor' %}
+                      {% if can_promote_pastor %}
+                      <option value="{% url 'members:demote_from_pastor' member.id %}" data-confirm="Ondoa cheo cha mchungaji kwa {{ member.full_name }}?">Ondoa: Mchungaji</option>
+                      {% endif %}
+                    {% elif member.role == 'secretary' %}
+                      <option value="{% url 'members:demote_from_secretary' member.id %}" data-confirm="Ondoa cheo cha katibu kwa {{ member.full_name }}?">Ondoa: Katibu</option>
+                    {% elif member.role == 'accountant' %}
+                      <option value="{% url 'members:toggle_accountant_access' member.id %}" data-confirm="Badilisha ruhusa ya kuingiza michango?">
+                        {% if member.can_post_member_donations %}Ondoa ruhusa ya michango{% else %}Ruhusu kuingiza michango{% endif %}
+                      </option>
+                    {% endif %}
+                  </select>
+                  <div class="role-action-row">
+                    <button type="submit" class="btn-xs btn-xs-primary">Tekeleza</button>
+                  </div>
+                </form>
+              </div>
+              {% endif %}
+            </td>
+            <td>
+              {% if member.is_active and member.is_active_member %}
+              <span class="badge-ok">Active</span>
+              {% else %}
+              <span class="badge-off">Inactive</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="actions-cell">
+                <a href="{% url 'members:admin_reset_password' member.id %}" class="btn-xs">Nenosiri</a>
+                <form method="post" action="{% url 'members:toggle_member_active' member.id %}" style="display:inline;">{% csrf_token %}
+                  {% if member.is_active and member.is_active_member %}
+                  <button type="submit" class="btn-xs btn-xs-danger">Simamisha</button>
+                  {% else %}
+                  <button type="submit" class="btn-xs btn-xs-success">Washa</button>
+                  {% endif %}
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page_obj.has_other_pages %}
+    <div class="pagination-bar">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}&q={{ search_q }}&role={{ filter_role }}&status={{ filter_status }}">« Iliyopita</a>
+      {% endif %}
+      <span class="current">Ukurasa {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}&q={{ search_q }}&role={{ filter_role }}&status={{ filter_status }}">Ifuatayo »</a>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <p style="padding:2rem;text-align:center;color:rgba(255,255,255,0.45);">Hakuna wanachama waliopatikana.</p>
+    {% endif %}
+  </div>
 </div>
+{% endblock %}
+
+{% block page_extra_js %}
+<script>
+(function () {
+  document.querySelectorAll('.role-action-form').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      var sel = form.querySelector('.role-action-select');
+      var url = sel && sel.value;
+      if (!url) {
+        e.preventDefault();
+        alert('Chagua kitendo kwanza.');
+        return;
+      }
+      var opt = sel.options[sel.selectedIndex];
+      var msg = opt.getAttribute('data-confirm');
+      if (msg && !window.confirm(msg)) {
+        e.preventDefault();
+        return;
+      }
+      form.action = url;
+    });
+  });
+})();
+</script>
 {% endblock %}

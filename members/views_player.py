@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView
@@ -13,10 +13,15 @@ from datetime import timedelta
 ChurchUser = get_user_model()
 
 class PlayerDashboardView(LoginRequiredMixin, ListView):
-    """Unified player dashboard for members to view all content"""
+    """Content hub for church leadership (not regular members)."""
     template_name = 'members/player_dashboard.html'
     context_object_name = 'content_items'
     paginate_by = 20
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and getattr(request.user, 'role', None) == 'member':
+            return redirect('dashboard')
+        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         user = self.request.user
@@ -173,6 +178,8 @@ class PlayerDashboardView(LoginRequiredMixin, ListView):
 @login_required
 def media_player(request, content_type, content_id):
     """Unified media player for sermons and events"""
+    if getattr(request.user, 'role', None) == 'member':
+        return redirect('dashboard')
     user = request.user
     content = None
     template = 'members/media_player.html'
@@ -229,7 +236,9 @@ def media_player(request, content_type, content_id):
 
 @login_required
 def my_content(request):
-    """Personalized content view for the logged-in member"""
+    """Personalized content view (leadership roles only)."""
+    if getattr(request.user, 'role', None) == 'member':
+        return redirect('dashboard')
     user = request.user
     
     # Get user's registered events

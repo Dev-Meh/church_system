@@ -1,96 +1,98 @@
-{% extends 'base.html' %}
+{% extends 'church_layout/app_shell.html' %}
+{% load i18n_church %}
 
-{% block title %}Message Details - PHM-ARCC Iyumbu Dodoma{% endblock %}
+{% block title %}Message Details - PHM-ARCC{% endblock %}
+{% block page_title %}{{ message.title }}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">Sent {{ message.created_at|date:"M d, Y H:i" }}</p>{% endblock %}
 
-{% block extra_css %}
+{% block page_header_actions %}
+<a href="{% url 'members:message_list' %}" class="action-btn"><i class="fas fa-arrow-left"></i> Back</a>
+{% include 'members/language_selector.html' %}
+<span class="welcome-pill">{{ user.first_name }} {{ user.last_name }}</span>
+{% endblock %}
+
+{% block page_extra_css %}
 <style>
-@media (max-width: 767.98px) {
-  .message-detail-page .display-4 { font-size: 2rem; }
-  .message-detail-page .msg-stat-divider {
-    border-left: none !important;
-    border-top: 1px solid #dee2e6;
-    padding-top: 1rem;
-    margin-top: 0.25rem;
-  }
-}
+.action-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 12px; font-weight: 700; text-decoration: none; margin-right: 0.5rem; }
+.action-btn:hover { background: rgba(200,168,75,0.15); color: #c8a84b; }
+.panel { background: #152333; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; margin-bottom: 1.5rem; overflow: hidden; }
+.panel-hd { padding: 1rem 1.5rem; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.07); color: #c8a84b; font-weight: 700; }
+.panel-bd { padding: 1.5rem; color: rgba(255,255,255,0.85); }
+.badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.badge-urgent { background: rgba(231,76,60,0.2); color: #e74c3c; }
+.badge-high { background: rgba(243,156,18,0.2); color: #f39c12; }
+.badge-normal { background: rgba(52,152,219,0.2); color: #3498db; }
+.msg-body { padding: 1rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; margin: 1rem 0 1.5rem; line-height: 1.6; }
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center; margin: 1.5rem 0; }
+.stat-num { font-size: 2rem; font-weight: 700; color: #c8a84b; }
+.stat-num.success { color: #27ae60; }
+.stat-num.warning { color: #f39c12; }
+.stat-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 0.25rem; }
+.table { width: 100%; color: rgba(255,255,255,0.85); }
+.table thead th { font-size: 11px; text-transform: uppercase; color: rgba(255,255,255,0.5); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0.75rem; }
+.table tbody td { padding: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.badge-read { background: rgba(39,174,96,0.2); color: #27ae60; }
+.badge-unread { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
+@media (max-width: 767px) { .stats-row { grid-template-columns: 1fr; } }
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="container mt-4 message-detail-page">
-    <div class="mb-4">
-        <a href="{% url 'members:message_list' %}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Sent Messages
-        </a>
+{% block page_content %}
+<div class="panel">
+  <div class="panel-bd">
+    <span class="badge {% if message.priority == 'urgent' %}badge-urgent{% elif message.priority == 'high' %}badge-high{% else %}badge-normal{% endif %}">
+      {{ message.get_priority_display }} Priority
+    </span>
+    <div class="msg-body">{{ message.content|linebreaks }}</div>
+    <h4 style="color:#c8a84b;margin-bottom:0.5rem;">Delivery Statistics</h4>
+    <div class="stats-row">
+      <div>
+        <div class="stat-num">{{ total_count }}</div>
+        <div class="stat-label">Total Recipients</div>
+      </div>
+      <div>
+        <div class="stat-num success">{{ read_count }}</div>
+        <div class="stat-label">Read</div>
+      </div>
+      <div>
+        <div class="stat-num warning">{{ unread_count }}</div>
+        <div class="stat-label">Unread</div>
+      </div>
     </div>
+  </div>
+</div>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
-            <h3 class="mb-0">{{ message.title }}</h3>
-        </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <span class="badge {% if message.priority == 'urgent' %}bg-danger{% elif message.priority == 'high' %}bg-warning{% else %}bg-info{% endif %}">
-                    {{ message.get_priority_display }} Priority
-                </span>
-                <span class="text-muted ms-2">Sent on {{ message.created_at|date:"M d, Y H:i" }}</span>
-            </div>
-            <div class="p-3 bg-light rounded border mb-4">
-                {{ message.content|linebreaks }}
-            </div>
-
-            <h4>Delivery Statistics</h4>
-            <div class="row text-center my-4 g-3 flex-column flex-md-row">
-                <div class="col-md-4">
-                    <div class="display-4">{{ total_count }}</div>
-                    <div class="text-muted">Total Recipients</div>
-                </div>
-                <div class="col-md-4 border-start msg-stat-divider">
-                    <div class="display-4 text-success">{{ read_count }}</div>
-                    <div class="text-muted">Read</div>
-                </div>
-                <div class="col-md-4 border-start msg-stat-divider">
-                    <div class="display-4 text-warning">{{ unread_count }}</div>
-                    <div class="text-muted">Unread</div>
-                </div>
-            </div>
-        </div>
+<div class="panel">
+  <div class="panel-hd">Recipient List</div>
+  <div class="panel-bd">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Delivered At</th>
+            <th>Status</th>
+            <th>Read At</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for mr in recipients %}
+          <tr>
+            <td>{{ mr.recipient.first_name }} {{ mr.recipient.last_name }}</td>
+            <td>{{ mr.delivered_at|date:"M d, Y H:i" }}</td>
+            <td>
+              {% if mr.is_read %}
+              <span class="badge badge-read">Read</span>
+              {% else %}
+              <span class="badge badge-unread">Unread</span>
+              {% endif %}
+            </td>
+            <td>{{ mr.read_at|date:"M d, Y H:i"|default:"-" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-
-    <div class="card shadow-sm">
-        <div class="card-header bg-light">
-            <h5 class="mb-0">Recipient List</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Member</th>
-                        <th>Delivered At</th>
-                        <th>Status</th>
-                        <th>Read At</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for mr in recipients %}
-                        <tr>
-                            <td>{{ mr.recipient.first_name }} {{ mr.recipient.last_name }}</td>
-                            <td>{{ mr.delivered_at|date:"M d, Y H:i" }}</td>
-                            <td>
-                                {% if mr.is_read %}
-                                    <span class="badge bg-success">Read</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">Unread</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ mr.read_at|date:"M d, Y H:i"|default:"-" }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 {% endblock %}

@@ -1,0 +1,291 @@
+<style>
+/* ── Global responsive (all pages) ── */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body.nav-open {
+  overflow: hidden;
+}
+
+.cm-mobile-menu-fab {
+  display: none;
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 250;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid rgba(200, 168, 75, 0.55);
+  background: linear-gradient(145deg, #0d2340, #152333);
+  color: #c8a84b;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.cm-mobile-menu-fab svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 180;
+  backdrop-filter: blur(2px);
+}
+.sidebar-backdrop.visible {
+  display: block;
+}
+
+/* Grids & forms used across the app */
+.donation-grid,
+.info-cards,
+.pd-panels,
+.pd-grid,
+.stats-grid,
+.form-row,
+.sheet-row,
+.chart-row {
+  min-width: 0;
+}
+
+@media (max-width: 992px) {
+  .cm-mobile-menu-fab {
+    display: inline-flex;
+  }
+  body:has(.topnav-menu-btn) .cm-mobile-menu-fab {
+    display: none !important;
+  }
+
+  /* Legacy + app shell: slide-in sidebar drawer */
+  .layout > .sidebar,
+  .layout > aside.sidebar,
+  #sidebar.sidebar,
+  aside#sidebar.sidebar {
+    position: fixed !important;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: min(288px, 92vw) !important;
+    min-width: 0 !important;
+    max-width: 92vw;
+    height: 100vh !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    transform: translateX(-105%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 200;
+    border-right: 2px solid rgba(200, 168, 75, 0.45) !important;
+    border-bottom: none !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .layout > .sidebar.mobile-open,
+  .layout > aside.sidebar.mobile-open,
+  #sidebar.sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .layout > .sidebar.collapsed,
+  #sidebar.sidebar.collapsed {
+    width: min(288px, 92vw) !important;
+    min-width: 0 !important;
+  }
+  .layout > .sidebar.collapsed .brand-text,
+  .layout > .sidebar.collapsed .nav-label,
+  .layout > .sidebar.collapsed .nav-section-label,
+  .layout > .sidebar.collapsed .user-info,
+  .layout > .sidebar.collapsed .nav-item span,
+  .layout > .sidebar.collapsed .nav-count,
+  .layout > .sidebar.collapsed .btn-logout span {
+    display: revert !important;
+    opacity: 1 !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  .layout {
+    flex-direction: column !important;
+    min-height: 100vh;
+  }
+  .layout > .main,
+  .layout > #main,
+  .layout .main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: 1;
+  }
+  .layout > .main.collapsed,
+  #main.main.collapsed {
+    margin-left: 0 !important;
+  }
+
+  .topbar,
+  .topnav {
+    height: auto !important;
+    min-height: 58px;
+    padding: 0.75rem 1rem !important;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .topnav-title,
+  .topbar h2 {
+    font-size: 1.1rem !important;
+    line-height: 1.25;
+  }
+  .topnav-title-block {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+  .topnav-actions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .welcome-pill {
+    white-space: normal;
+    text-align: center;
+    max-width: 100%;
+  }
+
+  .page-body {
+    padding: 1rem !important;
+    max-width: none !important;
+  }
+
+  .donation-grid,
+  .info-cards,
+  .pd-panels {
+    grid-template-columns: 1fr !important;
+  }
+  .pd-layout {
+    flex-direction: column !important;
+  }
+  .pd-sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
+    margin-right: 0 !important;
+    margin-bottom: 1rem;
+  }
+
+  .wrap {
+    margin: 12px auto !important;
+    padding: 0 12px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .topnav-title,
+  .topbar h2,
+  .pd-title {
+    font-size: 1rem !important;
+  }
+  .page-body,
+  .pd-shell {
+    padding: 0.75rem !important;
+  }
+  .panel-bd,
+  .panel-body,
+  .card-body {
+    padding: 1rem !important;
+  }
+  .form-container,
+  .announcement-form {
+    padding: 1.25rem !important;
+  }
+  .form-row {
+    grid-template-columns: 1fr !important;
+  }
+  .submit-section,
+  .form-buttons {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .submit-section .submit-btn,
+  .submit-section .cancel-btn,
+  .form-buttons .btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+  .msg-list-header {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .msg-list-header .btn-primary-sm {
+    width: 100%;
+    text-align: center;
+  }
+  .stats-row {
+    grid-template-columns: 1fr !important;
+  }
+  .recipients-stats {
+    grid-template-columns: 1fr !important;
+  }
+  .chart-wrap {
+    height: min(240px, 55vw) !important;
+  }
+  .cm-mobile-menu-fab {
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* Tables: horizontal scroll on small screens */
+.page-body .table,
+.page-body table,
+.panel .table,
+.panel-bd table,
+.panel-body table,
+.tbl-wrap,
+.table-responsive {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.page-body table,
+.panel table {
+  min-width: 520px;
+}
+.sheet-table {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Touch-friendly controls */
+@media (max-width: 992px) {
+  .nav-item,
+  .btn-logout,
+  .action-btn,
+  .btn-donate,
+  .btn-primary-sm {
+    min-height: 44px;
+  }
+  .btn,
+  button,
+  a.btn {
+    min-height: 40px;
+  }
+}
+
+/* Print pages: keep readable width */
+@media print {
+  .cm-mobile-menu-fab,
+  .sidebar-backdrop {
+    display: none !important;
+  }
+}
+</style>

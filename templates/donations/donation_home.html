@@ -1,254 +1,12 @@
-{% extends 'base.html' %}
+{% extends 'church_layout/app_shell.html' %}
 {% load i18n_church %}
 
-{% block title %}{% church_t 'donations' %} - PHM-ARCC Iyumbu Church Management System{% endblock %}
+{% block title %}{% church_t 'donations' %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_t 'donations' %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">PHM-ARCC Iyumbu Dodoma</p>{% endblock %}
 
-{% block extra_css %}
+{% block page_extra_css %}
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lato:wght@300;400;700&display=swap');
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-        background: #0f1e2e;
-        font-family: 'Lato', sans-serif;
-        min-height: 100vh;
-    }
-
-    /* ── LAYOUT ── */
-    .layout { display: flex; min-height: 100vh; }
-
-    /* ── SIDEBAR ── */
-    .sidebar {
-        width: 240px;
-        min-height: 100vh;
-        background: linear-gradient(180deg, #0d2340 0%, #0a1a2e 100%);
-        border-right: 3px solid #c8a84b;
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        top: 0; left: 0;
-        height: 100%;
-        z-index: 200;
-        transition: width 0.3s ease;
-    }
-
-    .sidebar.collapsed { width: 64px; }
-
-    .sidebar-header {
-        padding: 1.2rem 1rem;
-        border-bottom: 1px solid rgba(200,168,75,0.2);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        min-height: 68px;
-    }
-
-    .brand { display: flex; align-items: center; gap: 10px; overflow: hidden; }
-
-    .brand-text { overflow: hidden; transition: opacity 0.2s, width 0.3s; }
-    .sidebar.collapsed .brand-text { opacity: 0; width: 0; pointer-events: none; }
-
-    .church-name {
-        font-family: 'Cinzel', serif;
-        font-size: 12px;
-        font-weight: 600;
-        color: #c8a84b;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
-
-    .church-sub {
-        font-size: 9px;
-        color: rgba(255,255,255,0.35);
-        letter-spacing: 0.8px;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
-
-    .toggle-btn {
-        background: rgba(200,168,75,0.1);
-        border: 1px solid rgba(200,168,75,0.3);
-        border-radius: 6px;
-        width: 30px; height: 30px;
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer;
-        flex-shrink: 0;
-        transition: background 0.2s;
-    }
-
-    .toggle-btn:hover { background: rgba(200,168,75,0.25); }
-
-    .toggle-btn svg {
-        width: 16px; height: 16px;
-        stroke: #c8a84b;
-        fill: none;
-        stroke-width: 2;
-        transition: transform 0.3s;
-    }
-
-    .sidebar.collapsed .toggle-btn svg { transform: rotate(180deg); }
-
-    /* USER AREA */
-    .user-area {
-        padding: 1rem;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        overflow: hidden;
-    }
-
-    .avatar {
-        width: 36px; height: 36px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #1a3a5c, #c8a84b);
-        display: flex; align-items: center; justify-content: center;
-        font-family: 'Cinzel', serif;
-        font-size: 13px;
-        font-weight: 600;
-        color: #fff;
-        flex-shrink: 0;
-    }
-
-    .user-info { overflow: hidden; transition: opacity 0.2s, width 0.3s; }
-    .sidebar.collapsed .user-info { opacity: 0; width: 0; pointer-events: none; }
-
-    .user-name { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; }
-    .user-role { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-
-    /* NAV MENU */
-    .nav-menu { flex: 1; padding: 1rem 0; overflow-y: auto; }
-
-    .nav-section-label {
-        font-size: 9px;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        color: rgba(255,255,255,0.2);
-        padding: 0.6rem 1.1rem 0.3rem;
-        white-space: nowrap;
-        overflow: hidden;
-        transition: opacity 0.2s;
-    }
-
-    .sidebar.collapsed .nav-section-label { opacity: 0; }
-
-    .nav-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 1.1rem;
-        margin: 2px 8px;
-        border-radius: 8px;
-        color: rgba(255,255,255,0.55);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        text-decoration: none;
-        transition: all 0.2s;
-        white-space: nowrap;
-        overflow: hidden;
-    }
-
-    .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
-
-    .nav-item.active {
-        background: rgba(200,168,75,0.12);
-        color: #c8a84b;
-        border-left: 3px solid #c8a84b;
-        margin-left: 5px;
-        padding-left: calc(1.1rem - 3px);
-    }
-
-    .nav-item svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
-
-    .nav-label { transition: opacity 0.2s, width 0.3s; overflow: hidden; }
-    .sidebar.collapsed .nav-label { opacity: 0; width: 0; }
-
-    .nav-badge {
-        margin-left: auto;
-        background: rgba(200,168,75,0.2);
-        color: #c8a84b;
-        font-size: 9px;
-        font-weight: 700;
-        padding: 2px 6px;
-        border-radius: 10px;
-        flex-shrink: 0;
-        transition: opacity 0.2s;
-    }
-
-    .sidebar.collapsed .nav-badge { opacity: 0; }
-
-    /* SIDEBAR FOOTER */
-    .sidebar-footer { padding: 1rem; border-top: 1px solid rgba(255,255,255,0.06); }
-
-    .btn-logout {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        width: 100%;
-        padding: 9px 1rem;
-        border-radius: 8px;
-        border: 1px solid rgba(192,57,43,0.3);
-        background: rgba(192,57,43,0.08);
-        color: rgba(231,76,60,0.8);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        text-decoration: none;
-        transition: all 0.2s;
-        overflow: hidden;
-        white-space: nowrap;
-    }
-
-    .btn-logout:hover { background: rgba(192,57,43,0.18); color: #e74c3c; border-color: rgba(231,76,60,0.5); }
-    .btn-logout svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
-    .sidebar.collapsed .btn-logout .nav-label { opacity: 0; width: 0; }
-
-    /* ── MAIN ── */
-    .main {
-        margin-left: 240px;
-        flex: 1;
-        transition: margin-left 0.3s ease;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .main.collapsed { margin-left: 64px; }
-
-    /* TOP BAR */
-    .topbar {
-        background: #152333;
-        border-bottom: 1px solid rgba(255,255,255,0.07);
-        padding: 0 1.8rem;
-        height: 58px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .topbar h2 { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 600; color: #fff; }
-    .topbar p { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; }
-
-    .welcome-pill {
-        background: rgba(200,168,75,0.12);
-        border: 1px solid rgba(200,168,75,0.3);
-        color: #c8a84b;
-        font-size: 11px;
-        font-weight: 700;
-        padding: 5px 12px;
-        border-radius: 20px;
-    }
-
-    /* PAGE BODY */
-    .page-body { padding: 1.6rem 1.8rem 3rem; flex: 1; }
-
-    /* DONATION CARDS */
     .donation-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
 
     .donation-form-card, .campaigns-card {
@@ -488,41 +246,8 @@
         letter-spacing: 0.5px;
     }
 
-    /* Phones / tablets: stack sidebar + content (no fixed strip + margin) */
+
     @media (max-width: 992px) {
-        .layout { flex-direction: column; }
-        .sidebar {
-            position: relative;
-            left: auto;
-            top: auto;
-            width: 100% !important;
-            height: auto;
-            min-height: 0;
-            border-right: none;
-            border-bottom: 3px solid #c8a84b;
-        }
-        .sidebar.collapsed { width: 100% !important; }
-        .sidebar.collapsed .brand-text,
-        .sidebar.collapsed .user-info,
-        .sidebar.collapsed .nav-label,
-        .sidebar.collapsed .nav-badge,
-        .sidebar.collapsed .nav-section-label {
-            opacity: 1 !important;
-            width: auto !important;
-            max-width: none !important;
-            pointer-events: auto !important;
-        }
-        .main,
-        .main.collapsed { margin-left: 0 !important; width: 100%; }
-        .topbar {
-            height: auto;
-            min-height: 58px;
-            padding: 0.75rem 1rem;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-        .welcome-pill { white-space: normal; text-align: center; }
-        .page-body { padding: 1rem 1rem 2rem; }
         .donation-grid { grid-template-columns: 1fr; }
         .info-cards { grid-template-columns: 1fr; }
     }
@@ -535,109 +260,7 @@
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="layout">
-
-    <!-- ── SIDEBAR ── -->
-    <div class="sidebar" id="sidebar">
-
-        <div class="sidebar-header">
-            <div class="brand">
-                <svg width="26" height="26" viewBox="0 0 48 48" fill="none" style="flex-shrink:0;">
-                    <rect x="20" y="4" width="8" height="40" rx="2" fill="#c8a84b"/>
-                    <rect x="6" y="16" width="36" height="8" rx="2" fill="#c8a84b"/>
-                </svg>
-                <div class="brand-text">
-                    <div class="church-name">PHM-ARCC</div>
-                    <div class="church-sub">Iyumbu Dodoma</div>
-                </div>
-            </div>
-            <button class="toggle-btn" onclick="toggleSidebar()">
-                <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
-        </div>
-
-        <div class="user-area">
-            <div class="avatar">{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</div>
-            <div class="user-info">
-                <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
-                <div class="user-role">{% church_t 'church_member' %}</div>
-            </div>
-        </div>
-
-        <div class="nav-menu">
-            <div class="nav-section-label">{% church_t 'main_menu' %}</div>
-
-            <a class="nav-item" href="{% url 'dashboard' %}">
-                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                <span class="nav-label">{% church_t 'dashboard' %}</span>
-            </a>
-
-            <a class="nav-item" href="{% url 'profile' %}">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                <span class="nav-label">{% church_t 'my_profile' %}</span>
-            </a>
-
-            <div class="nav-section-label">{% church_t 'finance_section' %}</div>
-
-            <a class="nav-item active" href="{% url 'donations:home' %}">
-                <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                <span class="nav-label">{% church_t 'donations' %}</span>
-            </a>
-
-            <a class="nav-item" href="{% url 'donations:financial_status' %}">
-                <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8M12 12v4M10 14h4"/></svg>
-                <span class="nav-label">{% church_t 'financial_status' %}</span>
-            </a>
-
-            <a class="nav-item" href="{% url 'donations:history' %}">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span class="nav-label">{% church_t 'my_history' %}</span>
-            </a>
-            {% if user.role == 'pastor' or user.role == 'accountant' %}
-            <a class="nav-item" href="{% url 'donations:tithe_list' %}">
-                <svg viewBox="0 0 24 24"><path d="M12 2v20M5 9h14M7 13h10"/></svg>
-                <span class="nav-label">List ya Zaka</span>
-            </a>
-            <a class="nav-item" href="{% url 'donations:cash_book' %}">
-                <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8"/></svg>
-                <span class="nav-label">Cash Book</span>
-            </a>
-            <a class="nav-item" href="{% url 'donations:income_allocation_report' %}">
-                <svg viewBox="0 0 24 24"><path d="M4 19h16M6 17V8m6 9V5m6 12v-7"/></svg>
-                <span class="nav-label">Report ya Mgawanyo</span>
-            </a>
-            {% endif %}
-        </div>
-
-        <div class="sidebar-footer">
-            <a href="{% url 'members:logout' %}" class="btn-logout">
-                <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-                <span class="nav-label">{% church_t 'logout' %}</span>
-            </a>
-        </div>
-
-    </div>
-
-    <!-- ── MAIN ── -->
-    <div class="main" id="main">
-
-        <div class="topbar">
-            <div>
-                <h2>{% church_t 'donations' %}</h2>
-                <p>PHM-ARCC Iyumbu Dodoma</p>
-            </div>
-            <span class="welcome-pill">{% church_t 'welcome' %}, {{ user.first_name }} {{ user.last_name }}!</span>
-        </div>
-
-        <div class="page-body">
-
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-
+{% block page_content %}
             <div class="donation-grid">
                 <!-- Manual Entry / Member Notice -->
                 <div class="donation-form-card">
@@ -713,7 +336,7 @@
                                 <div class="form-group">
                                     <label class="form-label" for="{{ sheet_form.donor.id_for_label }}">Mwanachama wa Zaka</label>
                                     {{ sheet_form.donor }}
-                                    <small class="text-muted">Chagua mtu tu unapoingiza zaka ya pesa au zaka ya mali.</small>
+                                    <small class="text-muted">Chagua mtu tu unapoingiza zaka ya fedha au zaka ya mali.</small>
                                 </div>
 
                                 <div class="form-group">
@@ -734,7 +357,7 @@
                                 <div class="form-group">
                                     <label class="form-label" for="{{ sheet_form.construction_pledge_amount.id_for_label }}">Ahadi Mpya ya Ujenzi (ongeza deni)</label>
                                     {{ sheet_form.construction_pledge_amount }}
-                                    <small class="text-muted">Hii ni ahadi (deni), si pesa iliyoingia leo.</small>
+                                    <small class="text-muted">Hii ni ahadi (deni), si fedha iliyoingia leo.</small>
                                 </div>
 
                                 <div class="form-group">
@@ -1010,23 +633,12 @@
                 </div>
             </div>
             {% endif %}
-
-        </div>
-    </div>
-</div>
 {% endblock %}
 
-{% block extra_js %}
+{% block page_extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const main = document.getElementById('main');
-        sidebar.classList.toggle('collapsed');
-        main.classList.toggle('collapsed');
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
         const sadakaInput = document.getElementById('id_sadaka');
         const zakaInput = document.getElementById('id_zaka');
         const malimbukoInput = document.getElementById('id_malimbuko');

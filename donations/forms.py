@@ -134,7 +134,7 @@ class DonationNoticeForm(forms.ModelForm):
 
 class AccountantSheetEntryForm(forms.Form):
     ZAKA_TYPE_CHOICES = [
-        ('money', 'Pesa'),
+        ('money', 'Fedha'),
         ('asset', 'Mali (mfano mbuzi)'),
     ]
 
@@ -239,7 +239,7 @@ class AccountantSheetEntryForm(forms.Form):
         construction_payment_amount = cleaned_data.get('construction_payment_amount') or 0
 
         if zaka_amount > 0 and zaka_type == 'money' and not donor:
-            raise forms.ValidationError('Chagua mwanachama aliyechanga zaka ya pesa.')
+            raise forms.ValidationError('Chagua mwanachama aliyechanga zaka ya fedha.')
         if zaka_type == 'asset':
             if not aina_nyingine_ya_zaka:
                 raise forms.ValidationError('Ukichagua zaka ya mali, andika aina ya mali (mfano mbuzi).')

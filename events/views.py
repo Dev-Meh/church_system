@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from .models import Event
 from .forms import EventForm
+from members.permissions import has_church_leadership
 
 class EventListView(ListView):
     """List all events"""
@@ -30,7 +31,7 @@ class EventCreateView(LoginRequiredMixin, CreateView):
     
     def dispatch(self, request, *args, **kwargs):
         # Only allow pastors to create events
-        if request.user.role not in ['pastor', 'admin']:
+        if not has_church_leadership(request.user):
             from django.contrib import messages
             messages.error(request, 'Access denied. Pastor privileges required.')
             return redirect('events:event_list')
@@ -48,7 +49,7 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
     
     def dispatch(self, request, *args, **kwargs):
         # Only allow pastors to update events
-        if request.user.role not in ['pastor', 'admin']:
+        if not has_church_leadership(request.user):
             from django.contrib import messages
             messages.error(request, 'Access denied. Pastor privileges required.')
             return redirect('events:event_list')
@@ -61,7 +62,7 @@ class EventDeleteView(LoginRequiredMixin, DeleteView):
     
     def dispatch(self, request, *args, **kwargs):
         # Only allow pastors to delete events
-        if request.user.role not in ['pastor', 'admin']:
+        if not has_church_leadership(request.user):
             from django.contrib import messages
             messages.error(request, 'Access denied. Pastor privileges required.')
             return redirect('events:event_list')

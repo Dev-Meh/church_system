@@ -1,7 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import (
+    LoginView,
+    PasswordResetView,
+    PasswordResetDoneView,
+    PasswordResetConfirmView,
+    PasswordResetCompleteView,
+)
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView, UpdateView, DetailView
@@ -18,9 +24,19 @@ from .forms import (
     ChurchUserLoginForm,
     ChurchGroupForm,
     GroupActivityForm,
+    PastorSetPasswordForm,
+    ChurchPasswordResetForm,
 )
 from .models import ChurchUser, ChurchGroup, GroupMembership
 from .language_utils import LanguageManager
+from django.utils import timezone
+from .permissions import (
+    can_appoint_secretary,
+    can_manage_members,
+    can_promote_to_pastor,
+    can_promote_to_admin,
+    has_church_leadership,
+)
 
 class CustomLoginView(LoginView):
     template_name = 'auth/unified_auth.html'
@@ -163,7 +179,7 @@ def home(request):
 @require_POST
 def toggle_accountant_access(request, user_id):
     """Pastor/Admin can grant or revoke donation posting access."""
-    if request.user.role not in ['pastor', 'admin']:
+    if not has_church_leadership(request.user):
         messages.error(request, 'Huna ruhusa ya kubadilisha access ya uingizaji michango.')
         return redirect('dashboard')
 
@@ -183,7 +199,7 @@ def toggle_accountant_access(request, user_id):
 @require_POST
 def promote_to_accountant(request, user_id):
     """Pastor/Admin can promote member to accountant role."""
-    if request.user.role not in ['pastor', 'admin']:
+    if not has_church_leadership(request.user):
         messages.error(request, 'Huna ruhusa ya kubadilisha role ya mtumiaji.')
         return redirect('dashboard')
 
@@ -199,8 +215,230 @@ def promote_to_accountant(request, user_id):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
 
 
+@login_required(login_url='members:login')
+@require_POST
+def promote_to_secretary(request, user_id):
+    """Pastor/Admin can appoint a member as church secretary."""
+    if not can_appoint_secretary(request.user):
+        messages.error(request, 'Huna ruhusa ya kuteua katibu.')
+        return redirect('dashboard')
+
+    member_user = get_object_or_404(ChurchUser, id=user_id)
+    if member_user.role != 'member':
+        messages.error(request, 'Ni member tu anaweza kuteuliwa kuwa katibu.')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
+
+    member_user.role = 'secretary'
+    member_user.can_post_member_donations = False
+    member_user.save(update_fields=['role', 'can_post_member_donations'])
+    messages.success(
+        request,
+        f'{member_user.full_name} sasa ni katibu wa kanisa — anaweza kutuma ujumbe, matangazo na taarifa za michango.',
+    )
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
+
+
+@login_required(login_url='members:login')
+@require_POST
+def demote_from_secretary(request, user_id):
+    """Pastor/Admin can remove secretary role."""
+    if not can_appoint_secretary(request.user):
+        messages.error(request, 'Huna ruhusa ya kuondoa katibu.')
+        return redirect('dashboard')
+
+    secretary_user = get_object_or_404(ChurchUser, id=user_id, role='secretary')
+    secretary_user.role = 'member'
+    secretary_user.save(update_fields=['role'])
+    messages.success(request, f'{secretary_user.full_name} sasa ni member wa kawaida.')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
+
+
+@login_required(login_url='members:login')
+@require_POST
+def promote_to_pastor(request, user_id):
+    """Admin or verified pastor appoints a member as verified pastor."""
+    if not can_promote_to_pastor(request.user):
+        messages.error(request, 'Huna ruhusa ya kuteua mchungaji.')
+        return redirect('dashboard')
+
+    member_user = get_object_or_404(ChurchUser, id=user_id, role='member')
+    member_user.role = 'pastor'
+    member_user.is_staff = True
+    member_user.is_verified_pastor = True
+    member_user.pastor_verification_date = timezone.now()
+    member_user.save(
+        update_fields=['role', 'is_staff', 'is_verified_pastor', 'pastor_verification_date']
+    )
+    messages.success(
+        request,
+        f'{member_user.full_name} sasa ni mchungaji aliyethibitishwa.',
+    )
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
+
+
+@login_required(login_url='members:login')
+@require_POST
+def demote_from_pastor(request, user_id):
+    """Admin or verified pastor removes pastor role."""
+    if not can_promote_to_pastor(request.user):
+        messages.error(request, 'Huna ruhusa ya kuondoa cheo cha mchungaji.')
+        return redirect('dashboard')
+
+    pastor_user = get_object_or_404(ChurchUser, id=user_id, role='pastor')
+    if pastor_user.pk == request.user.pk:
+        messages.error(request, 'Huwezi kuondoa cheo chako mwenyewe.')
+        return redirect('members:member_list')
+
+    pastor_user.role = 'member'
+    pastor_user.is_staff = False
+    pastor_user.is_verified_pastor = False
+    pastor_user.pastor_verification_date = None
+    pastor_user.save(
+        update_fields=['role', 'is_staff', 'is_verified_pastor', 'pastor_verification_date']
+    )
+    messages.success(request, f'{pastor_user.full_name} sasa ni member wa kawaida.')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
+
+
+@login_required(login_url='members:login')
+@require_POST
+def promote_to_admin(request, user_id):
+    """Church admin grants administrator role (not via public registration)."""
+    if not can_promote_to_admin(request.user):
+        messages.error(request, 'Ni msimamizi wa kanisa tu anaweza kuteua admin.')
+        return redirect('dashboard')
+
+    member_user = get_object_or_404(ChurchUser, id=user_id, role='member')
+    member_user.role = 'admin'
+    member_user.is_staff = True
+    member_user.is_verified_pastor = False
+    member_user.save(update_fields=['role', 'is_staff', 'is_verified_pastor'])
+    messages.success(
+        request,
+        f'{member_user.full_name} sasa ni msimamizi (administrator) wa mfumo.',
+    )
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
+
+
+@login_required(login_url='members:login')
+@require_POST
+def toggle_member_active(request, user_id):
+    """Pastor/admin: activate or deactivate member login and membership."""
+    if not can_manage_members(request.user):
+        messages.error(request, 'Huna ruhusa.')
+        return redirect('dashboard')
+
+    target = get_object_or_404(
+        ChurchUser, id=user_id, role__in=['member', 'accountant', 'secretary', 'pastor']
+    )
+    if target.pk == request.user.pk:
+        messages.error(request, 'Huwezi kusimamisha akaunti yako mwenyewe.')
+        return redirect('members:member_list')
+
+    if target.is_active and target.is_active_member:
+        target.is_active = False
+        target.is_active_member = False
+        target.save(update_fields=['is_active', 'is_active_member'])
+        messages.warning(request, f'Akaunti ya {target.full_name} imesimamishwa — hawawezi kuingia.')
+    else:
+        target.is_active = True
+        target.is_active_member = True
+        target.save(update_fields=['is_active', 'is_active_member'])
+        messages.success(request, f'Akaunti ya {target.full_name} imewashwa tena.')
+
+    return _redirect_member_list(request)
+
+
+def _redirect_member_list(request):
+    referer = request.META.get('HTTP_REFERER', '')
+    if referer and url_has_allowed_host_and_scheme(
+        referer,
+        allowed_hosts={request.get_host()},
+    ):
+        return redirect(referer)
+    return redirect('members:member_list')
+
+
+@login_required(login_url='members:login')
+def admin_reset_password(request, user_id):
+    """Pastor/admin: set password or email reset link for a member."""
+    if not can_manage_members(request.user):
+        messages.error(request, 'Huna ruhusa.')
+        return redirect('dashboard')
+
+    target = get_object_or_404(
+        ChurchUser, id=user_id, role__in=['member', 'accountant', 'secretary', 'pastor']
+    )
+
+    if request.method == 'POST':
+        action = request.POST.get('action', 'set_password')
+
+        if action == 'send_email':
+            if not target.email:
+                messages.error(request, f'{target.full_name} hana barua pepe kwenye akaunti.')
+            else:
+                form = ChurchPasswordResetForm({'email': target.email})
+                if form.is_valid():
+                    form.save(
+                        request=request,
+                        use_https=request.is_secure(),
+                        email_template_name='registration/password_reset_email.html',
+                        subject_template_name='registration/password_reset_subject.txt',
+                    )
+                    messages.success(
+                        request,
+                        f'Kiungo cha kubadili nenosiri kimetumwa kwa {target.email}.',
+                    )
+                else:
+                    messages.error(request, 'Imeshindikana kutuma barua pepe.')
+            return _redirect_member_list(request)
+
+        form = PastorSetPasswordForm(target, request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Nenosiri jipya limewekwa kwa {target.full_name}.')
+            return _redirect_member_list(request)
+    else:
+        form = PastorSetPasswordForm(target)
+
+    return render(
+        request,
+        'members/admin_reset_password.html',
+        {'form': form, 'target_user': target},
+    )
+
+
+class ChurchPasswordResetView(PasswordResetView):
+    form_class = ChurchPasswordResetForm
+    template_name = 'registration/password_reset_form.html'
+    email_template_name = 'registration/password_reset_email.html'
+    subject_template_name = 'registration/password_reset_subject.txt'
+    success_url = reverse_lazy('members:password_reset_done')
+
+    def form_valid(self, form):
+        form.save(
+            request=self.request,
+            use_https=self.request.is_secure(),
+            domain_override=self.request.get_host(),
+        )
+        return redirect(self.success_url)
+
+
+class ChurchPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'registration/password_reset_done.html'
+
+
+class ChurchPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'registration/password_reset_confirm.html'
+    success_url = reverse_lazy('members:password_reset_complete')
+
+
+class ChurchPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'registration/password_reset_complete.html'
+
+
 def _can_manage_group(request, group):
-    if request.user.role in ["pastor", "admin"]:
+    if has_church_leadership(request.user):
         return True
     return GroupMembership.objects.filter(
         group=group, member=request.user, role__in=["leader", "assistant"], is_active=True
@@ -210,7 +448,7 @@ def _can_manage_group(request, group):
 @login_required(login_url='members:login')
 def group_list(request):
     groups = ChurchGroup.objects.filter(is_active=True).select_related("leader")
-    if request.user.role not in ["pastor", "admin"]:
+    if not has_church_leadership(request.user):
         groups = groups.filter(
             memberships__member=request.user, memberships__is_active=True
         ).distinct()
@@ -222,7 +460,7 @@ def group_detail(request, pk):
     group = get_object_or_404(ChurchGroup.objects.select_related("leader"), pk=pk, is_active=True)
 
     # only group members (or pastor/admin) can access
-    if request.user.role not in ["pastor", "admin"] and not GroupMembership.objects.filter(
+    if not has_church_leadership(request.user) and not GroupMembership.objects.filter(
         group=group, member=request.user, is_active=True
     ).exists():
         messages.error(request, "Huruhusiwi kuona kundi hili.")
@@ -249,7 +487,7 @@ def group_detail(request, pk):
 
 @login_required(login_url='members:login')
 def group_create(request):
-    if request.user.role not in ["pastor", "admin"]:
+    if not has_church_leadership(request.user):
         messages.error(request, "Ni pastor/admin tu anaweza kuunda kundi.")
         return redirect("members:group_list")
 
