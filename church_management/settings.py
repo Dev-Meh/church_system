@@ -147,7 +147,7 @@ SESSION_COOKIE_HTTPONLY = True         # JS cannot access session cookie
 SESSION_COOKIE_SAMESITE = 'Lax'       # protects against CSRF attacks
 
 # ── CSRF PROTECTION ─────────────────────────────
-CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 
 # ── CLICKJACKING PROTECTION ─────────────────────
@@ -159,9 +159,9 @@ SECURE_BROWSER_XSS_FILTER = True
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True') == 'True'
+    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
+    CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
+    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
 
 # ── SMS CONFIGURATION ───────────────────────────
 # Beem SMS API Configuration (Tanzania SMS provider)
