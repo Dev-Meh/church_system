@@ -1,6 +1,12 @@
 from decimal import Decimal
 from django import forms
-from .models import Donation, DonationCampaign, DonationNotice, CashBookEntry
+from .models import (
+    Donation,
+    DonationCampaign,
+    DonationNotice,
+    CashBookEntry,
+    GROUP_PAYMENT_CHOICES,
+)
 from members.models import ChurchUser
 
 
@@ -79,17 +85,20 @@ class AccountantDonationEntryForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, allowed_donor_ids=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['donor'].required = False
         self.fields['campaign'].required = False
         self.fields['category'].required = False
         self.fields['notes'].required = False
         self.fields['notes'].widget.attrs['placeholder'] = 'Maelezo mafupi (hiari): mfano zaka ya mwezi huu'
-        self.fields['donor'].queryset = ChurchUser.objects.filter(
+        qs = ChurchUser.objects.filter(
             is_active=True,
-            role__in=['member', 'pastor', 'elder', 'deacon', 'accountant', 'admin']
+            role__in=['member', 'pastor', 'elder', 'deacon', 'accountant', 'admin', 'secretary']
         ).order_by('first_name', 'last_name')
+        if allowed_donor_ids is not None:
+            qs = qs.filter(id__in=allowed_donor_ids)
+        self.fields['donor'].queryset = qs
 
     def clean(self):
         cleaned_data = super().clean()
@@ -100,6 +109,61 @@ class AccountantDonationEntryForm(forms.ModelForm):
             raise forms.ValidationError('Kwa zaka, lazima uchague mwanachama.')
         if amount is not None and not _is_whole_amount(amount):
             raise forms.ValidationError('Kiasi cha fedha kiwekwe bila desimali.')
+        return cleaned_data
+
+
+class GroupMchangoEntryForm(forms.ModelForm):
+    """Mchango wa idara — mhasibu huandika, mwanachama huona baadaye."""
+
+    class Meta:
+        model = Donation
+        fields = [
+            "donor",
+            "amount",
+            "payment_method",
+            "tithe_gift_type",
+            "contribution_date",
+            "notes",
+        ]
+        widgets = {
+            "donor": forms.Select(attrs={"class": "form-select"}),
+            "amount": forms.NumberInput(
+                attrs={"class": "form-control", "min": "1", "step": "1"}
+            ),
+            "payment_method": forms.Select(attrs={"class": "form-select"}),
+            "tithe_gift_type": forms.Select(attrs={"class": "form-select"}),
+            "contribution_date": forms.DateInput(
+                attrs={"class": "form-control", "type": "date"}
+            ),
+            "notes": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
+        }
+
+    def __init__(self, *args, allowed_donor_ids=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["donor"].label = "Jina la mwanachama"
+        self.fields["donor"].required = True
+        self.fields["amount"].label = "Kiasi cha mchango (TZS)"
+        self.fields["payment_method"].label = "Aina ya fedha"
+        self.fields["payment_method"].choices = GROUP_PAYMENT_CHOICES
+        self.fields["tithe_gift_type"].label = "Mchango ni"
+        self.fields["contribution_date"].label = "Tarehe ya mchango"
+        self.fields["notes"].label = "Maelezo (hiari)"
+        self.fields["notes"].required = False
+        self.fields["notes"].widget.attrs["placeholder"] = "Mfano: mchango wa mwezi Mei"
+        qs = ChurchUser.objects.filter(is_active=True).order_by(
+            "first_name", "last_name"
+        )
+        if allowed_donor_ids is not None:
+            qs = qs.filter(id__in=allowed_donor_ids)
+        self.fields["donor"].queryset = qs
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not cleaned_data.get("donor"):
+            raise forms.ValidationError("Chagua mwanachama.")
+        amount = cleaned_data.get("amount")
+        if amount is not None and not _is_whole_amount(amount):
+            raise forms.ValidationError("Kiasi kiwe namba kamili (mfano 5000).")
         return cleaned_data
 
 
@@ -219,12 +283,14 @@ class AccountantSheetEntryForm(forms.Form):
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Maelezo (hiari)'})
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, allowed_donor_ids=None, **kwargs):
         super().__init__(*args, **kwargs)
         member_qs = ChurchUser.objects.filter(
             is_active=True,
-            role__in=['member', 'pastor', 'elder', 'deacon', 'accountant', 'admin']
+            role__in=['member', 'pastor', 'elder', 'deacon', 'accountant', 'admin', 'secretary']
         ).order_by('first_name', 'last_name')
+        if allowed_donor_ids is not None:
+            member_qs = member_qs.filter(id__in=allowed_donor_ids)
         self.fields['donor'].queryset = member_qs
         self.fields['construction_donor'].queryset = member_qs
 

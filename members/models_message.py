@@ -20,6 +20,15 @@ class Message(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
     
+    church_group = models.ForeignKey(
+        "members.ChurchGroup",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="messages",
+        help_text="Matangazo ya idara; tupu = kanisa zima",
+    )
+
     # Targeting options
     send_to_all = models.BooleanField(default=True, help_text="Send to all members")
     target_roles = models.CharField(

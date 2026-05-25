@@ -83,6 +83,11 @@ class ChurchUser(AbstractUser):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
+
+    @property
+    def is_app_admin(self):
+        """Administrator in the church app (role or Django superuser)."""
+        return self.role == 'admin' or self.is_superuser
     
     @property
     def age(self):
@@ -180,7 +185,12 @@ class ChurchGroup(models.Model):
     GROUP_TYPE_CHOICES = [
         ("youth", "Vijana"),
         ("women", "Akina Mama"),
+        ("choir", "Kwaya"),
+        ("men", "Akina Baba"),
         ("elders", "Wazee"),
+        ("children", "Watoto"),
+        ("worship", "Ibada / Worship"),
+        ("other", "Kundi Lingine"),
     ]
 
     name = models.CharField(max_length=120, unique=True)
@@ -192,6 +202,23 @@ class ChurchGroup(models.Model):
         null=True,
         blank=True,
         related_name="led_church_groups",
+        verbose_name="Mwenyekiti wa kundi",
+    )
+    secretary = models.ForeignKey(
+        ChurchUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="secretary_church_groups",
+        verbose_name="Katibu wa kundi",
+    )
+    accountant = models.ForeignKey(
+        ChurchUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="accountant_church_groups",
+        verbose_name="Mhasibu wa kundi",
     )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -204,12 +231,19 @@ class ChurchGroup(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def display_title(self):
+        """Kichwa cha ukurasa: Vijana, Akina Mama, Kwaya, n.k."""
+        return self.get_group_type_display()
+
 
 class GroupMembership(models.Model):
     ROLE_CHOICES = [
-        ("leader", "Leader"),
-        ("assistant", "Assistant"),
-        ("member", "Member"),
+        ("leader", "Mwenyekiti"),
+        ("assistant", "Msaidizi"),
+        ("secretary", "Katibu"),
+        ("accountant", "Mhasibu"),
+        ("member", "Mwanachama"),
     ]
 
     group = models.ForeignKey(
@@ -250,3 +284,74 @@ class GroupActivity(models.Model):
 
     def __str__(self):
         return f"{self.group.name} - {self.title}"
+
+
+class UniversityStudentRecord(models.Model):
+    """Wanafunzi wa chuo — rekodi inabaki hata baada ya kuhitimu."""
+
+    STATUS_CHOICES = [
+        ("studying", "Anasoma"),
+        ("completed", "Amehitimu"),
+        ("paused", "Amesimama"),
+    ]
+
+    LEVEL_CHOICES = [
+        ("certificate", "Cheti"),
+        ("diploma", "Diploma"),
+        ("degree", "Shahada (Digrii)"),
+        ("masters", "Uzamili"),
+        ("phd", "PhD"),
+        ("other", "Nyingine"),
+    ]
+
+    member = models.ForeignKey(
+        ChurchUser,
+        on_delete=models.CASCADE,
+        related_name="university_records",
+    )
+    institution = models.CharField(max_length=200, verbose_name="Chuo / Chuo kikuu")
+    course = models.CharField(max_length=200, verbose_name="Kozi / Programu")
+    faculty = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="Kitivo / Somo",
+    )
+    level = models.CharField(
+        max_length=20,
+        choices=LEVEL_CHOICES,
+        default="degree",
+    )
+    year_started = models.PositiveIntegerField(null=True, blank=True)
+    year_completed = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Mwaka wa kuhitimu (jaza mwanafunzi anapomaliza).",
+    )
+    expected_completion_year = models.PositiveIntegerField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="studying",
+    )
+    notes = models.TextField(blank=True, help_text="Maelezo ya ziada kwa mchungaji.")
+    recorded_by = models.ForeignKey(
+        ChurchUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="university_records_recorded",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Rekodi ya Mwanafunzi wa Chuo"
+        verbose_name_plural = "Wanafunzi wa Chuo"
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"{self.member.full_name} — {self.course} @ {self.institution}"
+
+    @property
+    def is_alumni(self):
+        return self.status == "completed"

@@ -61,12 +61,25 @@ class DonationCampaign(models.Model):
     def total_donations(self):
         return self.donations.count()
 
+GROUP_PAYMENT_CHOICES = [
+    ("cash", "Taslimu (cash)"),
+    ("mobile_money", "Simu — M-Pesa / Tigo / Airtel"),
+    ("bank_transfer", "Benki"),
+    ("check", "Hundi / Cheki"),
+    ("online", "Mtandaoni"),
+    ("card", "Kadi"),
+]
+
+_PAYMENT_METHOD_SW = dict(GROUP_PAYMENT_CHOICES)
+_GIFT_TYPE_SW = {"money": "Fedha", "asset": "Mali"}
+
+
 class Donation(models.Model):
     DONATION_TYPE_CHOICES = [
         ('tithe', 'Zaka'),
         ('offering', 'Sadaka'),
         ('special', 'Mchango Maalum'),
-        ('other', 'Mchango Mwingine'),
+        ('other', 'Mchango'),
     ]
 
     PAYMENT_METHOD_CHOICES = [
@@ -108,7 +121,15 @@ class Donation(models.Model):
     donation_date = models.DateTimeField(auto_now_add=True)
     processed_date = models.DateTimeField(null=True, blank=True)
     processed_by = models.ForeignKey(ChurchUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='processed_donations')
-    
+    recorded_for_group = models.ForeignKey(
+        'members.ChurchGroup',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recorded_donations',
+        help_text='Kundi linalohusika (mhasibu wa kundi).',
+    )
+
     class Meta:
         verbose_name = "Donation"
         verbose_name_plural = "Donations"
@@ -117,6 +138,39 @@ class Donation(models.Model):
     def __str__(self):
         donor_name = self.donor_name or (self.donor.full_name if self.donor else 'Anonymous')
         return f"{donor_name} - {self.amount}"
+
+    @property
+    def payment_method_sw(self):
+        """Aina ya fedha kwa Kiswahili (kutoka GROUP_PAYMENT_CHOICES)."""
+        if not self.payment_method:
+            return ""
+        return _PAYMENT_METHOD_SW.get(
+            self.payment_method,
+            self.get_payment_method_display(),
+        )
+
+    @property
+    def gift_type_sw(self):
+        """Fedha au mali."""
+        return _GIFT_TYPE_SW.get(self.tithe_gift_type, self.tithe_gift_type or "")
+
+    @property
+    def aina_ya_fedha(self):
+        """
+        Lebo kamili ya aina ya fedha kwa mchango: Fedha (njia ya malipo)
+        au Mali (maelezo ya mali).
+        """
+        if self.tithe_gift_type == "asset":
+            desc = (self.tithe_asset_description or "").strip()
+            return f"Mali{(' — ' + desc) if desc else ''}"
+        return self.payment_method_sw
+
+    @property
+    def mchango_display(self):
+        """Kiasi cha mchango kilichoandikwa (TZS)."""
+        if self.amount is None:
+            return ""
+        return f"{int(self.amount)} TZS"
 
 
 class DonationNotice(models.Model):

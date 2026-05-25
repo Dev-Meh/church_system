@@ -422,24 +422,21 @@
             </div>
 
             {% if show_management_graphs %}
-            <div class="panel mt-4">
-                <div class="panel-header">
-                    <h3>Donation Trend (Last 6 Months)</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="chart-wrap">
-                        <canvas id="donationTrendChart"></canvas>
+            <div class="chart-row mt-4">
+                <div class="chart-panel">
+                    <div class="panel-hd">Michango — miezi 6 (histogram)</div>
+                    <div class="panel-bd">
+                        <div class="chart-wrap">
+                            <canvas id="donationTrendChart"></canvas>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="panel mt-4">
-                <div class="panel-header">
-                    <h3>Member Registrations (Last 6 Months)</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="chart-wrap">
-                        <canvas id="registrationTrendChart"></canvas>
+                <div class="chart-panel">
+                    <div class="panel-hd">Usajili wa wanachama — miezi 6</div>
+                    <div class="panel-bd">
+                        <div class="chart-wrap">
+                            <canvas id="registrationTrendChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -636,7 +633,7 @@
 {% endblock %}
 
 {% block page_extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% include 'church_layout/chart_histogram_assets.html' %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
         const sadakaInput = document.getElementById('id_sadaka');
@@ -686,57 +683,22 @@ document.addEventListener('DOMContentLoaded', function () {
         const registrationLabels = JSON.parse('{{ registration_chart_labels|escapejs }}');
         const registrationData = JSON.parse('{{ registration_chart_data|escapejs }}');
 
-        if (donationCtx) {
-            new Chart(donationCtx, {
-                type: 'line',
-                data: {
-                    labels: donationLabels,
-                    datasets: [{
-                        label: 'Donations (TZS)',
-                        data: donationData,
-                        borderColor: '#c8a84b',
-                        backgroundColor: 'rgba(200, 168, 75, 0.16)',
-                        borderWidth: 2,
-                        tension: 0.35,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#d8e2ef' } } },
-                    scales: {
-                        x: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } },
-                        y: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } }
-                    }
-                }
-            });
-        }
-
-        if (registrationCtx) {
-            new Chart(registrationCtx, {
-                type: 'bar',
-                data: {
-                    labels: registrationLabels,
-                    datasets: [{
-                        label: 'New Members',
-                        data: registrationData,
-                        backgroundColor: 'rgba(46, 204, 113, 0.45)',
-                        borderColor: '#2ecc71',
-                        borderWidth: 1.5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#d8e2ef' } } },
-                    scales: {
-                        x: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } },
-                        y: { ticks: { color: '#9fb2c8', precision: 0 }, grid: { color: 'rgba(255,255,255,0.08)' } }
-                    }
-                }
-            });
-        }
+        ChurchHistogram.create(donationCtx, {
+            labels: donationLabels,
+            data: donationData,
+            datasetLabel: 'Michango (TZS)',
+            colorScheme: 'gold',
+            formatY: 'currency',
+            emptyText: 'Hakuna michango katika miezi 6 iliyopita.',
+        });
+        ChurchHistogram.create(registrationCtx, {
+            labels: registrationLabels,
+            data: registrationData,
+            datasetLabel: 'Wanachama wapya',
+            colorScheme: 'green',
+            formatY: 'integer',
+            emptyText: 'Hakuna usajili katika miezi 6 iliyopita.',
+        });
     });
 </script>
 {% endblock %}

@@ -24,7 +24,7 @@ class GroupMembershipInline(admin.TabularInline):
 
 @admin.register(ChurchGroup)
 class ChurchGroupAdmin(admin.ModelAdmin):
-    list_display = ("name", "group_type", "leader", "is_active")
+    list_display = ("name", "group_type", "leader", "secretary", "accountant", "is_active")
     list_filter = ("group_type", "is_active")
     search_fields = ("name",)
     inlines = [GroupMembershipInline]

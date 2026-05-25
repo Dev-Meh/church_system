@@ -1,0 +1,53 @@
+{% extends 'church_layout/app_shell.html' %}
+
+{% block title %}Michango Yangu — {{ group.display_title }}{% endblock %}
+{% block page_title %}Michango Yangu{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{{ group.display_title }}</p>{% endblock %}
+
+{% block page_header_actions %}
+<a href="{% url 'members:group_detail' group.pk %}" class="btn-cancel" style="text-decoration:none;padding:8px 14px;border-radius:6px;">← {{ group.display_title }}</a>
+{% endblock %}
+
+{% block page_extra_css %}
+<style>
+.panel{background:#152333;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+.mchango-table{width:100%;border-collapse:collapse;font-size:13px;}
+.mchango-table th{text-align:left;padding:0.6rem 0.5rem;color:#c8a84b;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(255,255,255,0.1);}
+.mchango-table td{padding:0.65rem 0.5rem;border-bottom:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.85);}
+.empty-box{text-align:center;padding:2.5rem 1rem;color:rgba(255,255,255,0.45);font-size:14px;line-height:1.5;}
+</style>
+{% endblock %}
+
+{% block page_content %}
+{% if has_michango %}
+<div class="panel">
+  <table class="mchango-table">
+    <thead>
+      <tr>
+        <th>Jina</th>
+        <th>Mchango</th>
+        <th>Aina ya fedha</th>
+        <th>Tarehe</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in donations %}
+      <tr>
+        <td>{{ d.donor_name|default:user.full_name }}</td>
+        <td><strong>{{ d.mchango_display }}</strong></td>
+        <td>{{ d.aina_ya_fedha }}</td>
+        <td>{{ d.contribution_date }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="panel">
+  <div class="empty-box">
+    Hakuna mchango uliorekodiwa kwako kwenye {{ group.display_title }} bado.<br>
+    Mhasibu atakuandikia baada ya kupokea mchango wako — utaona jina, kiasi, na aina ya fedha hapa.
+  </div>
+</div>
+{% endif %}
+{% endblock %}

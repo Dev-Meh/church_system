@@ -2,9 +2,16 @@ from .language_utils import LanguageManager
 from .permissions import (
     can_manage_church_communications,
     can_create_church_announcements,
+    can_manage_church_groups,
     has_church_leadership,
 )
 from .app_nav import resolve_active_nav
+
+
+def _inbox_count_for_user(user):
+    from .message_queries import church_inbox_unread_count
+
+    return church_inbox_unread_count(user)
 
 
 def language_context(request):
@@ -31,6 +38,9 @@ def church_permissions_context(request):
         'has_leadership': (
             has_church_leadership(user) if user.is_authenticated else False
         ),
+        'can_manage_church_groups': (
+            can_manage_church_groups(user) if user.is_authenticated else False
+        ),
     }
 
 
@@ -50,7 +60,10 @@ def app_shell_context(request):
     from events.models import Event
     from sermons.models import Sermon
     from prayers.models import PrayerRequest
+    from django.db.models import Q
+    from .models import GroupMembership
     from .models_message import MessageRecipient, Message
+    from .group_permissions import groups_led_or_staffed
 
     match = request.resolver_match
     app_name = getattr(match, 'app_name', '') or ''
@@ -70,6 +83,6 @@ def app_shell_context(request):
         'nav_prayers_count': PrayerRequest.objects.filter(
             visibility__in=['public', 'leadership'],
         ).exclude(status='closed').count(),
-        'nav_messages_count': MessageRecipient.objects.filter(recipient=user).count(),
+        'nav_messages_count': _inbox_count_for_user(user),
         'sent_messages_count': sent_messages_count,
     }

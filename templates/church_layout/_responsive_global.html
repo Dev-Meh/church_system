@@ -58,6 +58,25 @@ body.nav-open {
   min-width: 0;
 }
 
+.chart-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+.chart-panel {
+  background: #152333;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.chart-panel .panel-hd {
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  color: #c8a84b;
+}
+
 @media (max-width: 992px) {
   .cm-mobile-menu-fab {
     display: inline-flex;
@@ -144,13 +163,19 @@ body.nav-open {
   }
   .topnav-title-block {
     min-width: 0;
-    flex: 1 1 100%;
+    flex: 1 1 auto;
+  }
+  .topnav-profile-link {
+    display: flex;
+    margin-left: auto;
+    flex-shrink: 0;
   }
   .topnav-actions {
     flex-wrap: wrap;
     gap: 0.5rem;
     width: 100%;
     justify-content: flex-start;
+    margin-left: 0;
   }
   .welcome-pill {
     white-space: normal;

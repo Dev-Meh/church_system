@@ -31,6 +31,14 @@ class LanguageManager:
         'sermons': {'en': 'Sermons', 'sw': 'Mahubiri'},
         'donations': {'en': 'Donations', 'sw': 'Michango'},
         'events': {'en': 'Events', 'sw': 'Matukio'},
+        'church_departments': {'en': 'Departments', 'sw': 'Idara'},
+        'church_departments_page': {'en': 'Church Departments', 'sw': 'Idara za Kanisa'},
+        'church_departments_subtitle': {
+            'en': 'Youth, Women, Choir, and other church ministries',
+            'sw': 'Vijana, Akina Mama, Kwaya, na idara nyingine',
+        },
+        'date_of_birth': {'en': 'Date of Birth *', 'sw': 'Tarehe ya kuzaliwa *'},
+        'gender': {'en': 'Gender *', 'sw': 'Jinsia *'},
         'profile': {'en': 'Profile', 'sw': 'Wasifu'},
         'settings': {'en': 'Settings', 'sw': 'Mipangilio'},
         'logout': {'en': 'Logout', 'sw': 'Toka'},
@@ -62,7 +70,7 @@ class LanguageManager:
         
         # Navigation items
         'create_message': {'en': 'Create Message', 'sw': 'Unda Ujumbe'},
-        'view_messages': {'en': 'View Messages', 'sw': 'Ona Ujumbe'},
+        'view_messages': {'en': 'Church Messages', 'sw': 'Ujumbe wa Kanisa'},
         'all_members': {'en': 'All Members', 'sw': 'Wanachama Wote'},
         'create_sermon': {'en': 'Create Sermon', 'sw': 'Unda Hubo'},
         'series_label': {'en': 'Series', 'sw': 'Mfululizo'},

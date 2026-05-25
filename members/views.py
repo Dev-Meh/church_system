@@ -14,6 +14,7 @@ from django.views.generic import CreateView, UpdateView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.decorators.http import require_POST
 from django.http import HttpResponseRedirect
+from django.db.models import Count, Q, Sum
 from django.conf import settings
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import check_for_language
@@ -28,11 +29,28 @@ from .forms import (
     ChurchPasswordResetForm,
 )
 from .models import ChurchUser, ChurchGroup, GroupMembership
+from .group_permissions import (
+    can_access_group,
+    can_assign_group_officers,
+    can_manage_group_activities,
+    can_manage_group_donations,
+    can_manage_group_members,
+    can_send_group_messages,
+    can_view_group_members,
+    groups_visible_to_user,
+    is_group_mwenyekiti,
+    is_group_plain_member,
+)
+from .group_services import assign_group_officer, get_group_member_ids
+from .models_message import Message, MessageRecipient
+from donations.models import Donation
+from donations.forms import GroupMchangoEntryForm
 from .language_utils import LanguageManager
 from django.utils import timezone
 from .permissions import (
     can_appoint_secretary,
     can_manage_members,
+    can_manage_church_groups,
     can_promote_to_pastor,
     can_promote_to_admin,
     has_church_leadership,
@@ -110,8 +128,17 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
         return self.request.user
     
     def form_valid(self, form):
-        messages.success(self.request, 'Profile updated successfully!')
-        return super().form_valid(form)
+        user = self.get_object()
+        uploaded = self.request.FILES.get('profile_picture')
+        old_picture = user.profile_picture if user.profile_picture else None
+        response = super().form_valid(form)
+        if uploaded:
+            if old_picture and old_picture.name != form.instance.profile_picture.name:
+                old_picture.delete(save=False)
+            messages.success(self.request, 'Profile photo saved successfully.')
+        else:
+            messages.success(self.request, 'Profile updated successfully!')
+        return response
 
 @login_required(login_url='members:login')
 def dashboard(request):
@@ -437,49 +464,85 @@ class ChurchPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'registration/password_reset_complete.html'
 
 
-def _can_manage_group(request, group):
-    if has_church_leadership(request.user):
-        return True
-    return GroupMembership.objects.filter(
-        group=group, member=request.user, role__in=["leader", "assistant"], is_active=True
-    ).exists()
-
-
 @login_required(login_url='members:login')
 def group_list(request):
-    groups = ChurchGroup.objects.filter(is_active=True).select_related("leader")
-    if not has_church_leadership(request.user):
-        groups = groups.filter(
-            memberships__member=request.user, memberships__is_active=True
-        ).distinct()
-    return render(request, "members/group_list.html", {"groups": groups})
+    groups = (
+        groups_visible_to_user(request.user)
+        .select_related("leader", "secretary", "accountant")
+        .annotate(
+            member_count=Count(
+                "memberships",
+                filter=Q(memberships__is_active=True),
+            )
+        )
+    )
+    return render(
+        request,
+        "members/group_list.html",
+        {
+            "groups": groups,
+            "can_create_groups": can_manage_church_groups(request.user),
+        },
+    )
 
 
 @login_required(login_url='members:login')
 def group_detail(request, pk):
-    group = get_object_or_404(ChurchGroup.objects.select_related("leader"), pk=pk, is_active=True)
+    group = get_object_or_404(
+        ChurchGroup.objects.select_related("leader", "secretary", "accountant"),
+        pk=pk,
+        is_active=True,
+    )
 
-    # only group members (or pastor/admin) can access
-    if not has_church_leadership(request.user) and not GroupMembership.objects.filter(
-        group=group, member=request.user, is_active=True
-    ).exists():
+    if not can_access_group(request.user, group):
         messages.error(request, "Huruhusiwi kuona kundi hili.")
         return redirect("members:group_list")
 
-    memberships = group.memberships.select_related("member").filter(is_active=True)
+    can_view_members = can_view_group_members(request.user, group)
+    can_manage = can_manage_group_members(request.user, group)
+    can_manage_activities = can_manage_group_activities(request.user, group)
+
+    memberships = []
+    available_members = ChurchUser.objects.none()
+    if can_view_members:
+        memberships = group.memberships.select_related("member").filter(is_active=True)
+        if can_manage:
+            available_members = ChurchUser.objects.filter(is_active=True).exclude(
+                id__in=memberships.values_list("member_id", flat=True)
+            )
+
     activities = group.activities.select_related("created_by").all()[:20]
 
-    available_members = ChurchUser.objects.filter(is_active=True).exclude(
-        id__in=memberships.values_list("member_id", flat=True)
+    group_matangazo = (
+        Message.objects.filter(
+            church_group=group,
+            is_active=True,
+        )
+        .select_related("sender")
+        .order_by("-created_at")[:15]
     )
-    can_manage = _can_manage_group(request, group)
+
+    officer_candidates = ChurchUser.objects.none()
+    if can_assign_group_officers(request.user):
+        officer_candidates = ChurchUser.objects.filter(is_active=True).order_by(
+            "first_name", "last_name"
+        )
 
     context = {
         "group": group,
         "memberships": memberships,
         "activities": activities,
         "available_members": available_members,
+        "officer_candidates": officer_candidates,
         "can_manage": can_manage,
+        "can_manage_activities": can_manage_activities,
+        "can_view_members": can_view_members,
+        "is_mwenyekiti": is_group_mwenyekiti(request.user, group),
+        "can_assign_officers": can_assign_group_officers(request.user),
+        "can_manage_donations": can_manage_group_donations(request.user, group),
+        "can_send_messages": can_send_group_messages(request.user, group),
+        "is_plain_member": is_group_plain_member(request.user, group),
+        "group_matangazo": group_matangazo,
         "activity_form": GroupActivityForm(),
     }
     return render(request, "members/group_detail.html", context)
@@ -487,8 +550,8 @@ def group_detail(request, pk):
 
 @login_required(login_url='members:login')
 def group_create(request):
-    if not has_church_leadership(request.user):
-        messages.error(request, "Ni pastor/admin tu anaweza kuunda kundi.")
+    if not can_manage_church_groups(request.user):
+        messages.error(request, "Ni mchungaji, admin, au katibu tu anaweza kuunda kundi.")
         return redirect("members:group_list")
 
     if request.method == "POST":
@@ -511,9 +574,118 @@ def group_create(request):
 
 @login_required(login_url='members:login')
 @require_POST
+def group_assign_officers(request, pk):
+    """Mchungaji huweka kiongozi, katibu, na mhasibu wa kundi."""
+    group = get_object_or_404(ChurchGroup, pk=pk, is_active=True)
+    if not can_assign_group_officers(request.user):
+        messages.error(request, "Ni mchungaji/admin tu anaweza kuteua viongozi wa kundi.")
+        return redirect("members:group_detail", pk=pk)
+
+    for role in ("leader", "secretary", "accountant"):
+        raw_id = request.POST.get(f"{role}_id", "").strip()
+        if raw_id:
+            member = get_object_or_404(ChurchUser, pk=raw_id, is_active=True)
+            assign_group_officer(group, role, member)
+        else:
+            assign_group_officer(group, role, None)
+
+    messages.success(request, "Mwenyekiti, katibu na mhasibu wamesasishwa.")
+    return redirect("members:group_detail", pk=pk)
+
+
+@login_required(login_url='members:login')
+def group_donations(request, pk):
+    """Mhasibu wa kundi: ingiza na ona michango ya wanachama wa kundi tu."""
+    group = get_object_or_404(
+        ChurchGroup.objects.select_related("accountant"),
+        pk=pk,
+        is_active=True,
+    )
+    if not can_manage_group_donations(request.user, group):
+        messages.error(request, "Huna ruhusa ya kusimamia michango ya idara hii.")
+        return redirect("members:group_detail", pk=pk)
+
+    member_ids = get_group_member_ids(group)
+    donations = (
+        Donation.objects.filter(
+            recorded_for_group=group,
+            donor_id__in=member_ids,
+            status="completed",
+        )
+        .select_related("donor")
+        .order_by("-contribution_date", "-donation_date")[:50]
+    )
+
+    if request.method == "POST":
+        form = GroupMchangoEntryForm(
+            request.POST,
+            allowed_donor_ids=member_ids,
+        )
+        if form.is_valid():
+            donation = form.save(commit=False)
+            if not donation.donor_id or donation.donor_id not in member_ids:
+                messages.error(request, "Chagua mwanachama wa kundi hili.")
+            else:
+                donation.donor_name = donation.donor.full_name
+                donation.donation_type = "other"
+                donation.recorded_for_group = group
+                donation.status = "completed"
+                donation.processed_by = request.user
+                donation.processed_date = timezone.now()
+                donation.save()
+                messages.success(request, "Mchango umeandikwa — mwanachama ataona kwenye wasifu wake.")
+                return redirect("members:group_donations", pk=pk)
+    else:
+        form = GroupMchangoEntryForm(allowed_donor_ids=member_ids)
+
+    total_michango = donations.aggregate(total=Sum("amount"))["total"] or 0
+
+    return render(
+        request,
+        "members/group_donations.html",
+        {
+            "group": group,
+            "form": form,
+            "donations": donations,
+            "total_michango": total_michango,
+            "member_count": len(member_ids),
+        },
+    )
+
+
+@login_required(login_url="members:login")
+def group_my_donations(request, pk):
+    """Mwanachama: michango yake pekee kwenye idara hii."""
+    group = get_object_or_404(ChurchGroup, pk=pk, is_active=True)
+    if not can_access_group(request.user, group):
+        messages.error(request, "Huruhusiwi kuona idara hili.")
+        return redirect("members:group_list")
+
+    donations = (
+        Donation.objects.filter(
+            donor=request.user,
+            recorded_for_group=group,
+            status="completed",
+        )
+        .order_by("-contribution_date", "-donation_date")
+    )
+
+    return render(
+        request,
+        "members/group_my_donations.html",
+        {
+            "group": group,
+            "donations": donations,
+            "has_michango": donations.exists(),
+        },
+    )
+
+
+@login_required(login_url='members:login')
+@require_POST
 def group_add_member(request, pk):
     group = get_object_or_404(ChurchGroup, pk=pk, is_active=True)
-    if not _can_manage_group(request, group):
+    if not can_manage_group_members(request.user, group):
         messages.error(request, "Huna ruhusa ya kuongeza wanachama kwenye kundi hili.")
         return redirect("members:group_detail", pk=pk)
 
@@ -531,9 +703,12 @@ def group_add_member(request, pk):
         membership.is_active = True
         membership.save()
 
-    if role == "leader" and group.leader_id != member.id:
-        group.leader = member
-        group.save(update_fields=["leader"])
+    if role == "leader":
+        assign_group_officer(group, "leader", member)
+    elif role == "secretary":
+        assign_group_officer(group, "secretary", member)
+    elif role == "accountant":
+        assign_group_officer(group, "accountant", member)
 
     messages.success(request, "Mwanachama ameongezwa kwenye kundi.")
     return redirect("members:group_detail", pk=pk)
@@ -543,8 +718,8 @@ def group_add_member(request, pk):
 @require_POST
 def group_add_activity(request, pk):
     group = get_object_or_404(ChurchGroup, pk=pk, is_active=True)
-    if not _can_manage_group(request, group):
-        messages.error(request, "Huna ruhusa ya kuweka shughuli za kundi hili.")
+    if not can_manage_group_activities(request.user, group):
+        messages.error(request, "Ni mwenyekiti, katibu, au mchungaji tu anaweza kuweka shughuli za idara.")
         return redirect("members:group_detail", pk=pk)
 
     form = GroupActivityForm(request.POST)

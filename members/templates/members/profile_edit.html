@@ -1,5 +1,5 @@
 {% extends 'church_layout/app_shell.html' %}
-{% load i18n_church %}
+{% load i18n_church member_extras %}
 
 {% block title %}Edit Profile - PHM-ARCC Iyumbu CMS{% endblock %}
 {% block page_title %}Edit Profile{% endblock %}
@@ -15,12 +15,30 @@
 .form-header{margin-bottom:2rem;}
 .form-header h2{font-family:'Cinzel',serif;font-size:20px;font-weight:600;color:#c8a84b;margin-bottom:0.5rem;}
 .form-header p{color:rgba(255,255,255,0.6);font-size:14px;}
+.profile-photo-block{display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;padding:1.25rem;margin-bottom:2rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;}
+@media (max-width:768px){
+  .profile-photo-block{flex-wrap:nowrap;justify-content:flex-end;}
+  .profile-photo-block .user-avatar-wrap{order:2;margin-left:auto;}
+  .profile-photo-block > div:not(.user-avatar-wrap){order:1;flex:1;min-width:0;}
+}
+.profile-photo-hint{font-size:13px;color:rgba(255,255,255,0.55);margin-top:0.5rem;max-width:360px;line-height:1.5;}
+.profile-photo-hint strong{color:#c8a84b;font-weight:600;}
+.profile-file-input-hidden{position:absolute;width:0.1px;height:0.1px;opacity:0;overflow:hidden;z-index:-1;}
+.profile-photo-actions{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.5rem;max-width:280px;}
+.btn-photo{padding:12px 16px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;text-align:center;border:1px solid rgba(200,168,75,0.45);background:rgba(200,168,75,0.15);color:#c8a84b;}
+.btn-photo-secondary{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.85);}
+@media(min-width:400px){.profile-photo-actions{flex-direction:row;flex-wrap:wrap;}}
+#profile-preview-wrap{margin-top:0.75rem;}
+#profile-preview{display:none;width:80px;height:80px;object-fit:cover;border-radius:50%;border:2px solid rgba(200,168,75,0.4);}
 .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;margin-bottom:2rem;}
 .form-group{display:flex;flex-direction:column;}
 .form-group.full-width{grid-column:1/-1;}
 .form-label{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:0.5rem;}
 .form-input,.form-select{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:12px 16px;color:#fff;font-size:14px;}
 .form-input:focus,.form-select:focus{outline:none;border-color:#c8a84b;}
+.dob-pickers{display:flex;flex-direction:column;gap:0.65rem;width:100%;}
+.dob-pickers .dob-select{width:100%;min-height:44px;font-size:16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 14px;color:#fff;}
+@media(min-width:480px){.dob-pickers{flex-direction:row;}.dob-year{flex:1.1;}.dob-month{flex:1.2;}.dob-day{flex:0.75;}}
 .form-select option{background:#0d2340;color:#fff;}
 .form-actions{display:flex;gap:1rem;justify-content:flex-end;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.07);}
 .btn-cancel{padding:10px 20px;background:transparent;border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:rgba(255,255,255,0.7);font-size:12px;font-weight:700;text-decoration:none;}
@@ -35,11 +53,33 @@
 <div class="form-card">
   <div class="form-header">
     <h2>Edit Your Profile</h2>
-    <p>Update your personal information and contact details</p>
+    <p>Update your personal information and profile photo</p>
   </div>
 
-  <form method="post">
+  <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
+
+    <div class="profile-photo-block">
+      {% user_avatar user 80 %}
+      <div>
+        <label class="form-label">Picha ya wasifu</label>
+        {{ form.profile_picture }}
+        <div class="profile-photo-actions">
+          <button type="button" class="btn-photo" id="btn-take-photo">📷 Piga picha (kamera)</button>
+          <button type="button" class="btn-photo btn-photo-secondary" id="btn-pick-photo">🖼 Chagua picha</button>
+        </div>
+        {% if form.profile_picture.errors %}<ul class="errorlist">{% for error in form.profile_picture.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+        <p class="profile-photo-hint">
+          <strong>Kwenye simu:</strong> bofya <strong>Piga picha</strong> au <strong>Chagua picha</strong>.
+          Picha yoyote kutoka kamera au gallery (chini ya 5MB). Kisha bofye <strong>Save Changes</strong>.
+          {% if user.profile_picture and user.profile_picture.name %} Picha ya sasa iko juu.{% endif %}
+        </p>
+        <div id="profile-preview-wrap">
+          <img id="profile-preview" alt="Preview">
+        </div>
+      </div>
+    </div>
+
     <div class="form-grid">
       <div class="form-group">
         <label class="form-label" for="{{ form.first_name.id_for_label }}">First Name</label>
@@ -62,7 +102,8 @@
         {% if form.phone_number.errors %}<ul class="errorlist">{% for error in form.phone_number.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
       </div>
       <div class="form-group">
-        <label class="form-label" for="{{ form.date_of_birth.id_for_label }}">Date of Birth</label>
+        <label class="form-label">Tarehe ya kuzaliwa</label>
+        <p style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:0.5rem;">Mwaka → Mwezi → Siku</p>
         {{ form.date_of_birth }}
         {% if form.date_of_birth.errors %}<ul class="errorlist">{% for error in form.date_of_birth.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
       </div>
@@ -88,11 +129,47 @@
 {% block page_extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('input, select, textarea').forEach(function(el) {
+  document.querySelectorAll('input:not([type=file]), select, textarea').forEach(function(el) {
     if (!el.classList.contains('form-input') && !el.classList.contains('form-select')) {
       el.classList.add(el.tagName === 'SELECT' ? 'form-select' : 'form-input');
     }
   });
+  var fileInput = document.querySelector('input[type="file"][name="profile_picture"]');
+  var btnTake = document.getElementById('btn-take-photo');
+  var btnPick = document.getElementById('btn-pick-photo');
+  var preview = document.getElementById('profile-preview');
+  var avatarImg = document.querySelector('.profile-photo-block .user-avatar-photo');
+  var avatarFallback = document.querySelector('.profile-photo-block .user-avatar-fallback');
+  if (btnTake && fileInput) {
+    btnTake.addEventListener('click', function() {
+      fileInput.setAttribute('capture', 'user');
+      fileInput.click();
+    });
+  }
+  if (btnPick && fileInput) {
+    btnPick.addEventListener('click', function() {
+      fileInput.removeAttribute('capture');
+      fileInput.click();
+    });
+  }
+  if (fileInput && preview) {
+    fileInput.addEventListener('change', function() {
+      var file = fileInput.files && fileInput.files[0];
+      if (!file) {
+        preview.style.display = 'none';
+        preview.removeAttribute('src');
+        return;
+      }
+      var url = URL.createObjectURL(file);
+      preview.src = url;
+      preview.style.display = 'block';
+      if (avatarImg) {
+        avatarImg.src = url;
+        avatarImg.style.display = 'block';
+      }
+      if (avatarFallback) avatarFallback.style.display = 'none';
+    });
+  }
 });
 </script>
 {% endblock %}

@@ -40,9 +40,6 @@
 {% block page_content %}
 <div class="panel">
   <div class="panel-bd">
-    <span class="badge {% if message.priority == 'urgent' %}badge-urgent{% elif message.priority == 'high' %}badge-high{% else %}badge-normal{% endif %}">
-      {{ message.get_priority_display }} Priority
-    </span>
     <div class="msg-body">{{ message.content|linebreaks }}</div>
     <h4 style="color:#c8a84b;margin-bottom:0.5rem;">Delivery Statistics</h4>
     <div class="stats-row">

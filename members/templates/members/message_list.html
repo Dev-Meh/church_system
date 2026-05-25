@@ -39,7 +39,6 @@
           <tr>
             <th>Date</th>
             <th>{% church_t 'message_title_label' %}</th>
-            <th>{% church_t 'priority_level_label' %}</th>
             <th>{% church_t 'recipients' %}</th>
             <th>Read</th>
             <th></th>
@@ -50,11 +49,6 @@
           <tr>
             <td>{{ msg.created_at|date:"M d, Y H:i" }}</td>
             <td><strong>{{ msg.title }}</strong></td>
-            <td>
-              <span class="badge {% if msg.priority == 'urgent' %}badge-urgent{% elif msg.priority == 'high' %}badge-high{% else %}badge-normal{% endif %}">
-                {{ msg.get_priority_display }}
-              </span>
-            </td>
             <td>{{ msg.recipient_count }}</td>
             <td>{{ msg.read_count }}</td>
             <td>

@@ -75,11 +75,11 @@ class PlayerDashboardView(LoginRequiredMixin, ListView):
             })
         
         # Get unread messages
-        unread_messages = MessageRecipient.objects.filter(
-            recipient=user,
-            is_read=False,
-            message__is_active=True
-        ).order_by('-message__created_at')[:5]
+        from .message_queries import member_inbox_queryset
+
+        unread_messages = member_inbox_queryset(user, group=None).filter(
+            is_read=False
+        )[:5]
         
         for recipient in unread_messages:
             content_items.append({
@@ -92,7 +92,6 @@ class PlayerDashboardView(LoginRequiredMixin, ListView):
                 'badge': 'New Message',
                 'badge_color': 'warning',
                 'sender': recipient.message.sender.full_name,
-                'priority': recipient.message.get_priority_display(),
             })
         
         # Get active announcements
@@ -113,7 +112,6 @@ class PlayerDashboardView(LoginRequiredMixin, ListView):
                 'badge': 'Announcement',
                 'badge_color': 'info',
                 'author': announcement.author.full_name if announcement.author else 'Church Admin',
-                'priority': announcement.get_priority_display(),
             })
         
         # Sort all items by date (newest first)
@@ -151,11 +149,9 @@ class PlayerDashboardView(LoginRequiredMixin, ListView):
         
         context['sermons_count'] = Sermon.objects.filter(is_published=True).count()
         
-        context['unread_messages_count'] = MessageRecipient.objects.filter(
-            recipient=user,
-            is_read=False,
-            message__is_active=True
-        ).count()
+        from .message_queries import church_inbox_unread_count
+
+        context['unread_messages_count'] = church_inbox_unread_count(user)
         
         context['active_announcements_count'] = Announcement.objects.filter(
             is_active=True
@@ -252,9 +248,9 @@ def my_content(request):
     my_notes = SermonNote.objects.filter(user=user).select_related('sermon').order_by('-created_at')
     
     # Get user's messages
-    my_messages = MessageRecipient.objects.filter(
-        recipient=user, message__is_active=True
-    ).select_related('message', 'message__sender').order_by('-message__created_at')
+    from .message_queries import member_inbox_queryset
+
+    my_messages = member_inbox_queryset(user, group=None)
     
     context = {
         'my_events': my_events,

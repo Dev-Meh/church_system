@@ -1,105 +1,255 @@
-{% extends 'base.html' %}
+{% extends 'church_layout/app_shell.html' %}
 
-{% block title %}{{ group.name }}{% endblock %}
+{% block title %}{{ group.display_title }} - PHM-ARCC{% endblock %}
+{% block page_title %}{{ group.display_title }}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{{ group.name }}</p>{% endblock %}
 
-{% block content %}
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap cm-stack-sm">
-    <div>
-      <h3 class="mb-0">{{ group.name }}</h3>
-      <small class="text-muted">Aina: {{ group.get_group_type_display }}</small>
+{% block page_header_actions %}
+{% if can_manage_donations %}
+<a href="{% url 'members:group_donations' group.pk %}" class="btn-save" style="text-decoration:none;padding:8px 14px;border-radius:6px;">Simamia Michango</a>
+{% endif %}
+{% if can_send_messages %}
+<a href="{% url 'members:group_broadcast' group.pk %}" class="btn-save" style="text-decoration:none;padding:8px 14px;border-radius:6px;margin-left:0.35rem;">Matangazo</a>
+{% endif %}
+{% if is_plain_member %}
+<a href="{% url 'members:group_my_donations' group.pk %}" class="btn-save" style="text-decoration:none;padding:8px 14px;border-radius:6px;">Michango Yangu</a>
+<a href="{% url 'members:member_messages' %}?group={{ group.pk }}" class="btn-save" style="text-decoration:none;padding:8px 14px;border-radius:6px;margin-left:0.35rem;">Matangazo</a>
+{% endif %}
+<a href="{% url 'members:group_list' %}" class="btn-cancel" style="text-decoration:none;padding:8px 14px;border-radius:6px;margin-left:0.5rem;">← Rudi</a>
+{% endblock %}
+
+{% block page_extra_css %}
+<style>
+.detail-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:1.25rem;}
+@media(max-width:900px){.detail-grid{grid-template-columns:1fr;}}
+.panel{background:#152333;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;margin-bottom:1rem;}
+.panel-hd{padding:0.85rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);font-family:'Cinzel',serif;font-size:14px;color:#c8a84b;}
+.panel-bd{padding:1rem 1.25rem;}
+.member-row{display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:14px;}
+.member-row:last-child{border-bottom:none;}
+.member-name{font-weight:700;color:#fff;}
+.member-meta{font-size:12px;color:rgba(255,255,255,0.5);margin-top:0.2rem;line-height:1.4;}
+.role-pill{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);flex-shrink:0;}
+.panel-members-highlight{border-color:rgba(200,168,75,0.45);box-shadow:0 0 0 1px rgba(200,168,75,0.12);}
+.members-full{grid-column:1/-1;}
+.officer-grid{display:grid;grid-template-columns:1fr;gap:0.75rem;}
+.officer-row label{font-size:11px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,0.5);display:block;margin-bottom:0.35rem;}
+.officer-row select{width:100%;background:#0f1e2e;border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:8px;padding:8px 12px;}
+.add-row{display:grid;grid-template-columns:1fr auto auto;gap:0.5rem;align-items:end;}
+.add-row select,.add-row button{background:#0f1e2e;border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:8px;padding:8px 12px;font-size:13px;}
+.add-row button{background:rgba(200,168,75,0.15);border-color:rgba(200,168,75,0.35);color:#c8a84b;font-weight:700;cursor:pointer;}
+.activity-item{padding:0.85rem 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.panel-bd input,.panel-bd textarea,.panel-bd select{width:100%;background:#0f1e2e;border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:8px;padding:8px 12px;margin-bottom:0.5rem;}
+.btn-act{padding:8px 16px;background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.35);color:#2ecc71;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;}
+.btn-gold{padding:8px 16px;background:rgba(200,168,75,0.15);border:1px solid rgba(200,168,75,0.35);color:#c8a84b;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;}
+</style>
+{% endblock %}
+
+{% block page_content %}
+
+{% if is_plain_member %}
+<div class="panel" style="margin-bottom:1.25rem;">
+  <div class="panel-bd" style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5;">
+    Unaweza kuona <strong>shughuli za kundi</strong>, <strong>michango yako</strong> (ukishaandikwa na mhasibu), na <strong>matangazo</strong> ya {{ group.display_title }}.
+  </div>
+</div>
+{% elif not can_view_members %}
+<div class="panel" style="margin-bottom:1.25rem;">
+  <div class="panel-bd" style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5;">
+    Unaweza kuona uongozi na shughuli za {{ group.display_title }}. Orodha ya wanachama wengine inapatikana kwa mwenyekiti, katibu, na mhasibu pekee.
+  </div>
+</div>
+{% endif %}
+
+{% if can_view_members and is_mwenyekiti %}
+<div class="panel panel-members-highlight" style="margin-bottom:1.25rem;">
+  <div class="panel-hd">Wanachama wa {{ group.display_title }} ({{ memberships|length }})</div>
+  <div class="panel-bd">
+    <p style="font-size:13px;color:rgba(255,255,255,0.55);margin:0 0 0.75rem;">Orodha ya wanachama wako wa idara hii.</p>
+    {% for membership in memberships %}
+    <div class="member-row">
+      <div>
+        <div class="member-name">{{ membership.member.full_name }}</div>
+        <div class="member-meta">
+          {% if membership.member.phone_number %}{{ membership.member.phone_number }}{% else %}Simu haijawekwa{% endif %}
+          {% if membership.member.gender %} · {{ membership.member.get_gender_display }}{% endif %}
+          {% if membership.member.age %} · miaka {{ membership.member.age }}{% endif %}
+        </div>
+      </div>
+      <span class="role-pill">{{ membership.get_role_display }}</span>
     </div>
-    <a href="{% url 'members:group_list' %}" class="btn btn-outline-secondary">Makundi Yote</a>
+    {% empty %}
+    <p style="color:rgba(255,255,255,0.45);font-size:13px;">Hakuna wanachama bado. Ongeza wanachama hapa chini au wasiliana na mchungaji.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="detail-grid">
+  <div>
+    <div class="panel">
+      <div class="panel-hd">Uongozi wa Kundi</div>
+      <div class="panel-bd">
+        <p><strong style="color:rgba(255,255,255,0.5);">Mwenyekiti:</strong>
+          {% if group.leader %}{{ group.leader.full_name }}{% else %}Hajapangwa{% endif %}</p>
+        <p><strong style="color:rgba(255,255,255,0.5);">Katibu:</strong>
+          {% if group.secretary %}{{ group.secretary.full_name }}{% else %}Hajapangwa{% endif %}</p>
+        <p><strong style="color:rgba(255,255,255,0.5);">Mhasibu:</strong>
+          {% if group.accountant %}{{ group.accountant.full_name }}{% else %}Hajapangwa{% endif %}</p>
+        <p style="margin:0.75rem 0 0;"><strong style="color:rgba(255,255,255,0.5);">Maelezo:</strong><br>
+          {{ group.description|default:"—" }}</p>
+      </div>
+    </div>
+
+    {% if can_view_members and not is_mwenyekiti %}
+    <div class="panel">
+      <div class="panel-hd">Wanachama ({{ memberships|length }})</div>
+      <div class="panel-bd">
+        {% for membership in memberships %}
+        <div class="member-row">
+          <div>
+            <div class="member-name">{{ membership.member.full_name }}</div>
+            <div class="member-meta">
+              {% if membership.member.phone_number %}{{ membership.member.phone_number }}{% endif %}
+              {% if membership.member.gender %} · {{ membership.member.get_gender_display }}{% endif %}
+            </div>
+          </div>
+          <span class="role-pill">{{ membership.get_role_display }}</span>
+        </div>
+        {% empty %}
+        <p style="color:rgba(255,255,255,0.45);font-size:13px;">Hakuna wanachama bado.</p>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if can_assign_officers %}
+    <div class="panel">
+      <div class="panel-hd">Teua Mwenyekiti, Katibu na Mhasibu (Mchungaji)</div>
+      <div class="panel-bd">
+        <form method="post" action="{% url 'members:group_assign_officers' group.pk %}">
+          {% csrf_token %}
+          <div class="officer-grid">
+            <div class="officer-row">
+              <label>Mwenyekiti</label>
+              <select name="leader_id">
+                <option value="">— Ondoa —</option>
+                {% for p in officer_candidates %}
+                <option value="{{ p.id }}" {% if group.leader_id == p.id %}selected{% endif %}>{{ p.full_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="officer-row">
+              <label>Katibu wa kundi</label>
+              <select name="secretary_id">
+                <option value="">— Ondoa —</option>
+                {% for p in officer_candidates %}
+                <option value="{{ p.id }}" {% if group.secretary_id == p.id %}selected{% endif %}>{{ p.full_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="officer-row">
+              <label>Mhasibu wa kundi</label>
+              <select name="accountant_id">
+                <option value="">— Ondoa —</option>
+                {% for p in officer_candidates %}
+                <option value="{{ p.id }}" {% if group.accountant_id == p.id %}selected{% endif %}>{{ p.full_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn-gold" style="margin-top:0.75rem;">Hifadhi</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
   </div>
 
-  <div class="row">
-    <div class="col-lg-5 mb-3">
-      <div class="card shadow-sm mb-3">
-        <div class="card-header"><strong>Taarifa za Kundi</strong></div>
-        <div class="card-body">
-          <p><strong>Kiongozi:</strong> {% if group.leader %}{{ group.leader.full_name }}{% else %}Hajapangwa{% endif %}</p>
-          <p class="mb-0"><strong>Maelezo:</strong> {{ group.description|default:"-" }}</p>
-        </div>
+  <div>
+    {% if can_manage %}
+    <div class="panel">
+      <div class="panel-hd">Ongeza Mwanachama</div>
+      <div class="panel-bd">
+        <form method="post" action="{% url 'members:group_add_member' group.pk %}">
+          {% csrf_token %}
+          <div class="add-row">
+            <select name="member_id" required>
+              <option value="">Chagua mwanachama</option>
+              {% for person in available_members %}
+              <option value="{{ person.id }}">{{ person.full_name }} ({{ person.username }})</option>
+              {% endfor %}
+            </select>
+            <select name="role">
+              <option value="member">Mwanachama</option>
+              <option value="assistant">Msaidizi</option>
+              <option value="leader">Mwenyekiti</option>
+              <option value="secretary">Katibu</option>
+              <option value="accountant">Mhasibu</option>
+            </select>
+            <button type="submit">Ongeza</button>
+          </div>
+        </form>
       </div>
+    </div>
+    {% endif %}
 
-      <div class="card shadow-sm">
-        <div class="card-header"><strong>Wanachama wa Kundi</strong></div>
-        <div class="card-body">
-          <ul class="list-group list-group-flush">
-            {% for membership in memberships %}
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>{{ membership.member.full_name }}</span>
-                <span class="badge bg-secondary">{{ membership.get_role_display }}</span>
-              </li>
-            {% empty %}
-              <li class="list-group-item text-muted">Hakuna wanachama bado.</li>
-            {% endfor %}
-          </ul>
+    {% if can_manage_activities %}
+    <div class="panel">
+      <div class="panel-hd">Weka Shughuli</div>
+      <div class="panel-bd">
+        <form method="post" action="{% url 'members:group_add_activity' group.pk %}">
+          {% csrf_token %}
+          {{ activity_form.as_p }}
+          <button type="submit" class="btn-act">Hifadhi Shughuli</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-hd">Matangazo — {{ group.display_title }}</div>
+      <div class="panel-bd">
+        {% if can_send_messages %}
+        <p style="font-size:12px;color:rgba(255,255,255,0.5);margin:0 0 0.75rem;">
+          <a href="{% url 'members:group_broadcast' group.pk %}" style="color:#c8a84b;">Tuma tangazo jipya →</a>
+        </p>
+        {% endif %}
+        {% for msg in group_matangazo %}
+        <div class="activity-item">
+          <div style="display:flex;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
+            <strong>{{ msg.title }}</strong>
+            <span style="font-size:12px;color:rgba(255,255,255,0.45);">{{ msg.created_at|date:"d M Y" }}</span>
+          </div>
+          <p style="font-size:12px;color:rgba(255,255,255,0.5);margin:0.25rem 0;">
+            Kutoka: {{ msg.sender.full_name }}
+          </p>
+          <p style="font-size:13px;color:rgba(255,255,255,0.75);margin:0;">{{ msg.content|linebreaksbr }}</p>
         </div>
+        {% empty %}
+        <p style="color:rgba(255,255,255,0.45);font-size:13px;">Hakuna matangazo bado{% if can_send_messages %}. Tumia kiungo hapo juu kutuma{% endif %}.</p>
+        {% endfor %}
+        {% if group_matangazo %}
+        <p style="margin-top:0.75rem;font-size:12px;">
+          <a href="{% url 'members:member_messages' %}?group={{ group.pk }}" style="color:#c8a84b;">Fungua orodha kamili ya matangazo →</a>
+        </p>
+        {% endif %}
       </div>
     </div>
 
-    <div class="col-lg-7 mb-3">
-      {% if can_manage %}
-        <div class="card shadow-sm mb-3">
-          <div class="card-header"><strong>Ongeza Mwanachama</strong></div>
-          <div class="card-body">
-            <form method="post" action="{% url 'members:group_add_member' group.pk %}">
-              {% csrf_token %}
-              <div class="row g-2">
-                <div class="col-md-7">
-                  <select name="member_id" class="form-select" required>
-                    <option value="">Chagua mwanachama</option>
-                    {% for person in available_members %}
-                      <option value="{{ person.id }}">{{ person.full_name }} ({{ person.username }})</option>
-                    {% endfor %}
-                  </select>
-                </div>
-                <div class="col-md-3">
-                  <select name="role" class="form-select">
-                    <option value="member">Member</option>
-                    <option value="assistant">Assistant</option>
-                    <option value="leader">Leader</option>
-                  </select>
-                </div>
-                <div class="col-md-2 d-grid">
-                  <button type="submit" class="btn btn-primary">Ongeza</button>
-                </div>
-              </div>
-            </form>
+    <div class="panel">
+      <div class="panel-hd">Shughuli za Kundi</div>
+      <div class="panel-bd">
+        {% for activity in activities %}
+        <div class="activity-item">
+          <div style="display:flex;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;">
+            <strong>{{ activity.title }}</strong>
+            <span style="font-size:12px;color:rgba(255,255,255,0.45);">{{ activity.activity_date }}</span>
           </div>
+          <p style="font-size:13px;color:rgba(255,255,255,0.7);margin:0.35rem 0;">{{ activity.description }}</p>
         </div>
-
-        <div class="card shadow-sm mb-3">
-          <div class="card-header"><strong>Weka Shughuli ya Kundi</strong></div>
-          <div class="card-body">
-            <form method="post" action="{% url 'members:group_add_activity' group.pk %}">
-              {% csrf_token %}
-              {{ activity_form.as_p }}
-              <button type="submit" class="btn btn-success">Hifadhi Shughuli</button>
-            </form>
-          </div>
-        </div>
-      {% endif %}
-
-      <div class="card shadow-sm">
-        <div class="card-header"><strong>Shughuli za Kundi</strong></div>
-        <div class="card-body">
-          <ul class="list-group list-group-flush">
-            {% for activity in activities %}
-              <li class="list-group-item">
-                <div class="d-flex justify-content-between align-items-start flex-wrap cm-stack-sm gap-2">
-                  <strong>{{ activity.title }}</strong>
-                  <small class="text-muted">{{ activity.activity_date }}</small>
-                </div>
-                <div>{{ activity.description }}</div>
-                <small class="text-muted">Imewekwa na: {{ activity.created_by.full_name|default:"N/A" }}</small>
-              </li>
-            {% empty %}
-              <li class="list-group-item text-muted">Hakuna shughuli bado.</li>
-            {% endfor %}
-          </ul>
-        </div>
+        {% empty %}
+        <p style="color:rgba(255,255,255,0.45);font-size:13px;">Hakuna shughuli bado.</p>
+        {% endfor %}
       </div>
     </div>
   </div>

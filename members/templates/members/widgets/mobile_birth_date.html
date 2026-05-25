@@ -1,0 +1,7 @@
+<div{% include "django/forms/widgets/attrs.html" %}>
+  <div class="dob-pickers">
+    <div class="dob-part dob-year">{% include widget.subwidgets.0.template_name with widget=widget.subwidgets.0 %}</div>
+    <div class="dob-part dob-month">{% include widget.subwidgets.1.template_name with widget=widget.subwidgets.1 %}</div>
+    <div class="dob-part dob-day">{% include widget.subwidgets.2.template_name with widget=widget.subwidgets.2 %}</div>
+  </div>
+</div>

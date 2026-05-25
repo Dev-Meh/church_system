@@ -118,6 +118,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Serve uploaded files via Django when True (local dev, or if Nginx /media is not set up).
+# Production: prefer Nginx alias; set SERVE_MEDIA_FILES=True as fallback.
+SERVE_MEDIA_FILES = os.getenv('SERVE_MEDIA_FILES', 'True' if DEBUG else 'False') == 'True'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom User Model

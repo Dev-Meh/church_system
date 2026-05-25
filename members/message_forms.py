@@ -7,7 +7,7 @@ class MessageForm(forms.ModelForm):
     
     class Meta:
         model = Message
-        fields = ['title', 'content', 'priority', 'send_to_all', 'target_roles']
+        fields = ['title', 'content', 'send_to_all', 'target_roles']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -17,9 +17,6 @@ class MessageForm(forms.ModelForm):
                 'class': 'form-control',
                 'rows': 6,
                 'placeholder': 'Write your message here...'
-            }),
-            'priority': forms.Select(attrs={
-                'class': 'form-control'
             }),
             'send_to_all': forms.CheckboxInput(attrs={
                 'class': 'form-check-input'
@@ -57,12 +54,35 @@ class MessageForm(forms.ModelForm):
         
         return cleaned_data
 
+class GroupMessageForm(forms.ModelForm):
+    """Matangazo kwa wanachama wa idara (kundi)."""
+
+    class Meta:
+        model = Message
+        fields = ["title", "content"]
+        widgets = {
+            "title": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Kichwa cha tangazo",
+                }
+            ),
+            "content": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 6,
+                    "placeholder": "Andika tangazo hapa...",
+                }
+            ),
+        }
+
+
 class AnnouncementForm(forms.ModelForm):
     """Form for creating public announcements"""
     
     class Meta:
         model = Announcement
-        fields = ['title', 'content', 'priority', 'expires_at']
+        fields = ['title', 'content', 'expires_at']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -72,9 +92,6 @@ class AnnouncementForm(forms.ModelForm):
                 'class': 'form-control',
                 'rows': 6,
                 'placeholder': 'Write your announcement here...'
-            }),
-            'priority': forms.Select(attrs={
-                'class': 'form-control'
             }),
             'expires_at': forms.DateTimeInput(attrs={
                 'class': 'form-control',

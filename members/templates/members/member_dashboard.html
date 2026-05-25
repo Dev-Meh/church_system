@@ -67,8 +67,8 @@
   </div>
 </div>
 
-<div class="panel">
-  <div class="panel-hd">Donation Trend (Last 6 Months)</div>
+<div class="chart-panel">
+  <div class="panel-hd">Michango yangu — miezi 6 (histogram)</div>
   <div class="panel-bd">
     <div class="chart-wrap"><canvas id="memberDonationChart"></canvas></div>
   </div>
@@ -120,36 +120,18 @@
 {% endblock %}
 
 {% block page_extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% include 'church_layout/chart_histogram_assets.html' %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const chartCtx = document.getElementById('memberDonationChart');
   const labels = JSON.parse('{{ member_donation_chart_labels|escapejs }}');
   const data = JSON.parse('{{ member_donation_chart_data|escapejs }}');
-  if (!chartCtx) return;
-  new Chart(chartCtx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'My Donations (TZS)',
-        data: data,
-        borderColor: '#c8a84b',
-        backgroundColor: 'rgba(200, 168, 75, 0.18)',
-        borderWidth: 2,
-        tension: 0.35,
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#d8e2ef' } } },
-      scales: {
-        x: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } },
-        y: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } }
-      }
-    }
+  ChurchHistogram.create(document.getElementById('memberDonationChart'), {
+    labels: labels,
+    data: data,
+    datasetLabel: 'Michango yangu (TZS)',
+    colorScheme: 'gold',
+    formatY: 'currency',
+    emptyText: 'Hakuna michango yako katika miezi 6 iliyopita.',
   });
 });
 </script>

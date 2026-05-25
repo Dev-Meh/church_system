@@ -11,9 +11,10 @@ from django.http import JsonResponse
 from django.db.models.functions import TruncMonth
 from datetime import timedelta
 import json
-from .models import ChurchUser
+from .models import ChurchUser, UniversityStudentRecord
 from donations.models import Donation, DonationCampaign
 from .models_message import MessageRecipient
+from .message_queries import member_inbox_queryset, church_inbox_unread_count
 from .permissions import (
     can_manage_church_communications,
     can_create_church_announcements,
@@ -32,7 +33,7 @@ def dashboard(request):
     """Role-based dashboard that adapts to user role"""
     user = request.user
 
-    if user.role == 'admin':
+    if getattr(user, 'is_app_admin', False) or user.role == 'admin':
         return pastor_dashboard(request)
 
     if user.role == 'pastor':
@@ -99,6 +100,12 @@ def pastor_dashboard(request):
 
     accountant_users = ChurchUser.objects.filter(role='accountant').order_by('first_name', 'last_name')
     secretary_users = ChurchUser.objects.filter(role='secretary').order_by('first_name', 'last_name')
+    university_students_studying = UniversityStudentRecord.objects.filter(
+        status='studying'
+    ).count()
+    university_students_alumni = UniversityStudentRecord.objects.filter(
+        status='completed'
+    ).count()
     
     # Donation trend (last 6 months)
     six_months_ago = timezone.now().date() - timedelta(days=180)
@@ -194,6 +201,8 @@ def pastor_dashboard(request):
         'donation_chart_data': json.dumps(donation_chart_data),
         'registration_chart_labels': json.dumps(registration_chart_labels),
         'registration_chart_data': json.dumps(registration_chart_data),
+        'university_students_studying': university_students_studying,
+        'university_students_alumni': university_students_alumni,
     }
     
     return render(request, 'members/pastor_dashboard.html', context)
@@ -212,16 +221,10 @@ def member_dashboard(request):
     # Available campaigns
     available_campaigns = DonationCampaign.objects.filter(status='active').order_by('-created_at')[:5]
     
-    # Unread messages count
-    unread_messages_count = MessageRecipient.objects.filter(
-        recipient=user,
-        is_read=False
-    ).count()
-    
-    # Recent messages for this member
-    member_messages = MessageRecipient.objects.filter(
-        recipient=user
-    ).select_related('message', 'message__sender').order_by('-message__created_at')[:5]
+    # Ujumbe wa kanisa zima tu (si matangazo ya idara)
+    unread_messages_count = church_inbox_unread_count(user)
+
+    member_messages = member_inbox_queryset(user, group=None)[:5]
 
     # Left navigation counters
     nav_events_count = Event.objects.filter(is_published=True).count()
@@ -229,7 +232,7 @@ def member_dashboard(request):
     nav_prayers_count = PrayerRequest.objects.filter(
         visibility__in=['public', 'leadership']
     ).exclude(status='closed').count()
-    nav_messages_count = MessageRecipient.objects.filter(recipient=user).count()
+    nav_messages_count = member_inbox_queryset(user, group=None).count()
 
     # Member personal donation trend (last 6 months)
     six_months_ago = timezone.now().date() - timedelta(days=180)

@@ -3,7 +3,11 @@
 
 {% block title %}{% church_t 'view_messages' %} - PHM-ARCC{% endblock %}
 {% block page_title %}{% church_t 'view_messages' %}{% endblock %}
-{% block page_subtitle %}<p class="topnav-subtitle">PHM-ARCC Iyumbu Dodoma</p>{% endblock %}
+{% block page_subtitle %}
+<p class="topnav-subtitle">
+  {% if filter_group %}Matangazo ya {{ filter_group.display_title }} pekee{% else %}Ujumbe kutoka kwa uongozi wa kanisa — si matangazo za idara{% endif %}
+</p>
+{% endblock %}
 
 {% block page_extra_css %}
 <style>
@@ -18,11 +22,6 @@
 .message-title { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 0.5rem; }
 .message-meta { display: flex; flex-direction: column; gap: 0.25rem; font-size: 12px; color: rgba(255,255,255,0.6); }
 .message-sender { font-weight: 600; color: #c8a84b; }
-.message-priority { padding: 2px 8px; border-radius: 12px; font-weight: 700; text-transform: uppercase; font-size: 10px; }
-.priority-low { background: rgba(76,175,80,0.2); color: #4caf50; }
-.priority-medium { background: rgba(255,193,7,0.2); color: #ffc107; }
-.priority-high { background: rgba(255,152,0,0.2); color: #ff9800; }
-.priority-urgent { background: rgba(244,67,54,0.2); color: #f44336; }
 .message-content { color: rgba(255,255,255,0.8); line-height: 1.6; margin-bottom: 1rem; }
 .message-footer { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: rgba(255,255,255,0.5); }
 .read-status { display: flex; align-items: center; gap: 0.5rem; }
@@ -41,10 +40,21 @@
 {% endblock %}
 
 {% block page_content %}
+{% if filter_group %}
+<p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:1rem;">
+  Hizi ni matangazo ya <strong style="color:#c8a84b;">{{ filter_group.display_title }}</strong> tu.
+  <a href="{% url 'members:group_detail' filter_group.pk %}" style="color:#c8a84b;margin-left:0.5rem;">← Rudi idara</a>
+  · <a href="{% url 'members:member_messages' %}" style="color:#c8a84b;">Ujumbe wa kanisa</a>
+</p>
+{% else %}
+<p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:1rem;">
+  Matangazo ya <strong>Vijana</strong> na <strong>Akina Mama</strong> yanaonekana kwenye ukurasa wa idara husika (menyu <em>Idara</em>), si hapa.
+</p>
+{% endif %}
 <div class="panel">
   <div class="panel-hdr">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-    <span>Messages from Church Leadership</span>
+    <span>{% if filter_group %}Matangazo — {{ filter_group.display_title }}{% else %}Ujumbe wa Kanisa{% endif %}</span>
   </div>
   <div class="panel-body">
     {% if message_recipients %}
@@ -56,7 +66,6 @@
             <div class="message-meta">
               <span>From: <span class="message-sender">{{ recipient.message.sender.first_name }} {{ recipient.message.sender.last_name }}</span></span>
               <span>Sent: {{ recipient.message.created_at|date:"M d, Y h:i A" }}</span>
-              <span>Priority: <span class="message-priority priority-{{ recipient.message.priority }}">{{ recipient.message.get_priority_display }}</span></span>
             </div>
           </div>
           <div class="read-status">

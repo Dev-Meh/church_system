@@ -1,37 +1,52 @@
-{% extends 'base.html' %}
+{% extends 'church_layout/app_shell.html' %}
+{% load i18n_church %}
 
-{% block title %}Makundi ya Kanisa{% endblock %}
+{% block title %}{% church_t 'church_departments_page' %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_t 'church_departments_page' %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{% church_t 'church_departments_subtitle' %}</p>{% endblock %}
 
-{% block content %}
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap cm-stack-sm">
-    <h3>Makundi ya Kanisa</h3>
-    {% if user.role == 'pastor' or user.role == 'admin' %}
-      <a href="{% url 'members:group_create' %}" class="btn btn-primary">Unda Kundi</a>
+{% block page_header_actions %}
+{% if can_create_groups %}
+<a href="{% url 'members:group_create' %}" class="btn-save" style="text-decoration:none;padding:8px 16px;border-radius:6px;">+ Unda Kundi</a>
+{% endif %}
+{% endblock %}
+
+{% block page_extra_css %}
+<style>
+.groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;}
+.group-card{background:#152333;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.25rem;display:flex;flex-direction:column;gap:0.5rem;}
+.group-card h3{font-family:'Cinzel',serif;font-size:17px;color:#c8a84b;margin:0;}
+.group-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:4px 10px;border-radius:999px;background:rgba(200,168,75,0.15);color:#c8a84b;border:1px solid rgba(200,168,75,0.35);}
+.group-meta{font-size:13px;color:rgba(255,255,255,0.55);}
+.group-desc{font-size:13px;color:rgba(255,255,255,0.7);flex:1;line-height:1.45;}
+.btn-open{display:inline-flex;margin-top:0.5rem;padding:8px 14px;background:rgba(200,168,75,0.12);border:1px solid rgba(200,168,75,0.3);border-radius:6px;color:#c8a84b;font-size:12px;font-weight:700;text-decoration:none;align-self:flex-start;}
+.empty-box{padding:2rem;text-align:center;color:rgba(255,255,255,0.5);background:#152333;border-radius:12px;border:1px dashed rgba(255,255,255,0.15);}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="groups-grid">
+  {% for group in groups %}
+  <article class="group-card">
+    <h3>{{ group.display_title }}</h3>
+    <p class="group-meta" style="margin-top:0;font-size:12px;opacity:0.65;">{{ group.name }}</p>
+    <p class="group-meta">
+      Mwenyekiti: {% if group.leader %}{{ group.leader.full_name }}{% else %}—{% endif %}
+      · Katibu: {% if group.secretary %}{{ group.secretary.first_name }}{% else %}—{% endif %}
+      · Mhasibu: {% if group.accountant %}{{ group.accountant.first_name }}{% else %}—{% endif %}
+      · Wanachama: {{ group.member_count }}
+    </p>
+    <p class="group-desc">{{ group.description|default:"Hakuna maelezo."|truncatewords:18 }}</p>
+    <a href="{% url 'members:group_detail' group.pk %}" class="btn-open">Fungua {{ group.display_title }} →</a>
+  </article>
+  {% empty %}
+  <div class="empty-box" style="grid-column:1/-1;">
+    Hakuna kundi bado.
+    {% if can_create_groups %}
+    <p style="margin-top:0.75rem;"><a href="{% url 'members:group_create' %}" style="color:#c8a84b;">Unda kundi la kwanza</a>
+    au endesha: <code style="color:#c8a84b;">python manage.py setup_church_groups</code></p>
     {% endif %}
   </div>
-
-  <div class="row">
-    {% for group in groups %}
-      <div class="col-md-6 col-lg-4 mb-3">
-        <div class="card h-100 shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">{{ group.name }}</h5>
-            <p class="text-muted mb-1">Aina: {{ group.get_group_type_display }}</p>
-            <p class="text-muted mb-1">
-              Kiongozi:
-              {% if group.leader %}{{ group.leader.full_name }}{% else %}Hajapangwa{% endif %}
-            </p>
-            <p class="card-text">{{ group.description|default:"Hakuna maelezo."|truncatewords:20 }}</p>
-            <a href="{% url 'members:group_detail' group.pk %}" class="btn btn-outline-primary btn-sm">Fungua Kundi</a>
-          </div>
-        </div>
-      </div>
-    {% empty %}
-      <div class="col-12">
-        <div class="alert alert-info">Hakuna kundi lililosajiliwa kwa sasa.</div>
-      </div>
-    {% endfor %}
-  </div>
+  {% endfor %}
 </div>
 {% endblock %}

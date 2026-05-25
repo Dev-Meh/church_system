@@ -12,6 +12,7 @@ from .models_message import Message, MessageRecipient, Announcement
 from .message_forms import MessageForm, AnnouncementForm
 from .sms_service import sms_service
 from .permissions import can_manage_church_communications, can_create_church_announcements
+from .message_queries import member_inbox_queryset
 
 @login_required(login_url='members:login')
 def message_center(request):
@@ -150,11 +151,27 @@ class MessageDetailView(LoginRequiredMixin, DetailView):
 
 @login_required(login_url='members:login')
 def member_messages(request):
-    """Show messages received by current member"""
-    # Get all messages for this member
-    message_recipients = MessageRecipient.objects.filter(
-        recipient=request.user
-    ).select_related('message', 'message__sender').order_by('-message__created_at')
+    """Ujumbe wa kanisa na matangazo yaliyotumwa kwa mwanachama."""
+    from .models import ChurchGroup
+    from .group_permissions import can_access_group
+
+    filter_group = None
+    filter_group_obj = None
+    raw_group = request.GET.get("group")
+    if raw_group:
+        try:
+            gid = int(raw_group)
+            group = ChurchGroup.objects.filter(pk=gid, is_active=True).first()
+            if group and can_access_group(request.user, group):
+                filter_group = gid
+                filter_group_obj = group
+        except (TypeError, ValueError):
+            pass
+
+    message_recipients = member_inbox_queryset(
+        request.user,
+        group=filter_group_obj,
+    )
     
     # Mark all as read
     message_recipients.filter(is_read=False).update(
@@ -163,10 +180,11 @@ def member_messages(request):
     )
     
     context = {
-        'message_recipients': message_recipients,
+        "message_recipients": message_recipients,
+        "filter_group": filter_group_obj,
     }
-    
-    return render(request, 'members/member_messages.html', context)
+
+    return render(request, "members/member_messages.html", context)
 
 @login_required(login_url='members:login')
 def mark_message_read(request, recipient_id):

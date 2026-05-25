@@ -18,7 +18,6 @@
 .message-meta { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.35rem; }
 .message-content { color: rgba(255,255,255,0.8); line-height: 1.5; margin-bottom: 0.75rem; }
 .message-stats { display: flex; gap: 1.5rem; font-size: 11px; color: rgba(255,255,255,0.6); flex-wrap: wrap; }
-.priority-low { color: #4caf50; } .priority-medium { color: #ffc107; } .priority-high { color: #ff9800; } .priority-urgent { color: #f44336; }
 .action-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; margin: 0 8px 8px 0; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 12px; font-weight: 700; text-decoration: none; text-transform: uppercase; }
 .action-btn:hover { background: rgba(200,168,75,0.15); color: #c8a84b; }
 </style>
@@ -52,7 +51,6 @@
       <div class="message-item">
         <div class="message-title">{{ message.title }}</div>
         <div class="message-meta">
-          <span>Priority: <span class="priority-{{ message.priority }}">{{ message.get_priority_display }}</span></span>
           <span>{{ message.created_at|date:"M d, Y h:i A" }}</span>
         </div>
         <div class="message-content">{{ message.content|truncatechars:150 }}</div>

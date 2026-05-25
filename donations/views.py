@@ -25,13 +25,36 @@ from .forms import (
 )
 
 
+def _is_church_wide_accountant(user):
+    from members.group_permissions import is_church_wide_accountant
+    return is_church_wide_accountant(user)
+
+
 def _is_accountant(user):
-    return user.role == 'accountant' and bool(getattr(user, 'can_post_member_donations', False))
+    from members.group_permissions import (
+        groups_accounted_by,
+        is_church_wide_accountant,
+    )
+    if is_church_wide_accountant(user):
+        return True
+    return groups_accounted_by(user).exists()
+
+
+def _is_group_only_accountant(user):
+    from members.group_permissions import is_group_only_accountant
+    return is_group_only_accountant(user)
+
+
+def _allowed_donor_ids(user):
+    from members.group_permissions import get_scoped_donor_ids_for_user
+    return get_scoped_donor_ids_for_user(user)
 
 
 def _can_view_all_donations(user):
     from members.permissions import has_church_leadership
-    return _is_accountant(user) or has_church_leadership(user)
+    if _is_group_only_accountant(user):
+        return True
+    return _is_church_wide_accountant(user) or has_church_leadership(user)
 
 
 def _can_publish_donation_notice(user):
@@ -41,11 +64,13 @@ def _can_publish_donation_notice(user):
 
 def _can_view_tithe_list(user):
     from members.permissions import has_church_leadership
-    return has_church_leadership(user) or _is_accountant(user)
+    if _is_group_only_accountant(user):
+        return False
+    return has_church_leadership(user) or _is_church_wide_accountant(user)
 
 
 def _can_manage_cash_book(user):
-    return user.role == 'accountant' and bool(getattr(user, 'can_post_member_donations', False))
+    return _is_church_wide_accountant(user)
 
 
 def _can_view_cash_book(user):
@@ -136,6 +161,19 @@ def _get_accountant_sheet_rows():
 @login_required
 def donation_home(request):
     """Donation page: manual entry for accountant, summary for member."""
+    if _is_group_only_accountant(request.user):
+        from members.group_permissions import groups_accounted_by
+        group = groups_accounted_by(request.user).first()
+        if group:
+            messages.info(
+                request,
+                'Unaingiza michango ya wanachama wa kundi lako tu.',
+            )
+            from django.urls import reverse
+            return redirect('members:group_donations', pk=group.pk)
+        messages.error(request, 'Hujapangiwa kundi la mhasibu.')
+        return redirect('members:group_list')
+
     campaigns = DonationCampaign.objects.filter(status='active').order_by('-created_at')
     categories = DonationCategory.objects.all()
     is_accountant = _is_accountant(request.user)
@@ -158,16 +196,34 @@ def donation_home(request):
                 notice.save()
                 messages.success(request, 'Taarifa ya mchango imetumwa kikamilifu.')
                 return redirect('donations:home')
-            form = AccountantDonationEntryForm() if is_accountant else None
-            sheet_form = AccountantSheetEntryForm() if is_accountant else None
+            donor_scope = _allowed_donor_ids(request.user)
+            form = (
+                AccountantDonationEntryForm(allowed_donor_ids=donor_scope)
+                if is_accountant
+                else None
+            )
+            sheet_form = (
+                AccountantSheetEntryForm(allowed_donor_ids=donor_scope)
+                if is_accountant
+                else None
+            )
         else:
             if not is_accountant:
                 messages.error(request, 'Ni mhasibu mwenye access tu anaweza kuingiza michango manually.')
                 return redirect('donations:home')
 
             if action == 'sheet_entry':
-                sheet_form = AccountantSheetEntryForm(request.POST)
-                form = AccountantDonationEntryForm()
+                if _is_group_only_accountant(request.user):
+                    messages.error(
+                        request,
+                        'Mhasibu wa kundi hutumia ukurasa wa Michango wa Kundi.',
+                    )
+                    return redirect('donations:home')
+                donor_scope = _allowed_donor_ids(request.user)
+                sheet_form = AccountantSheetEntryForm(
+                    request.POST, allowed_donor_ids=donor_scope
+                )
+                form = AccountantDonationEntryForm(allowed_donor_ids=donor_scope)
                 if sheet_form.is_valid():
                     tithe_donor = sheet_form.cleaned_data.get('donor')
                     construction_donor = sheet_form.cleaned_data.get('construction_donor')
@@ -292,8 +348,11 @@ def donation_home(request):
                     )
                     return redirect('donations:home')
             else:
-                form = AccountantDonationEntryForm(request.POST)
-                sheet_form = AccountantSheetEntryForm()
+                donor_scope = _allowed_donor_ids(request.user)
+                form = AccountantDonationEntryForm(
+                    request.POST, allowed_donor_ids=donor_scope
+                )
+                sheet_form = AccountantSheetEntryForm(allowed_donor_ids=donor_scope)
                 if form.is_valid():
                     donation = form.save(commit=False)
                     if donation.donation_type != 'tithe':
@@ -301,6 +360,14 @@ def donation_home(request):
                         donation.donor_name = 'Michango ya Pamoja'
                     elif donation.donor and not donation.donor_name:
                         donation.donor_name = donation.donor.full_name
+                    if donor_scope is not None and donation.donor_id:
+                        from members.group_permissions import groups_accounted_by
+                        donation.recorded_for_group = groups_accounted_by(
+                            request.user
+                        ).filter(
+                            memberships__member_id=donation.donor_id,
+                            memberships__is_active=True,
+                        ).first() or groups_accounted_by(request.user).first()
                     donation.status = 'completed'
                     donation.processed_by = request.user
                     donation.processed_date = timezone.now()
@@ -309,8 +376,17 @@ def donation_home(request):
                     return redirect('donations:home')
             notice_form = DonationNoticeForm() if can_publish_notice else None
     else:
-        form = AccountantDonationEntryForm() if is_accountant else None
-        sheet_form = AccountantSheetEntryForm() if is_accountant else None
+        donor_scope = _allowed_donor_ids(request.user)
+        form = (
+            AccountantDonationEntryForm(allowed_donor_ids=donor_scope)
+            if is_accountant
+            else None
+        )
+        sheet_form = (
+            AccountantSheetEntryForm(allowed_donor_ids=donor_scope)
+            if is_accountant
+            else None
+        )
         notice_form = DonationNoticeForm() if can_publish_notice else None
 
     # Show active donation notices (all members, or targeted member only).
@@ -402,9 +478,13 @@ class DonationHistoryView(LoginRequiredMixin, ListView):
     paginate_by = 10
     
     def get_queryset(self):
-        base_qs = Donation.objects.select_related('donor').order_by('-donation_date')
+        from members.group_permissions import donations_queryset_for_user
+
+        base_qs = Donation.objects.select_related('donor', 'recorded_for_group').order_by(
+            '-donation_date'
+        )
         if _can_view_all_donations(self.request.user):
-            return base_qs
+            return donations_queryset_for_user(self.request.user, base_qs)
         return base_qs.filter(donor=self.request.user)
 
     def get_context_data(self, **kwargs):

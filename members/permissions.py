@@ -11,7 +11,7 @@ def _role(user):
 
 
 def is_church_admin(user):
-    return _role(user) == 'admin'
+    return _role(user) == 'admin' or bool(getattr(user, 'is_superuser', False))
 
 
 def is_verified_pastor(user):
@@ -63,4 +63,11 @@ def can_appoint_secretary(user):
 
 def can_manage_members(user):
     """Verified pastor or admin: member list, activate/deactivate, reset passwords."""
+    return has_church_leadership(user)
+
+
+def can_manage_church_groups(user):
+    """Create/edit church groups: pastor, admin, or secretary."""
+    if _role(user) == 'secretary':
+        return True
     return has_church_leadership(user)

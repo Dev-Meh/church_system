@@ -1,0 +1,6 @@
+<div class="user-avatar-wrap {{ css_class }}" style="width:{{ size }}px;height:{{ size }}px;min-width:{{ size }}px;flex-shrink:0;">
+{% if user.profile_picture and user.profile_picture.name %}
+  <img src="{{ user.profile_picture.url }}?v={{ user.profile_picture.name|urlencode }}" alt="{{ user.get_full_name }}" class="user-avatar-photo" width="{{ size }}" height="{{ size }}" onerror="this.style.display='none';var f=this.parentElement.querySelector('.user-avatar-fallback');if(f)f.style.display='flex';">
+{% endif %}
+  <div class="user-avatar-fallback" style="width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#c8a84b);align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:600;color:#fff;font-size:{% if size >= 64 %}22{% elif size >= 40 %}14{% else %}11{% endif %}px;{% if user.profile_picture and user.profile_picture.name %}display:none{% else %}display:flex{% endif %};">{{ initials }}</div>
+</div>

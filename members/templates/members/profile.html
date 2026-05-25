@@ -1,5 +1,5 @@
 {% extends 'church_layout/app_shell.html' %}
-{% load i18n_church %}
+{% load i18n_church member_extras %}
 
 {% block title %}My Profile - PHM-ARCC CMS{% endblock %}
 {% block page_title %}My Profile{% endblock %}
@@ -12,8 +12,14 @@
 {% block page_extra_css %}
 <style>
 .profile-card{background:#152333;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:2rem;}
-.profile-header{display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap;}
-.profile-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#c8a84b);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:28px;font-weight:600;color:#fff;}
+.profile-header{display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap;position:relative;}
+.profile-header .user-avatar-wrap{flex-shrink:0;}
+@media (max-width:768px){
+  .profile-header{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:0.75rem 1rem;align-items:start;padding-top:0.25rem;}
+  .profile-header .user-avatar-wrap{grid-column:2;grid-row:1;justify-self:end;}
+  .profile-header .btn-edit{grid-column:1;grid-row:1;align-self:center;margin-left:0;}
+  .profile-header .profile-info{grid-column:1/-1;grid-row:2;}
+}
 .profile-info h1{font-family:'Cinzel',serif;font-size:24px;color:#c8a84b;margin-bottom:0.5rem;}
 .profile-info p{color:rgba(255,255,255,0.6);font-size:14px;}
 .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;}
@@ -28,10 +34,13 @@
 {% block page_content %}
 <div class="profile-card">
   <div class="profile-header">
-    <div class="profile-avatar">{{ member.first_name|slice:":1" }}{{ member.last_name|slice:":1" }}</div>
+    {% user_avatar member 80 %}
     <div class="profile-info">
       <h1>{{ member.first_name }} {{ member.last_name }}</h1>
       <p>Member since {{ member.date_joined|date:"F Y" }}</p>
+      {% if not member.profile_picture %}
+      <p style="margin-top:0.35rem;font-size:13px;"><a href="{% url 'profile_edit' %}" style="color:#c8a84b;">Ongeza picha ya wasifu</a></p>
+      {% endif %}
     </div>
     <a href="{% url 'profile_edit' %}" class="btn-edit">Edit Profile</a>
   </div>

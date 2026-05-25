@@ -1,0 +1,63 @@
+{% extends 'church_layout/app_shell.html' %}
+
+{% block title %}{{ record.member.full_name }} — Chuo{% endblock %}
+{% block page_title %}{{ record.member.full_name }}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{{ record.course }} · {{ record.institution }}</p>{% endblock %}
+
+{% block page_header_actions %}
+<a href="{% url 'members:university_student_edit' record.pk %}" class="btn-save" style="text-decoration:none;padding:8px 14px;border-radius:6px;">Hariri</a>
+<a href="{% url 'members:university_student_list' %}" class="btn-cancel" style="text-decoration:none;padding:8px 14px;border-radius:6px;margin-left:0.35rem;">← Orodha</a>
+{% endblock %}
+
+{% block page_extra_css %}
+<style>
+.panel{background:#152333;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+.row{display:grid;grid-template-columns:140px 1fr;gap:0.5rem 1rem;font-size:14px;padding:0.4rem 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.row:last-child{border-bottom:none;}
+.lbl{color:rgba(255,255,255,0.5);font-size:12px;}
+.val{color:#fff;}
+.badge-studying{color:#5dade2;}.badge-completed{color:#2ecc71;}
+.btn-gold{padding:8px 16px;background:rgba(200,168,75,0.15);border:1px solid rgba(200,168,75,0.35);color:#c8a84b;border-radius:8px;font-weight:700;cursor:pointer;}
+.hist-row{padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="panel">
+  <div class="row"><span class="lbl">Hali</span><span class="val badge-{{ record.status }}">{{ record.get_status_display }}</span></div>
+  <div class="row"><span class="lbl">Chuo</span><span class="val">{{ record.institution }}</span></div>
+  <div class="row"><span class="lbl">Kozi</span><span class="val">{{ record.course }}</span></div>
+  {% if record.faculty %}<div class="row"><span class="lbl">Kitivo</span><span class="val">{{ record.faculty }}</span></div>{% endif %}
+  <div class="row"><span class="lbl">Kiwango</span><span class="val">{{ record.get_level_display }}</span></div>
+  {% if record.year_started %}<div class="row"><span class="lbl">Alianza</span><span class="val">{{ record.year_started }}</span></div>{% endif %}
+  {% if record.expected_completion_year %}<div class="row"><span class="lbl">Kutarajiwa kuhitimu</span><span class="val">{{ record.expected_completion_year }}</span></div>{% endif %}
+  {% if record.year_completed %}<div class="row"><span class="lbl">Alihitimu</span><span class="val">{{ record.year_completed }}</span></div>{% endif %}
+  <div class="row"><span class="lbl">Simu</span><span class="val">{{ record.member.phone_number|default:"—" }}</span></div>
+  {% if record.notes %}<div class="row"><span class="lbl">Maelezo</span><span class="val">{{ record.notes|linebreaksbr }}</span></div>{% endif %}
+  <div class="row"><span class="lbl">Imeandikwa na</span><span class="val">{% if record.recorded_by %}{{ record.recorded_by.full_name }}{% else %}—{% endif %} · {{ record.updated_at|date:"d M Y" }}</span></div>
+</div>
+
+{% if record.status == 'studying' %}
+<div class="panel">
+  <p style="font-size:13px;color:rgba(255,255,255,0.65);margin:0 0 0.75rem;">Mwanafunzi akimaliza, weka hali <strong>Amehitimu</strong> — rekodi yake na kozi itabaki kwenye database.</p>
+  <form method="post" action="{% url 'members:university_student_mark_completed' record.pk %}" style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+    {% csrf_token %}
+    <label style="font-size:12px;color:rgba(255,255,255,0.5);">Mwaka wa kuhitimu:</label>
+    <input type="number" name="year_completed" value="{{ record.expected_completion_year }}" min="1990" max="2100" style="width:100px;background:#0f1e2e;border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:8px;padding:6px 10px;">
+    <button type="submit" class="btn-gold">Weka Amehitimu</button>
+  </form>
+</div>
+{% endif %}
+
+{% if member_history|length > 1 %}
+<div class="panel">
+  <h3 style="font-family:'Cinzel',serif;color:#c8a84b;font-size:15px;margin:0 0 0.75rem;">Historia ya elimu ya {{ record.member.first_name }}</h3>
+  {% for h in member_history %}
+  <div class="hist-row">
+    <a href="{% url 'members:university_student_detail' h.pk %}" style="color:#c8a84b;font-weight:600;">{{ h.course }}</a>
+    — {{ h.institution }} ({{ h.get_status_display }}{% if h.year_completed %}, {{ h.year_completed }}{% endif %})
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

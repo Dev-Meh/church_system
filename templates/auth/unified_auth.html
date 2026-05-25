@@ -35,6 +35,36 @@
         z-index: 0;
     }
 
+    .dob-pickers {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        width: 100%;
+    }
+    .dob-pickers .dob-select {
+        width: 100%;
+        min-height: 44px;
+        font-size: 16px;
+    }
+    .dob-part label.dob-mini {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #5a6a7a;
+        margin-bottom: 0.25rem;
+    }
+    @media (min-width: 480px) {
+        .dob-pickers {
+            flex-direction: row;
+            align-items: flex-end;
+        }
+        .dob-year { flex: 1.1; }
+        .dob-month { flex: 1.2; }
+        .dob-day { flex: 0.75; }
+    }
+
     .auth-card {
         background: #ffffff;
         border-radius: 16px;
@@ -521,7 +551,8 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">{% church_t 'date_of_birth' %}</label>
+                                <label class="form-label">{% church_t 'date_of_birth' %}</label>
+                                <p class="text-muted" style="font-size:12px;margin:-0.25rem 0 0.5rem;">Chagua <strong>mwaka</strong>, kisha mwezi na siku.</p>
                                 {{ form.date_of_birth }}
                                 {% if form.date_of_birth.errors %}<div class="text-danger">{% for e in form.date_of_birth.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
                             </div>

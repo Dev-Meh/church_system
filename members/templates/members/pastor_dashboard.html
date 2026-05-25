@@ -40,15 +40,20 @@
   <div class="pd-card"><div class="pd-label">Total Donations</div><div class="pd-value">{{ total_donations|floatformat:0 }}</div></div>
   <div class="pd-card"><div class="pd-label">This Month Donations</div><div class="pd-value">{{ donations_this_month|floatformat:0 }}</div></div>
   <div class="pd-card"><div class="pd-label">Active Campaigns</div><div class="pd-value">{{ active_campaigns }}</div></div>
+  <a href="{% url 'members:university_student_list' %}?tab=studying" class="pd-card" style="text-decoration:none;">
+    <div class="pd-label">Wanafunzi wa Chuo</div>
+    <div class="pd-value">{{ university_students_studying }}</div>
+    <div class="muted" style="margin-top:0.35rem;">Wanaosomea · {{ university_students_alumni }} waliohitimu</div>
+  </a>
 </div>
 
-<div class="pd-panels">
-  <div class="panel">
-    <div class="panel-hd">Donation Trend (Last 6 Months)</div>
+<div class="chart-row">
+  <div class="chart-panel">
+    <div class="panel-hd">Michango — miezi 6 (histogram)</div>
     <div class="panel-bd"><div class="chart-wrap"><canvas id="pastorDonationChart"></canvas></div></div>
   </div>
-  <div class="panel">
-    <div class="panel-hd">Member Registrations (Last 6 Months)</div>
+  <div class="chart-panel">
+    <div class="panel-hd">Usajili wa wanachama — miezi 6</div>
     <div class="panel-bd"><div class="chart-wrap"><canvas id="memberRegistrationChart"></canvas></div></div>
   </div>
 </div>
@@ -121,30 +126,30 @@
 {% endblock %}
 
 {% block page_extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% include 'church_layout/chart_histogram_assets.html' %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const donationCtx = document.getElementById('pastorDonationChart');
-    const registrationCtx = document.getElementById('memberRegistrationChart');
-    const donationLabels = JSON.parse('{{ donation_chart_labels|escapejs }}');
-    const donationData = JSON.parse('{{ donation_chart_data|escapejs }}');
-    const registrationLabels = JSON.parse('{{ registration_chart_labels|escapejs }}');
-    const registrationData = JSON.parse('{{ registration_chart_data|escapejs }}');
+  const donationLabels = JSON.parse('{{ donation_chart_labels|escapejs }}');
+  const donationData = JSON.parse('{{ donation_chart_data|escapejs }}');
+  const registrationLabels = JSON.parse('{{ registration_chart_labels|escapejs }}');
+  const registrationData = JSON.parse('{{ registration_chart_data|escapejs }}');
 
-    if (donationCtx) {
-        new Chart(donationCtx, {
-            type: 'line',
-            data: { labels: donationLabels, datasets: [{ label: 'Donations (TZS)', data: donationData, borderColor: '#f2d37a', backgroundColor: 'rgba(242, 211, 122, 0.15)', borderWidth: 2, tension: 0.35, fill: true }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#d8e2ef' } } }, scales: { x: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } }, y: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } } } }
-        });
-    }
-    if (registrationCtx) {
-        new Chart(registrationCtx, {
-            type: 'bar',
-            data: { labels: registrationLabels, datasets: [{ label: 'New Members', data: registrationData, backgroundColor: 'rgba(46, 204, 113, 0.45)', borderColor: '#2ecc71', borderWidth: 1.5 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#d8e2ef' } } }, scales: { x: { ticks: { color: '#9fb2c8' }, grid: { color: 'rgba(255,255,255,0.08)' } }, y: { ticks: { color: '#9fb2c8', precision: 0 }, grid: { color: 'rgba(255,255,255,0.08)' } } } }
-        });
-    }
+  ChurchHistogram.create(document.getElementById('pastorDonationChart'), {
+    labels: donationLabels,
+    data: donationData,
+    datasetLabel: 'Michango (TZS)',
+    colorScheme: 'gold',
+    formatY: 'currency',
+    emptyText: 'Hakuna michango katika miezi 6 iliyopita.',
+  });
+  ChurchHistogram.create(document.getElementById('memberRegistrationChart'), {
+    labels: registrationLabels,
+    data: registrationData,
+    datasetLabel: 'Wanachama wapya',
+    colorScheme: 'green',
+    formatY: 'integer',
+    emptyText: 'Hakuna usajili katika miezi 6 iliyopita.',
+  });
 });
 </script>
 {% endblock %}
