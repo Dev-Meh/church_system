@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Ombi halijaidhinishwa - PHM-ARCC{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="mx-auto text-center text-white" style="max-width:420px;">
+    <h2 class="mb-3" style="color:#c8a84b;">Ombi halijaidhinishwa</h2>
+    <p class="mb-4" style="color:#d8e2ef;">
+      Kipindi chako kinaweza kuisha au ukurasa ulichelewa. Fungua ukurasa upya na jaribu tena.
+    </p>
+    <a href="{% url 'members:login' %}" class="btn btn-warning">Rudi kwenye kuingia</a>
+  </div>
+</div>
+{% endblock %}

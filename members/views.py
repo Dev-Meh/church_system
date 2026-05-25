@@ -14,6 +14,7 @@ from django.views.generic import CreateView, UpdateView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.decorators.http import require_POST
 from django.http import HttpResponseRedirect
+from django.template.response import TemplateResponse
 from django.db.models import Count, Q, Sum
 from django.conf import settings
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -56,16 +57,51 @@ from .permissions import (
     has_church_leadership,
 )
 
+def csrf_failure(request, reason=''):
+    """Generic CSRF error — usionyeshe maelezo ya kiufundi."""
+    return TemplateResponse(
+        request,
+        'registration/csrf_failure.html',
+        status=403,
+    )
+
+
 class CustomLoginView(LoginView):
     template_name = 'auth/unified_auth.html'
     redirect_authenticated_user = True   # 👈 already logged in → go to dashboard
     authentication_form = ChurchUserLoginForm
-    
+
+    def dispatch(self, request, *args, **kwargs):
+        from .security import is_rate_limited, rate_limit_message
+
+        blocked, retry = is_rate_limited('login', request)
+        if blocked:
+            messages.error(request, rate_limit_message('login', retry))
+            return self.render_to_response(self.get_context_data())
+        return super().dispatch(request, *args, **kwargs)
+
     def get_success_url(self):
         return reverse_lazy('dashboard')
-    
+
+    def form_valid(self, form):
+        from .security import clear_rate_limit
+
+        clear_rate_limit('login', self.request, form.cleaned_data.get('username'))
+        return super().form_valid(form)
+
     def form_invalid(self, form):
-        messages.error(self.request, 'Invalid username or password. Please try again.')
+        from .security import is_rate_limited, rate_limit_message, record_rate_limit_failure
+
+        username = (self.request.POST.get('username') or '').strip()
+        record_rate_limit_failure('login', self.request, username)
+        blocked, retry = is_rate_limited('login', self.request, username)
+        if blocked:
+            messages.error(self.request, rate_limit_message('login', retry))
+        else:
+            messages.error(
+                self.request,
+                'Jina la mtumiaji au nenosiri si sahihi. Jaribu tena.',
+            )
         return super().form_invalid(form)
     
     def get_context_data(self, **kwargs):
@@ -76,11 +112,13 @@ class CustomLoginView(LoginView):
         return context
 
 def custom_logout(request):
+    from .middleware import add_private_no_cache_headers
+
+    request.session.pop('django_language', None)
     logout(request)
     response = redirect('members:login')
-    # Reset language preference at logout; user chooses again on login page.
-    request.session.pop('django_language', None)
     response.delete_cookie(settings.LANGUAGE_COOKIE_NAME)
+    add_private_no_cache_headers(response)
     messages.success(request, 'You have been successfully logged out.')
     return response
 
@@ -88,11 +126,24 @@ class RegisterView(CreateView):
     model = ChurchUser
     form_class = ChurchUserRegistrationForm
     template_name = 'auth/unified_auth.html'
-    
+
     def dispatch(self, request, *args, **kwargs):
+        from .security import is_rate_limited, rate_limit_message, record_rate_limit_failure
+
         if request.user.is_authenticated:
             return redirect('dashboard')
+        if request.method == 'POST':
+            blocked, retry = is_rate_limited('register', request)
+            if blocked:
+                messages.error(request, rate_limit_message('register', retry))
+                return redirect('members:login')
         return super().dispatch(request, *args, **kwargs)
+
+    def form_invalid(self, form):
+        from .security import record_rate_limit_failure
+
+        record_rate_limit_failure('register', self.request)
+        return super().form_invalid(form)
     
     def get_success_url(self):
         return reverse_lazy('members:login')
@@ -441,6 +492,20 @@ class ChurchPasswordResetView(PasswordResetView):
     email_template_name = 'registration/password_reset_email.html'
     subject_template_name = 'registration/password_reset_subject.txt'
     success_url = reverse_lazy('members:password_reset_done')
+
+    def post(self, request, *args, **kwargs):
+        from .security import (
+            is_rate_limited,
+            rate_limit_message,
+            record_rate_limit_failure,
+        )
+
+        blocked, retry = is_rate_limited('password_reset', request)
+        if blocked:
+            messages.error(request, rate_limit_message('password_reset', retry))
+            return redirect('members:password_reset')
+        record_rate_limit_failure('password_reset', request)
+        return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
         form.save(

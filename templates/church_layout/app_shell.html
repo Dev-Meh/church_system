@@ -46,6 +46,12 @@
 
 {% block extra_js %}
 <script>
+/* Back button after logout: reload if browser restored a cached page (bfcache). */
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
 function toggleAppSidebar() {
   if (window.innerWidth < 992) {
     if (typeof toggleMobileNav === 'function') toggleMobileNav();

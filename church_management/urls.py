@@ -15,7 +15,7 @@ from members.university_student_views import (
 )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path(settings.ADMIN_URL, admin.site.urls),
     path('', home, name='home'),              # visits / → goes to login
     path('dashboard/', dashboard, name='dashboard'),
     # Wanafunzi wa chuo (majina ya URL bila namespace — pamoja na members:...)

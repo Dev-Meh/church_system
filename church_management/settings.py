@@ -3,17 +3,30 @@ Django settings for church_management project.
 """
 
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file
 load_dotenv(BASE_DIR / '.env')
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-y5==$h6-5!)y&dreww3-hfq9bjg_wb%fb9hh2io0mqarxo2=-f')
+_INSECURE_DEV_SECRET = 'django-insecure-y5==$h6-5!)y&dreww3-hfq9bjg_wb%fb9hh2io0mqarxo2=-f'
+SECRET_KEY = os.getenv('SECRET_KEY', _INSECURE_DEV_SECRET)
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
+
+if not DEBUG:
+    if SECRET_KEY in (_INSECURE_DEV_SECRET, '', 'your-secret-key-here', 'badilisha-na-token-refu-random'):
+        raise ImproperlyConfigured(
+            'Set a strong unique SECRET_KEY in .env before running with DEBUG=False.'
+        )
+    if 'runserver' in sys.argv and os.getenv('ALLOW_INSECURE_RUNSERVER') != '1':
+        raise ImproperlyConfigured(
+            'Do not use runserver in production. Use gunicorn + DEBUG=False.'
+        )
 
 _allowed_hosts = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1')
 ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts.split(',') if h.strip()]
@@ -40,11 +53,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'members.middleware.SecurityHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'members.middleware.PreventAuthenticatedPageCacheMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -144,33 +159,76 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'PHM-ARCC <noreply@phm-arcc.local>')
 
+# ── ADMIN URL (badilisha kwenye production) ─────
+ADMIN_URL = os.getenv('ADMIN_URL', 'admin/').strip()
+if ADMIN_URL and not ADMIN_URL.endswith('/'):
+    ADMIN_URL = f'{ADMIN_URL}/'
+
 # ── SESSION SECURITY ────────────────────────────
-SESSION_COOKIE_AGE = 1800              # session expires after 30 minutes
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True # session dies when browser closes
-SESSION_COOKIE_HTTPONLY = True         # JS cannot access session cookie
-SESSION_COOKIE_SAMESITE = 'Lax'       # protects against CSRF attacks
+SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', '1800'))
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', 'Lax')
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_NAME = os.getenv('SESSION_COOKIE_NAME', 'phmarcc_sessionid')
 
 # ── CSRF PROTECTION ─────────────────────────────
-CSRF_COOKIE_HTTPONLY = False
-CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = os.getenv('CSRF_COOKIE_SAMESITE', 'Lax')
+CSRF_FAILURE_VIEW = 'members.views.csrf_failure'
+CSRF_USE_SESSIONS = False
 
-# ── CLICKJACKING PROTECTION ─────────────────────
+# ── CLICKJACKING / MIME SNIFFING ────────────────
 X_FRAME_OPTIONS = 'DENY'
-
-# ── CONTENT SECURITY ────────────────────────────
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_BROWSER_XSS_FILTER = True
+
+# ── UPLOAD LIMITS ───────────────────────────────
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv('DATA_UPLOAD_MAX_MEMORY_SIZE', str(5 * 1024 * 1024)))
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv('FILE_UPLOAD_MAX_MEMORY_SIZE', str(5 * 1024 * 1024)))
+
+# ── AUTH RATE LIMITS (brute-force protection) ───
+LOGIN_RATE_LIMIT_ATTEMPTS = int(os.getenv('LOGIN_RATE_LIMIT_ATTEMPTS', '5'))
+LOGIN_RATE_LIMIT_LOCKOUT = int(os.getenv('LOGIN_RATE_LIMIT_LOCKOUT', '900'))
+PASSWORD_RESET_RATE_LIMIT_ATTEMPTS = int(os.getenv('PASSWORD_RESET_RATE_LIMIT_ATTEMPTS', '3'))
+PASSWORD_RESET_RATE_LIMIT_WINDOW = int(os.getenv('PASSWORD_RESET_RATE_LIMIT_WINDOW', '3600'))
+REGISTER_RATE_LIMIT_ATTEMPTS = int(os.getenv('REGISTER_RATE_LIMIT_ATTEMPTS', '5'))
+REGISTER_RATE_LIMIT_WINDOW = int(os.getenv('REGISTER_RATE_LIMIT_WINDOW', '3600'))
+
+# ── HTTP SECURITY HEADERS ───────────────────────
+SECURITY_HEADERS_ENABLED = os.getenv('SECURITY_HEADERS_ENABLED', 'True') == 'True'
+CONTENT_SECURITY_POLICY = os.getenv(
+    'CONTENT_SECURITY_POLICY',
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+    "font-src 'self' https://cdnjs.cloudflare.com; "
+    "img-src 'self' data: blob:; "
+    "connect-src 'self'; "
+    "frame-ancestors 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'",
+)
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
-    CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
-    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
+    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'True') == 'True'
+    CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'True') == 'True'
+    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True') == 'True'
+    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True') == 'True'
+    SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'False') == 'True'
+    if SESSION_COOKIE_SECURE:
+        SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', 'Strict')
+else:
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_SSL_REDIRECT = False
 
 # ── SMS CONFIGURATION ───────────────────────────
 # Beem SMS API Configuration (Tanzania SMS provider)
-SMS_API_KEY = os.getenv('SMS_API_KEY', '6e951d16009ae944')
-SMS_API_SECRET = os.getenv('SMS_API_SECRET', 'YjZlMDk0NTA3Njk1Njc1MjJjNjNjMDYzNTMwMzgxNTUzZmY3OTE5MzNmNGNjMWM4M2M0YTU4MWRlMDViNTJjOA==')
+SMS_API_KEY = os.getenv('SMS_API_KEY', '')
+SMS_API_SECRET = os.getenv('SMS_API_SECRET', '')
 SMS_API_URL = 'https://apisms.beem.africa/public/v1/send-sms'
 SMS_SENDER_ID = os.getenv('SMS_SENDER_ID', 'PHM-ARCC')
 
@@ -192,6 +250,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': os.getenv('API_THROTTLE_ANON', '30/hour'),
+        'user': os.getenv('API_THROTTLE_USER', '300/hour'),
+    },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
