@@ -3,7 +3,7 @@
 
 {% block title %}{% church_t 'pastor_dashboard_title' %} - PHM-ARCC{% endblock %}
 {% block page_title %}{% church_t 'pastor_dashboard_title' %}{% endblock %}
-{% block page_subtitle %}<p class="topnav-subtitle">Karibu {{ user.first_name }} — usimamizi wa washirika, michango na mawasiliano.</p>{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{% church_t 'welcome_greeting' %} {{ user.first_name }} — {% church_t 'pastor_dashboard_subtitle' %}</p>{% endblock %}
 
 {% block page_header_actions %}
 {% include 'members/language_selector.html' %}
@@ -34,92 +34,92 @@
 
 {% block page_content %}
 <div class="pd-grid">
-  <div class="pd-card"><div class="pd-label">Total Members</div><div class="pd-value">{{ total_members }}</div></div>
-  <div class="pd-card"><div class="pd-label">Active Members</div><div class="pd-value">{{ active_members }}</div></div>
-  <div class="pd-card"><div class="pd-label">New This Month</div><div class="pd-value">{{ new_members_this_month }}</div></div>
-  <div class="pd-card"><div class="pd-label">Total Donations</div><div class="pd-value">{{ total_donations|floatformat:0 }}</div></div>
-  <div class="pd-card"><div class="pd-label">This Month Donations</div><div class="pd-value">{{ donations_this_month|floatformat:0 }}</div></div>
-  <div class="pd-card"><div class="pd-label">Active Campaigns</div><div class="pd-value">{{ active_campaigns }}</div></div>
+  <div class="pd-card"><div class="pd-label">{% church_t 'total_members' %}</div><div class="pd-value">{{ total_members }}</div></div>
+  <div class="pd-card"><div class="pd-label">{% church_t 'active_members_stat' %}</div><div class="pd-value">{{ active_members }}</div></div>
+  <div class="pd-card"><div class="pd-label">{% church_t 'new_this_month' %}</div><div class="pd-value">{{ new_members_this_month }}</div></div>
+  <div class="pd-card"><div class="pd-label">{% church_t 'total_donations' %}</div><div class="pd-value">{{ total_donations|floatformat:0 }}</div></div>
+  <div class="pd-card"><div class="pd-label">{% church_t 'donations_this_month' %}</div><div class="pd-value">{{ donations_this_month|floatformat:0 }}</div></div>
+  <div class="pd-card"><div class="pd-label">{% church_t 'active_campaigns' %}</div><div class="pd-value">{{ active_campaigns }}</div></div>
   <a href="{% url 'members:university_student_list' %}?tab=studying" class="pd-card" style="text-decoration:none;">
-    <div class="pd-label">Wanafunzi wa Chuo</div>
+    <div class="pd-label">{% church_t 'university_students_title' %}</div>
     <div class="pd-value">{{ university_students_studying }}</div>
-    <div class="muted" style="margin-top:0.35rem;">Wanaosomea · {{ university_students_alumni }} waliohitimu</div>
+    <div class="muted" style="margin-top:0.35rem;">{% church_t 'university_students_studying' %} · {{ university_students_alumni }} {% church_t 'university_students_alumni' %}</div>
   </a>
 </div>
 
 <div class="chart-row">
   <div class="chart-panel">
-    <div class="panel-hd">Michango — miezi 6 (histogram)</div>
+    <div class="panel-hd">{% church_t 'donations_chart_6mo' %}</div>
     <div class="panel-bd"><div class="chart-wrap"><canvas id="pastorDonationChart"></canvas></div></div>
   </div>
   <div class="chart-panel">
-    <div class="panel-hd">Usajili wa wanachama — miezi 6</div>
+    <div class="panel-hd">{% church_t 'registration_chart_6mo' %}</div>
     <div class="panel-bd"><div class="chart-wrap"><canvas id="memberRegistrationChart"></canvas></div></div>
   </div>
 </div>
 
 <div class="pd-panels">
   <div class="panel">
-    <div class="panel-hd">Recent Donations</div>
+    <div class="panel-hd">{% church_t 'recent_donations_panel' %}</div>
     <div class="panel-bd">
       {% for d in recent_donations|slice:":8" %}
       <div class="item-row">
-        <div><div>{{ d.donor.full_name|default:"Unknown" }}</div><div class="muted">{{ d.campaign.title|default:"General" }} • {{ d.donation_date|date:"M d, Y H:i" }}</div></div>
+        <div><div>{% if d.donor %}{{ d.donor.full_name }}{% else %}{% church_t 'unknown_label' %}{% endif %}</div><div class="muted">{% if d.campaign %}{{ d.campaign.title }}{% else %}{% church_t 'general_fund' %}{% endif %} • {{ d.donation_date|date:"M d, Y H:i" }}</div></div>
         <div><strong>{{ d.amount|floatformat:2 }}</strong></div>
       </div>
-      {% empty %}<div class="muted">No donations recorded yet.</div>{% endfor %}
+      {% empty %}<div class="muted">{% church_t 'no_donations_recorded' %}</div>{% endfor %}
     </div>
   </div>
   <div class="panel">
-    <div class="panel-hd">Recent Members</div>
+    <div class="panel-hd">{% church_t 'recent_members' %}</div>
     <div class="panel-bd">
       {% for m in recent_members|slice:":8" %}
       <div class="item-row">
         <div><div>{{ m.full_name }}</div><div class="muted">{{ m.email }}</div></div>
         <div class="muted">{{ m.date_joined|date:"M d" }}</div>
       </div>
-      {% empty %}<div class="muted">No recent members.</div>{% endfor %}
+      {% empty %}<div class="muted">{% church_t 'no_recent_members' %}</div>{% endfor %}
     </div>
   </div>
 </div>
 
 <div class="pd-panels">
   <div class="panel">
-    <div class="panel-hd">Recent Messages</div>
+    <div class="panel-hd">{% church_t 'recent_messages' %}</div>
     <div class="panel-bd">
       {% for rm in recent_messages|slice:":8" %}
       <div class="item-row">
         <div><div>{{ rm.message.title }}</div><div class="muted">{{ rm.message.created_at|date:"M d, Y H:i" }}</div></div>
-        <div class="muted">to {{ rm.message.recipient_count }}</div>
+        <div class="muted">{% church_t 'message_to_count' %} {{ rm.message.recipient_count }}</div>
       </div>
-      {% empty %}<div class="muted">No recent messages.</div>{% endfor %}
+      {% empty %}<div class="muted">{% church_t 'no_recent_messages' %}</div>{% endfor %}
     </div>
   </div>
   <div class="panel">
-    <div class="panel-hd">Katibu wa Kanisa</div>
+    <div class="panel-hd">{% church_t 'church_secretary_title' %}</div>
     <div class="panel-bd">
       {% for sec in secretary_users %}
       <div class="acc-row">
         <div><div>{{ sec.full_name }}</div><div class="muted">{{ sec.username }} • {{ sec.email|default:"-" }}</div></div>
-        <form method="post" action="{% url 'members:demote_from_secretary' sec.id %}">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-secondary">Ondoa Katibu</button></form>
+        <form method="post" action="{% url 'members:demote_from_secretary' sec.id %}">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-secondary">{% church_t 'remove_secretary' %}</button></form>
       </div>
-      {% empty %}<div class="muted">Hakuna katibu aliyeteuliwa. Nenda Manage Members na ubofye "Teua Katibu".</div>{% endfor %}
+      {% empty %}<div class="muted">{% church_t 'no_secretary_hint' %}</div>{% endfor %}
     </div>
   </div>
   <div class="panel">
-    <div class="panel-hd">Accountant Access Control</div>
+    <div class="panel-hd">{% church_t 'accountant_access_control' %}</div>
     <div class="panel-bd">
       {% for acct in accountant_users %}
       <div class="acc-row">
         <div><div>{{ acct.full_name }}</div><div class="muted">{{ acct.username }}</div></div>
         <div style="display:flex;align-items:center;gap:.5rem;">
-          {% if acct.can_post_member_donations %}<span class="badge-state ok">Access Granted</span>{% else %}<span class="badge-state no">Access Revoked</span>{% endif %}
+          {% if acct.can_post_member_donations %}<span class="badge-state ok">{% church_t 'access_granted' %}</span>{% else %}<span class="badge-state no">{% church_t 'access_revoked' %}</span>{% endif %}
           <form method="post" action="{% url 'members:toggle_accountant_access' acct.id %}">{% csrf_token %}
-            <button type="submit" class="btn btn-sm btn-outline-warning">{% if acct.can_post_member_donations %}Revoke{% else %}Grant{% endif %}</button>
+            <button type="submit" class="btn btn-sm btn-outline-warning">{% if acct.can_post_member_donations %}{% church_t 'revoke_access' %}{% else %}{% church_t 'grant_access' %}{% endif %}</button>
           </form>
         </div>
       </div>
-      {% empty %}<div class="muted">No accountant users found.</div>{% endfor %}
+      {% empty %}<div class="muted">{% church_t 'no_accountant_users' %}</div>{% endfor %}
     </div>
   </div>
 </div>
@@ -137,18 +137,18 @@ document.addEventListener('DOMContentLoaded', function () {
   ChurchHistogram.create(document.getElementById('pastorDonationChart'), {
     labels: donationLabels,
     data: donationData,
-    datasetLabel: 'Michango (TZS)',
+    datasetLabel: '{% church_t "donations" %} (TZS)',
     colorScheme: 'teal',
     formatY: 'currency',
-    emptyText: 'Hakuna michango katika miezi 6 iliyopita.',
+    emptyText: '{% church_t "no_donations_recorded" %}',
   });
   ChurchHistogram.create(document.getElementById('memberRegistrationChart'), {
     labels: registrationLabels,
     data: registrationData,
-    datasetLabel: 'Wanachama wapya',
+    datasetLabel: '{% church_t "new_members" %}',
     colorScheme: 'orange',
     formatY: 'integer',
-    emptyText: 'Hakuna usajili katika miezi 6 iliyopita.',
+    emptyText: '{% church_t "no_recent_members" %}',
   });
 });
 </script>
