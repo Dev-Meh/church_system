@@ -15,19 +15,41 @@ class PreventAuthenticatedPageCacheMiddleware:
     """
     Authenticated HTML pages must not be cached so Back after logout
     triggers a fresh request (session check → redirect to login).
+
+    Login/auth pages must not be cached either — stale CSRF tokens cause
+    "Ombi halijaidhinishwa" when the user submits an old tab.
     """
+
+    _NO_CACHE_PREFIXES = (
+        settings.LOGIN_URL.rstrip("/"),
+        "/members/register",
+        "/members/password-reset",
+    )
 
     def __init__(self, get_response):
         self.get_response = get_response
 
+    def _should_not_cache(self, request):
+        if getattr(request, "user", None) and request.user.is_authenticated:
+            return True
+        path = (request.path or "").rstrip("/") or "/"
+        login_path = settings.LOGIN_URL.rstrip("/") or "/"
+        if path == login_path or path.startswith(f"{login_path}/"):
+            return True
+        for prefix in self._NO_CACHE_PREFIXES:
+            p = prefix.rstrip("/")
+            if p and (path == p or path.startswith(f"{p}/")):
+                return True
+        return False
+
     def __call__(self, request):
         response = self.get_response(request)
-        if not getattr(request, "user", None) or not request.user.is_authenticated:
-            return response
         if response.status_code != 200:
             return response
         content_type = (response.get("Content-Type") or "").lower()
         if "text/html" not in content_type:
+            return response
+        if not self._should_not_cache(request):
             return response
         return add_private_no_cache_headers(response)
 
