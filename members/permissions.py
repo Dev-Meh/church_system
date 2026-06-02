@@ -71,3 +71,16 @@ def can_manage_church_groups(user):
     if _role(user) == 'secretary':
         return True
     return has_church_leadership(user)
+
+
+EVENT_MANAGER_ROLES = frozenset({'secretary', 'accountant'})
+
+
+def can_manage_events(user):
+    """Create/edit/delete events & services and upload posters.
+
+    Allowed: verified pastor, admin, katibu (secretary) or muhasibu (accountant).
+    """
+    if _role(user) in EVENT_MANAGER_ROLES:
+        return True
+    return has_church_leadership(user)

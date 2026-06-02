@@ -6,25 +6,20 @@ from .models import Event, EventRegistration, EventResource
 from members.models import ChurchUser
 
 class EventForm(forms.ModelForm):
-    # Use date pickers only, then convert to datetime in save().
+    # Native date pickers (phone-friendly), then converted to datetime in save().
     start_date = forms.DateField(
         widget=forms.DateInput(attrs={'class': 'form-input', 'type': 'date'})
     )
     end_date = forms.DateField(
         widget=forms.DateInput(attrs={'class': 'form-input', 'type': 'date'})
     )
-    registration_deadline = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={'class': 'form-input', 'type': 'date'})
-    )
 
     class Meta:
         model = Event
         fields = [
-            'title', 'description', 'event_type', 'start_date', 'end_date',
-            'location', 'frequency', 'is_recurring', 'max_participants',
-            'registration_required', 'registration_deadline', 'image',
-            'speakers', 'is_published'
+            'title', 'description', 'start_date', 'end_date',
+            'location', 'frequency', 'is_recurring',
+            'image', 'speakers', 'is_published'
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4, 'class': 'form-textarea'}),
@@ -47,9 +42,6 @@ class EventForm(forms.ModelForm):
             'required': 'End date is required.',
             'invalid': 'Please choose a valid end date.',
         }
-        self.fields['registration_deadline'].error_messages = {
-            'invalid': 'Please choose a valid registration deadline.',
-        }
 
     def clean_start_date(self):
         start_date = self.cleaned_data.get('start_date')
@@ -63,36 +55,19 @@ class EventForm(forms.ModelForm):
             raise forms.ValidationError("End date is required.")
         return end_date
 
-    def clean_registration_deadline(self):
-        registration_deadline = self.cleaned_data.get('registration_deadline')
-        if registration_deadline:
-            if registration_deadline < timezone.localdate():
-                raise forms.ValidationError("Registration deadline cannot be in the past.")
-        return registration_deadline
-
     def clean(self):
         cleaned_data = super().clean()
         start_date = cleaned_data.get('start_date')
         end_date = cleaned_data.get('end_date')
-        registration_deadline = cleaned_data.get('registration_deadline')
 
-        # Check if start_date is provided and valid
         if not start_date:
             raise forms.ValidationError("Start date is required.")
-        
-        # Check if end_date is provided and valid
         if not end_date:
             raise forms.ValidationError("End date is required.")
-        
-        # Validate date logic
-        if start_date and end_date:
-            if start_date >= end_date:
-                raise forms.ValidationError("End date must be after start date.")
-        
-        # Validate registration deadline
-        if registration_deadline and start_date:
-            if registration_deadline >= start_date:
-                raise forms.ValidationError("Registration deadline must be before event start date.")
+
+        # End date can be the same day or after the start date.
+        if start_date and end_date and start_date > end_date:
+            raise forms.ValidationError("End date must be on or after the start date.")
 
         return cleaned_data
 
@@ -101,7 +76,6 @@ class EventForm(forms.ModelForm):
 
         start_date = self.cleaned_data.get('start_date')
         end_date = self.cleaned_data.get('end_date')
-        registration_deadline = self.cleaned_data.get('registration_deadline')
 
         if start_date:
             instance.start_date = timezone.make_aware(
@@ -111,12 +85,12 @@ class EventForm(forms.ModelForm):
             instance.end_date = timezone.make_aware(
                 datetime.combine(end_date, time(hour=18, minute=0))
             )
-        if registration_deadline:
-            instance.registration_deadline = timezone.make_aware(
-                datetime.combine(registration_deadline, time(hour=23, minute=59))
-            )
-        else:
-            instance.registration_deadline = None
+        instance.registration_deadline = None
+        instance.registration_required = False
+        # Event type/max participants are no longer collected; keep DB consistent.
+        if not instance.event_type:
+            instance.event_type = 'service'
+        instance.max_participants = None
 
         if commit:
             instance.save()

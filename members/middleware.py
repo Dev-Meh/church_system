@@ -41,14 +41,21 @@ class SecurityHeadersMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
         if getattr(settings, "SECURITY_HEADERS_ENABLED", True):
-            self._apply_headers(response, request.is_secure())
+            self._apply_headers(response, request)
         return response
 
-    def _apply_headers(self, response, is_secure):
+    def _apply_headers(self, response, request):
+        is_secure = request.is_secure()
+        path = request.path or ""
+
         response.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
         response.setdefault("Cross-Origin-Opener-Policy", "same-origin")
-        response.setdefault("Cross-Origin-Resource-Policy", "same-origin")
+        # Public posters/files must load on the marketing site (may be another port in dev).
+        if path.startswith("/media/") or path.startswith("/static/"):
+            response.setdefault("Cross-Origin-Resource-Policy", "cross-origin")
+        else:
+            response.setdefault("Cross-Origin-Resource-Policy", "same-origin")
 
         csp = getattr(settings, "CONTENT_SECURITY_POLICY", None)
         if csp:

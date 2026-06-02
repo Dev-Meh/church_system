@@ -4,6 +4,9 @@ from . import views
 app_name = 'events'
 
 urlpatterns = [
+    # Public JSON feed for the marketing website (no auth)
+    path('api/public/', views.public_events_api, name='public_events_api'),
+
     # Event Views
     path('', views.EventListView.as_view(), name='event_list'),
     path('<int:pk>/', views.EventDetailView.as_view(), name='event_detail'),

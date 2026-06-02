@@ -246,11 +246,10 @@ def test_language_view(request):
     return render(request, template_name)
 
 def home(request):
-    """Home page - redirect to login if not authenticated, dashboard if authenticated"""
+    """Home: onyesha fomu ya kuingia kwenye URL fupi ('/'), au dashibodi ikiwa ameingia."""
     if request.user.is_authenticated:
         return redirect('dashboard')
-    else:
-        return redirect('members:login')
+    return CustomLoginView.as_view()(request)
 
 
 @login_required(login_url='members:login')
@@ -531,6 +530,18 @@ class ChurchPasswordResetCompleteView(PasswordResetCompleteView):
 
 @login_required(login_url='members:login')
 def group_list(request):
+    can_create = can_manage_church_groups(request.user)
+    if can_create:
+        from .group_services import ensure_default_church_groups
+
+        created = ensure_default_church_groups()
+        if created:
+            messages.success(
+                request,
+                f"Makundi {created} ya msingi yameundwa (Vijana na/au Akina Mama). "
+                "Endesha sync wanachama kutoka server ikiwa unahitaji, au hifadhi wasifu wa mwanachama.",
+            )
+
     groups = (
         groups_visible_to_user(request.user)
         .select_related("leader", "secretary", "accountant")
@@ -546,7 +557,7 @@ def group_list(request):
         "members/group_list.html",
         {
             "groups": groups,
-            "can_create_groups": can_manage_church_groups(request.user),
+            "can_create_groups": can_create,
         },
     )
 

@@ -17,7 +17,7 @@
 .panel-hdr svg{width:16px;height:16px;stroke:#c8a84b;}
 .panel-body{padding:1.5rem;}
 .event-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:1.5rem;margin-bottom:1rem;}
-.event-image{width:100%;height:220px;object-fit:contain;background:#0d1b2a;display:block;border-radius:8px 8px 0 0;margin:-1.5rem -1.5rem 1rem;}
+.event-image{width:100%;max-height:420px;object-fit:contain;background:#0d1b2a;display:block;border-radius:8px;margin:1rem 0 0;}
 .event-title{font-size:18px;font-weight:600;color:#fff;font-family:'Cinzel',serif;margin-bottom:0.5rem;}
 .event-meta{font-size:12px;color:rgba(255,255,255,0.6);}
 .event-date{color:#c8a84b;font-weight:600;}
@@ -42,15 +42,14 @@
     {% if events %}
       {% for event in events %}
       <div class="event-card">
-        {% if event.image %}<img src="{{ event.image.url }}" alt="{{ event.title }}" class="event-image">{% endif %}
         <div class="event-title">{{ event.title }}</div>
         <div class="event-meta">
           <span class="event-date">{{ event.start_date|date:"F d, Y g:i A" }}</span>
           {% if event.end_date %}<span> — {{ event.end_date|date:"F d, Y g:i A" }}</span>{% endif %}
           {% if event.location %}<div>{{ event.location }}</div>{% endif %}
-          <div>Type: {{ event.get_event_type_display }}</div>
         </div>
         {% if event.description %}<div class="event-description">{{ event.description|linebreaks }}</div>{% endif %}
+        {% if event.image %}<img src="{{ event.image.url }}" alt="{{ event.title }}" class="event-image">{% endif %}
         <div class="event-footer">
           <span>Posted: {{ event.created_at|date:"M d, Y" }}</span>
           {% if has_leadership %}

@@ -207,6 +207,26 @@ body.nav-open {
     margin: 12px auto !important;
     padding: 0 12px !important;
   }
+
+  /* Cards: simu — zibaki kwenye mpangilio (side by side) ndogo, si kufuatana chini */
+  .pd-grid,
+  .stats-grid,
+  .stat-grid,
+  .info-cards {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+  .pd-card,
+  .stat-card,
+  .stat-box {
+    padding: 0.85rem !important;
+  }
+  .pd-value {
+    font-size: 1.35rem !important;
+  }
+  .pd-label {
+    font-size: 0.72rem !important;
+  }
 }
 
 @media (max-width: 576px) {

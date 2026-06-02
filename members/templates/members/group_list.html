@@ -41,10 +41,19 @@
   </article>
   {% empty %}
   <div class="empty-box" style="grid-column:1/-1;">
-    Hakuna kundi bado.
     {% if can_create_groups %}
+    <p><strong>Hakuna kundi bado.</strong></p>
     <p style="margin-top:0.75rem;"><a href="{% url 'members:group_create' %}" style="color:#c8a84b;">Unda kundi la kwanza</a>
-    au endesha: <code style="color:#c8a84b;">python manage.py setup_church_groups</code></p>
+    au kwenye server: <code style="color:#c8a84b;">python manage.py setup_church_groups</code>
+    kisha <code style="color:#c8a84b;">python manage.py sync_group_memberships</code></p>
+    {% else %}
+    <p><strong>Hakuna kundi linaloonekana kwako.</strong></p>
+    <p style="margin-top:0.75rem;font-size:13px;line-height:1.5;">
+      Mwanachama anaona kundi <strong>tu</strong> ikiwa ameongezwa kwenye kundi hilo.<br>
+      <strong>Vijana:</strong> tarehe ya kuzaliwa lazima iwe kwenye wasifu na umri chini ya miaka 40.<br>
+      <strong>Akina mama:</strong> jinsia “Female” kwenye wasifu.<br>
+      Wasiliana na mchungaji au mwenyekiti wa idara akuongeze kwenye kundi, au ahakikishe wasifu wako una taarifa hizo.
+    </p>
     {% endif %}
   </div>
   {% endfor %}
