@@ -65,7 +65,9 @@
 <div class="stats-grid">
   <div class="stat-card"><div class="stat-label">Jumla</div><div class="stat-value">{{ total_all|floatformat:2 }}</div></div>
   <div class="stat-card gold"><div class="stat-label">Zaka</div><div class="stat-value">{{ total_tithe|floatformat:2 }}</div></div>
+  {% if can_view_sadaka %}
   <div class="stat-card green"><div class="stat-label">Sadaka</div><div class="stat-value">{{ total_offering|floatformat:2 }}</div></div>
+  {% endif %}
 </div>
 <div class="stats-grid">
   <div class="stat-card green"><div class="stat-label">Mchango Maalum</div><div class="stat-value">{{ total_special|floatformat:2 }}</div></div>

@@ -379,7 +379,7 @@
                         {% else %}
                             <div class="alert alert-info mb-0">
                                 Michango inaingizwa na mhasibu baada ya kupokea malipo.
-                                Ukiwa member, utaona rekodi zako hapa zikiwa zimetenganishwa (Zaka, Sadaka, Maalum, na Mengine).
+                                Ukiwa member, utaona rekodi zako hapa (Zaka, Maalum, na Mengine). Sadaka ya kanisa inaonekana kwa mchungaji na mhasibu tu.
                             </div>
                         {% endif %}
                     </div>
@@ -493,13 +493,15 @@
                     <div class="info-title">Zaka</div>
                     <div class="info-value">{{ total_tithe|floatformat:0 }}</div>
                 </div>
+                {% if can_view_sadaka %}
                 <div class="info-card" style="background: linear-gradient(135deg, #0e3a44, #165060);">
                     <div class="info-icon">
                         <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                     </div>
-                    <div class="info-title">Sadaka</div>
+                    <div class="info-title">Sadaka (Jumla ya Kanisa)</div>
                     <div class="info-value">{{ total_offering|floatformat:0 }}</div>
                 </div>
+                {% endif %}
             </div>
 
             <div class="info-cards mt-3">
@@ -551,10 +553,10 @@
                 </div>
             </div>
 
-            {% if is_accountant %}
+            {% if can_view_sadaka %}
             <div class="panel mt-4">
                 <div class="panel-header">
-                    <h3>Rekodi ya Mhasibu (Sadaka / Zaka / Malimbuko / Shukrani)</h3>
+                    <h3>Rekodi ya Sadaka na Michango (Mhasibu)</h3>
                 </div>
                 <div class="panel-body">
                     <div class="table-responsive">

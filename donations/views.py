@@ -83,6 +83,11 @@ def _can_view_income_allocation(user):
     return has_church_leadership(user) or _is_accountant(user)
 
 
+def _can_view_sadaka(user):
+    from members.permissions import can_view_church_sadaka
+    return can_view_church_sadaka(user)
+
+
 def _csv_response(filename):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
@@ -398,13 +403,24 @@ def donation_home(request):
         Q(target_member__isnull=True) | Q(target_member=request.user)
     ).select_related('created_by', 'target_member').order_by('-created_at')
 
+    can_view_sadaka = _can_view_sadaka(request.user)
     my_donations = Donation.objects.filter(donor=request.user)
     totals = my_donations.values('donation_type').annotate(total=models.Sum('amount'))
     totals_map = {item['donation_type']: item['total'] or 0 for item in totals}
+    if can_view_sadaka:
+        church_offering_total = (
+            Donation.objects.filter(donation_type='offering').aggregate(
+                total=models.Sum('amount')
+            )['total']
+            or 0
+        )
+    else:
+        church_offering_total = None
     accountant_sheet_rows = []
     construction_pledges = []
-    if is_accountant:
+    if can_view_sadaka:
         accountant_sheet_rows = _get_accountant_sheet_rows()[:20]
+    if is_accountant:
         construction_category = DonationCategory.objects.filter(name__iexact='Ujenzi').first()
         if construction_category:
             construction_pledges = (
@@ -450,10 +466,15 @@ def donation_home(request):
         'active_notices': active_notices,
         'total_all': my_donations.aggregate(total=models.Sum('amount'))['total'] or 0,
         'total_tithe': totals_map.get('tithe', 0),
-        'total_offering': totals_map.get('offering', 0),
+        'total_offering': church_offering_total,
+        'can_view_sadaka': can_view_sadaka,
         'total_special': totals_map.get('special', 0),
         'total_other': totals_map.get('other', 0),
-        'recent_my_donations': my_donations.order_by('-contribution_date', '-donation_date')[:10],
+        'recent_my_donations': (
+            my_donations.exclude(donation_type='offering')
+            if not can_view_sadaka
+            else my_donations
+        ).order_by('-contribution_date', '-donation_date')[:10],
         'show_management_graphs': request.user.role in {'pastor', 'accountant'},
         'donation_chart_labels': json.dumps(donation_chart_labels),
         'donation_chart_data': json.dumps(donation_chart_data),
@@ -484,20 +505,26 @@ class DonationHistoryView(LoginRequiredMixin, ListView):
             '-donation_date'
         )
         if _can_view_all_donations(self.request.user):
-            return donations_queryset_for_user(self.request.user, base_qs)
-        return base_qs.filter(donor=self.request.user)
+            qs = donations_queryset_for_user(self.request.user, base_qs)
+        else:
+            qs = base_qs.filter(donor=self.request.user)
+        if not _can_view_sadaka(self.request.user):
+            qs = qs.exclude(donation_type='offering')
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         qs = self.get_queryset()
+        can_view_sadaka = _can_view_sadaka(self.request.user)
         by_type = qs.values('donation_type').annotate(total=models.Sum('amount'))
         totals_map = {item['donation_type']: item['total'] or 0 for item in by_type}
         context['total_tithe'] = totals_map.get('tithe', 0)
-        context['total_offering'] = totals_map.get('offering', 0)
+        context['total_offering'] = totals_map.get('offering', 0) if can_view_sadaka else 0
         context['total_special'] = totals_map.get('special', 0)
         context['total_other'] = totals_map.get('other', 0)
         context['total_all'] = qs.aggregate(total=models.Sum('amount'))['total'] or 0
         context['can_view_all_donations'] = _can_view_all_donations(self.request.user)
+        context['can_view_sadaka'] = can_view_sadaka
         return context
 
 
@@ -592,14 +619,18 @@ def cash_book_view(request):
     })
 
 
-def _build_income_allocation_report(start_date, end_date):
+def _build_income_allocation_report(start_date, end_date, include_sadaka=True):
     period_qs = Donation.objects.filter(
         contribution_date__range=(start_date, end_date),
         status='completed',
     )
 
     total_zaka = period_qs.filter(donation_type='tithe').aggregate(total=models.Sum('amount'))['total'] or 0
-    total_sadaka = period_qs.filter(donation_type='offering').aggregate(total=models.Sum('amount'))['total'] or 0
+    total_sadaka = 0
+    if include_sadaka:
+        total_sadaka = period_qs.filter(donation_type='offering').aggregate(
+            total=models.Sum('amount')
+        )['total'] or 0
     total_mapato_mengineyo = period_qs.filter(
         donation_type__in=['other', 'special']
     ).aggregate(total=models.Sum('amount'))['total'] or 0
@@ -640,15 +671,18 @@ def income_allocation_report_view(request):
     form = IncomeAllocationReportForm(request.GET or None)
     report = None
 
+    can_view_sadaka = _can_view_sadaka(request.user)
     if form.is_valid():
         report = _build_income_allocation_report(
             form.cleaned_data['start_date'],
             form.cleaned_data['end_date'],
+            include_sadaka=can_view_sadaka,
         )
 
     return render(request, 'donations/income_allocation_report.html', {
         'form': form,
         'report': report,
+        'can_view_sadaka': can_view_sadaka,
     })
 
 
@@ -663,13 +697,16 @@ def income_allocation_report_print(request):
         messages.error(request, 'Chagua tarehe sahihi kisha generate report kabla ya print.')
         return redirect('donations:income_allocation_report')
 
+    can_view_sadaka = _can_view_sadaka(request.user)
     report = _build_income_allocation_report(
         form.cleaned_data['start_date'],
         form.cleaned_data['end_date'],
+        include_sadaka=can_view_sadaka,
     )
     return render(request, 'donations/income_allocation_print.html', church_print_context(
         report=report,
         report_date=timezone.localdate(),
+        can_view_sadaka=can_view_sadaka,
     ))
 
 @login_required

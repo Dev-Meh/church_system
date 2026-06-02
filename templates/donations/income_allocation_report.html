@@ -74,7 +74,9 @@
         <div class="body">
             <div class="stat-row">
                 <div class="stat"><div class="k">Zaka</div><div class="v">TZS {{ report.total_zaka|floatformat:2 }}</div></div>
+                {% if can_view_sadaka %}
                 <div class="stat"><div class="k">Sadaka</div><div class="v">TZS {{ report.total_sadaka|floatformat:2 }}</div></div>
+                {% endif %}
                 <div class="stat"><div class="k">Mapato Mengineyo</div><div class="v">TZS {{ report.total_mapato_mengineyo|floatformat:2 }}</div></div>
                 <div class="stat"><div class="k">Jumla ya Mapato</div><div class="v">TZS {{ report.total_mapato|floatformat:2 }}</div></div>
             </div>

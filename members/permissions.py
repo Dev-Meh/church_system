@@ -76,6 +76,18 @@ def can_manage_church_groups(user):
 EVENT_MANAGER_ROLES = frozenset({'secretary', 'accountant'})
 
 
+def can_view_church_sadaka(user):
+    """Sadaka (mchango wa jumla wa kanisa): mchungaji aliyethibitishwa au mhasibu tu."""
+    if not user or not getattr(user, 'is_authenticated', False):
+        return False
+    role = _role(user)
+    if role == 'accountant':
+        return True
+    if role == 'pastor':
+        return is_verified_pastor(user)
+    return False
+
+
 def can_manage_events(user):
     """Create/edit/delete events & services and upload posters.
 

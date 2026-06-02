@@ -134,10 +134,12 @@
         <td>Zaka</td>
         <td class="right">{{ report.total_zaka|floatformat:0 }}</td>
       </tr>
+      {% if can_view_sadaka %}
       <tr>
         <td>Sadaka</td>
         <td class="right">{{ report.total_sadaka|floatformat:0 }}</td>
       </tr>
+      {% endif %}
       <tr>
         <td>Mapato Mengineyo</td>
         <td class="right">{{ report.total_mapato_mengineyo|floatformat:0 }}</td>
