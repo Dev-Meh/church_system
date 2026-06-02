@@ -447,7 +447,7 @@
         <div class="auth-body">
             {% if auth_mode == 'login' %}
             <div class="auth-content" id="login-content">
-                <form method="post" action="{% url 'home' %}">
+                <form method="post" action="{% url 'members:login' %}">
                     {% csrf_token %}
                     
                     {% if form.non_field_errors %}
