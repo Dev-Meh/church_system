@@ -14,7 +14,7 @@ from .sms_service import sms_service
 from .permissions import can_manage_church_communications, can_create_church_announcements
 from .message_queries import member_inbox_queryset
 
-@login_required(login_url='members:login')
+@login_required
 def message_center(request):
     """Message center for pastor and church secretary."""
     if not can_manage_church_communications(request.user):
@@ -43,7 +43,6 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
     model = Message
     form_class = MessageForm
     template_name = 'members/message_create.html'
-    login_url = '/members/login/'
     
     def dispatch(self, request, *args, **kwargs):
         if not can_manage_church_communications(request.user):
@@ -103,7 +102,6 @@ class MessageListView(LoginRequiredMixin, ListView):
     template_name = 'members/message_list.html'
     context_object_name = 'messages'
     paginate_by = 20
-    login_url = '/members/login/'
     
     def dispatch(self, request, *args, **kwargs):
         if not can_manage_church_communications(request.user):
@@ -123,7 +121,6 @@ class MessageDetailView(LoginRequiredMixin, DetailView):
     model = Message
     template_name = 'members/message_detail.html'
     context_object_name = 'message'
-    login_url = '/members/login/'
     
     def dispatch(self, request, *args, **kwargs):
         if not can_manage_church_communications(request.user):
@@ -149,7 +146,7 @@ class MessageDetailView(LoginRequiredMixin, DetailView):
         
         return context
 
-@login_required(login_url='members:login')
+@login_required
 def member_messages(request):
     """Ujumbe wa kanisa na matangazo yaliyotumwa kwa mwanachama."""
     from .models import ChurchGroup
@@ -186,7 +183,7 @@ def member_messages(request):
 
     return render(request, "members/member_messages.html", context)
 
-@login_required(login_url='members:login')
+@login_required
 def mark_message_read(request, recipient_id):
     """AJAX endpoint to mark message as read"""
     try:
@@ -204,7 +201,6 @@ class AnnouncementCreateView(LoginRequiredMixin, CreateView):
     model = Announcement
     form_class = AnnouncementForm
     template_name = 'members/create_announcement.html'
-    login_url = '/members/login/'
     success_url = reverse_lazy('dashboard')
     
     def dispatch(self, request, *args, **kwargs):

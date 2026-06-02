@@ -28,7 +28,7 @@ from events.models import Event
 from sermons.models import Sermon
 from prayers.models import PrayerRequest
 
-@login_required(login_url='members:login')
+@login_required
 def dashboard(request):
     """Role-based dashboard that adapts to user role"""
     user = request.user
@@ -283,7 +283,6 @@ class MemberListView(LoginRequiredMixin, ListView):
     template_name = 'members/member_list.html'
     context_object_name = 'members'
     paginate_by = 20
-    login_url = '/members/login/'
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and not can_manage_members(request.user):

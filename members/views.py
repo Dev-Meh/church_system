@@ -116,7 +116,7 @@ def custom_logout(request):
 
     request.session.pop('django_language', None)
     logout(request)
-    response = redirect('members:login')
+    response = redirect('login')
     response.delete_cookie(settings.LANGUAGE_COOKIE_NAME)
     add_private_no_cache_headers(response)
     messages.success(request, 'You have been successfully logged out.')
@@ -136,7 +136,7 @@ class RegisterView(CreateView):
             blocked, retry = is_rate_limited('register', request)
             if blocked:
                 messages.error(request, rate_limit_message('register', retry))
-                return redirect('members:login')
+                return redirect('login')
         return super().dispatch(request, *args, **kwargs)
 
     def form_invalid(self, form):
@@ -146,7 +146,7 @@ class RegisterView(CreateView):
         return super().form_invalid(form)
     
     def get_success_url(self):
-        return reverse_lazy('members:login')
+        return reverse_lazy('login')
     
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -160,7 +160,6 @@ class RegisterView(CreateView):
         return context
 
 class ProfileView(LoginRequiredMixin, DetailView):
-    login_url = '/members/login/'
     model = ChurchUser
     template_name = 'members/profile.html'
     context_object_name = 'member'
@@ -169,7 +168,6 @@ class ProfileView(LoginRequiredMixin, DetailView):
         return self.request.user
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
-    login_url = '/members/login/'
     model = ChurchUser
     form_class = ChurchUserUpdateForm
     template_name = 'members/profile_edit.html'
@@ -191,7 +189,7 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
             messages.success(self.request, 'Profile updated successfully!')
         return response
 
-@login_required(login_url='members:login')
+@login_required
 def dashboard(request):
     return role_based_dashboard(request)
 
@@ -252,7 +250,7 @@ def home(request):
     return CustomLoginView.as_view()(request)
 
 
-@login_required(login_url='members:login')
+@login_required
 @require_POST
 def toggle_accountant_access(request, user_id):
     """Pastor/Admin can grant or revoke donation posting access."""
@@ -272,7 +270,7 @@ def toggle_accountant_access(request, user_id):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('dashboard')))
 
 
-@login_required(login_url='members:login')
+@login_required
 @require_POST
 def promote_to_accountant(request, user_id):
     """Pastor/Admin can promote member to accountant role."""
@@ -292,7 +290,7 @@ def promote_to_accountant(request, user_id):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
 
 
-@login_required(login_url='members:login')
+@login_required
 @require_POST
 def promote_to_secretary(request, user_id):
     """Pastor/Admin can appoint a member as church secretary."""
@@ -315,7 +313,7 @@ def promote_to_secretary(request, user_id):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
 
 
-@login_required(login_url='members:login')
+@login_required
 @require_POST
 def demote_from_secretary(request, user_id):
     """Pastor/Admin can remove secretary role."""
@@ -330,7 +328,7 @@ def demote_from_secretary(request, user_id):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
 
 
-@login_required(login_url='members:login')
+@login_required
 @require_POST
 def promote_to_pastor(request, user_id):
     """Admin or verified pastor appoints a member as verified pastor."""
@@ -353,7 +351,7 @@ def promote_to_pastor(request, user_id):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
 
 
-@login_required(login_url='members:login')
+@login_required
 @require_POST
 def demote_from_pastor(request, user_id):
     """Admin or verified pastor removes pastor role."""
@@ -377,7 +375,7 @@ def demote_from_pastor(request, user_id):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
 
 
-@login_required(login_url='members:login')
+@login_required
 @require_POST
 def promote_to_admin(request, user_id):
     """Church admin grants administrator role (not via public registration)."""
@@ -397,7 +395,7 @@ def promote_to_admin(request, user_id):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
 
 
-@login_required(login_url='members:login')
+@login_required
 @require_POST
 def toggle_member_active(request, user_id):
     """Pastor/admin: activate or deactivate member login and membership."""
@@ -436,7 +434,7 @@ def _redirect_member_list(request):
     return redirect('members:member_list')
 
 
-@login_required(login_url='members:login')
+@login_required
 def admin_reset_password(request, user_id):
     """Pastor/admin: set password or email reset link for a member."""
     if not can_manage_members(request.user):
@@ -528,7 +526,7 @@ class ChurchPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'registration/password_reset_complete.html'
 
 
-@login_required(login_url='members:login')
+@login_required
 def group_list(request):
     can_create = can_manage_church_groups(request.user)
     if can_create:
@@ -562,7 +560,7 @@ def group_list(request):
     )
 
 
-@login_required(login_url='members:login')
+@login_required
 def group_detail(request, pk):
     group = get_object_or_404(
         ChurchGroup.objects.select_related("leader", "secretary", "accountant"),
@@ -624,7 +622,7 @@ def group_detail(request, pk):
     return render(request, "members/group_detail.html", context)
 
 
-@login_required(login_url='members:login')
+@login_required
 def group_create(request):
     if not can_manage_church_groups(request.user):
         messages.error(request, "Ni mchungaji, admin, au katibu tu anaweza kuunda kundi.")
@@ -648,7 +646,7 @@ def group_create(request):
     return render(request, "members/group_form.html", {"form": form})
 
 
-@login_required(login_url='members:login')
+@login_required
 @require_POST
 def group_assign_officers(request, pk):
     """Mchungaji huweka kiongozi, katibu, na mhasibu wa kundi."""
@@ -669,7 +667,7 @@ def group_assign_officers(request, pk):
     return redirect("members:group_detail", pk=pk)
 
 
-@login_required(login_url='members:login')
+@login_required
 def group_donations(request, pk):
     """Mhasibu wa kundi: ingiza na ona michango ya wanachama wa kundi tu."""
     group = get_object_or_404(
@@ -729,7 +727,7 @@ def group_donations(request, pk):
     )
 
 
-@login_required(login_url="members:login")
+@login_required
 def group_my_donations(request, pk):
     """Mwanachama: michango yake pekee kwenye idara hii."""
     group = get_object_or_404(ChurchGroup, pk=pk, is_active=True)
@@ -757,7 +755,7 @@ def group_my_donations(request, pk):
     )
 
 
-@login_required(login_url='members:login')
+@login_required
 @require_POST
 def group_add_member(request, pk):
     group = get_object_or_404(ChurchGroup, pk=pk, is_active=True)
@@ -790,7 +788,7 @@ def group_add_member(request, pk):
     return redirect("members:group_detail", pk=pk)
 
 
-@login_required(login_url='members:login')
+@login_required
 @require_POST
 def group_add_activity(request, pk):
     group = get_object_or_404(ChurchGroup, pk=pk, is_active=True)

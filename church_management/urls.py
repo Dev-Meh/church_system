@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from members.views import home, dashboard, ProfileView, ProfileUpdateView
+from members.views import home, dashboard, ProfileView, ProfileUpdateView, CustomLoginView
 from members.university_student_views import (
     university_student_list,
     university_student_create,
@@ -16,7 +16,8 @@ from members.university_student_views import (
 
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
-    path('', home, name='home'),              # visits / → goes to login
+    path(settings.LOGIN_URL_PATH, CustomLoginView.as_view(), name='login'),
+    path('', home, name='home'),
     path('dashboard/', dashboard, name='dashboard'),
     # Wanafunzi wa chuo (majina ya URL bila namespace — pamoja na members:...)
     path('university-students/', university_student_list, name='university_student_list'),

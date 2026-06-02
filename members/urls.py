@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 from .dashboard_views import MemberListView
 from .message_views import (
@@ -29,7 +31,10 @@ app_name = 'members'
 
 urlpatterns = [
     # ... (existing urls)
-    path('login/', views.CustomLoginView.as_view(), name='login'),
+    path(
+        'login/',
+        RedirectView.as_view(url=settings.LOGIN_URL, permanent=True),
+    ),
     path('logout/', views.custom_logout, name='logout'),
     path('register/', views.RegisterView.as_view(), name='register'),
     path('members/', MemberListView.as_view(), name='member_list'),

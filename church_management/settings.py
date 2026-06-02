@@ -143,9 +143,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'members.ChurchUser'
 
 # ── LOGIN / LOGOUT ──────────────────────────────
-LOGIN_URL = '/members/login/'
+# Njia ya kuingia (si "/members/login/" wazi). Badilisha kwenye production.
+LOGIN_URL_PATH = os.getenv('LOGIN_URL_PATH', 'phm-kuingia-a8f2/').strip().lstrip('/')
+if LOGIN_URL_PATH and not LOGIN_URL_PATH.endswith('/'):
+    LOGIN_URL_PATH = f'{LOGIN_URL_PATH}/'
+LOGIN_URL = f'/{LOGIN_URL_PATH}'
 LOGIN_REDIRECT_URL = '/dashboard/'
-LOGOUT_REDIRECT_URL = '/members/login/'
+LOGOUT_REDIRECT_URL = LOGIN_URL
 
 # Email (password reset) — console in development
 EMAIL_BACKEND = os.getenv(

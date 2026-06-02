@@ -447,7 +447,7 @@
         <div class="auth-body">
             {% if auth_mode == 'login' %}
             <div class="auth-content" id="login-content">
-                <form method="post" action="{% url 'members:login' %}">
+                <form method="post" action="{% url 'login' %}">
                     {% csrf_token %}
                     
                     {% if form.non_field_errors %}
@@ -581,7 +581,7 @@
                 </form>
                 <div class="auth-switch-links">
                     {% church_t 'already_have_account' %}
-                    <a href="{% url 'members:login' %}">{% church_t 'login_tab' %}</a>
+                    <a href="{% url 'login' %}">{% church_t 'login_tab' %}</a>
                 </div>
             </div>
             {% endif %}

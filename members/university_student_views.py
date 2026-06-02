@@ -13,7 +13,7 @@ from .permissions import can_manage_members
 
 
 def _require_pastor(view_func):
-    @login_required(login_url="members:login")
+    @login_required
     def wrapper(request, *args, **kwargs):
         if not can_manage_members(request.user):
             messages.error(request, "Ni mchungaji/admin tu anaweza kusimamia wanafunzi wa chuo.")

@@ -20,7 +20,7 @@ def _group_recipients(group):
     )
 
 
-@login_required(login_url="members:login")
+@login_required
 def group_broadcast(request, pk):
     """Katibu au mwenyekiti hutuma matangazo kwa wanachama wa idara."""
     group = get_object_or_404(ChurchGroup, pk=pk, is_active=True)
