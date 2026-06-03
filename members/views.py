@@ -3,8 +3,6 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import (
     LoginView,
-    PasswordResetView,
-    PasswordResetDoneView,
     PasswordResetConfirmView,
     PasswordResetCompleteView,
 )
@@ -494,6 +492,16 @@ def _redirect_member_list(request):
     return redirect('members:member_list')
 
 
+def public_password_reset_disabled(request):
+    """Self-service password reset is disabled; pastor/admin resets from member list."""
+    messages.info(
+        request,
+        "Kubadili nenosiri, wasiliana na mchungaji au admin wa kanisa. "
+        "Wanaweza kukusaidia kutoka kwenye orodha ya wanachama.",
+    )
+    return redirect(settings.LOGIN_URL)
+
+
 @login_required
 def admin_reset_password(request, user_id):
     """Pastor/admin: set password or email reset link for a member."""
@@ -541,40 +549,6 @@ def admin_reset_password(request, user_id):
         'members/admin_reset_password.html',
         {'form': form, 'target_user': target},
     )
-
-
-class ChurchPasswordResetView(PasswordResetView):
-    form_class = ChurchPasswordResetForm
-    template_name = 'registration/password_reset_form.html'
-    email_template_name = 'registration/password_reset_email.html'
-    subject_template_name = 'registration/password_reset_subject.txt'
-    success_url = reverse_lazy('members:password_reset_done')
-
-    def post(self, request, *args, **kwargs):
-        from .security import (
-            is_rate_limited,
-            rate_limit_message,
-            record_rate_limit_failure,
-        )
-
-        blocked, retry = is_rate_limited('password_reset', request)
-        if blocked:
-            messages.error(request, rate_limit_message('password_reset', retry))
-            return redirect('members:password_reset')
-        record_rate_limit_failure('password_reset', request)
-        return super().post(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        form.save(
-            request=self.request,
-            use_https=self.request.is_secure(),
-            domain_override=self.request.get_host(),
-        )
-        return redirect(self.success_url)
-
-
-class ChurchPasswordResetDoneView(PasswordResetDoneView):
-    template_name = 'registration/password_reset_done.html'
 
 
 class ChurchPasswordResetConfirmView(PasswordResetConfirmView):

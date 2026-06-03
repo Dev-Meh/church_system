@@ -22,8 +22,7 @@ from .university_student_views import (
 )
 from .views import (
     ProfileView,
-    ChurchPasswordResetView,
-    ChurchPasswordResetDoneView,
+    public_password_reset_disabled,
     ChurchPasswordResetConfirmView,
     ChurchPasswordResetCompleteView,
 )
@@ -80,8 +79,8 @@ urlpatterns = [
     path('members/<int:user_id>/approve/', views.approve_member, name='approve_member'),
     path('members/<int:user_id>/toggle-active/', views.toggle_member_active, name='toggle_member_active'),
     path('members/<int:user_id>/reset-password/', views.admin_reset_password, name='admin_reset_password'),
-    path('password-reset/', ChurchPasswordResetView.as_view(), name='password_reset'),
-    path('password-reset/done/', ChurchPasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('password-reset/', views.public_password_reset_disabled, name='password_reset'),
+    path('password-reset/done/', views.public_password_reset_disabled, name='password_reset_done'),
     path('password-reset/<uidb64>/<token>/', ChurchPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('password-reset/complete/', ChurchPasswordResetCompleteView.as_view(), name='password_reset_complete'),
 ]

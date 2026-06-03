@@ -241,7 +241,7 @@
             </td>
             <td>
               <div class="actions-cell">
-                <a href="{% url 'members:admin_reset_password' member.id %}" class="btn-xs">Nenosiri</a>
+                <a href="{% url 'members:admin_reset_password' member.id %}" class="btn-xs">Weka nenosiri</a>
                 {% if member.role == 'member' and member.is_active and not member.is_active_member %}
                 <form method="post" action="{% url 'members:approve_member' member.id %}" style="display:inline;">{% csrf_token %}
                   <button type="submit" class="btn-xs btn-xs-success">Idhinisha</button>

@@ -713,7 +713,7 @@
                     <button type="submit" class="submit-btn">{% church_t 'login_to_account' %}</button>
                 </form>
                 <div class="auth-switch-links">
-                    <a href="{% url 'members:password_reset' %}" style="display:block;margin-bottom:0.5rem;font-size:12px;">Sahau nenosiri?</a>
+                    <p style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:0.5rem;">{% church_t 'password_reset_contact_admin' %}</p>
                     {% church_t 'dont_have_account' %}
                     <a href="{% url 'members:register' %}">{% church_t 'register_tab' %}</a>
                 </div>
