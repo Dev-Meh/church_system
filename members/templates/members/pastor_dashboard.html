@@ -68,7 +68,6 @@
   <div class="pd-card"><div class="pd-label">{% church_t 'new_this_month' %}</div><div class="pd-value">{{ new_members_this_month }}</div></div>
   <div class="pd-card"><div class="pd-label">{% church_t 'total_donations' %}</div><div class="pd-value">{{ total_donations|floatformat:0 }}</div></div>
   <div class="pd-card"><div class="pd-label">{% church_t 'donations_this_month' %}</div><div class="pd-value">{{ donations_this_month|floatformat:0 }}</div></div>
-  <div class="pd-card"><div class="pd-label">{% church_t 'active_campaigns' %}</div><div class="pd-value">{{ active_campaigns }}</div></div>
   <a href="{% url 'members:university_student_list' %}?tab=studying" class="pd-card" style="text-decoration:none;">
     <div class="pd-label">{% church_t 'university_students_title' %}</div>
     <div class="pd-value">{{ university_students_studying }}</div>
