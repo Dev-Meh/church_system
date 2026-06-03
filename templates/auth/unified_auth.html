@@ -418,10 +418,41 @@
         line-height: 1.35;
     }
 
-    .auth-card.auth-card--login .auth-lang {
-        margin-top: 0.4rem !important;
-        gap: 0.45rem !important;
-        font-size: 11px !important;
+    .auth-card.auth-card--login .auth-lang,
+    .auth-lang-compact {
+        margin-top: 0.15rem !important;
+        gap: 0.2rem !important;
+    }
+
+    .auth-lang-compact {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+    }
+
+    .auth-lang-compact a {
+        font-size: 9px;
+        font-weight: 700;
+        line-height: 1;
+        padding: 1px 4px;
+        text-decoration: none;
+        color: rgba(255, 255, 255, 0.65);
+    }
+
+    .auth-lang-compact a.is-active {
+        color: #c8a84b;
+    }
+
+    .auth-lang-compact .auth-lang-sep {
+        color: rgba(255, 255, 255, 0.25);
+        font-size: 8px;
+        line-height: 1;
+    }
+
+    .auth-card.auth-card--login .auth-lang-compact a {
+        font-size: 8px !important;
+        padding: 1px 3px !important;
     }
 
     .auth-card.auth-card--login .form-section {
@@ -640,10 +671,10 @@
             <div class="church-sub">Iyumbu Dodoma &mdash; {% church_t 'cms_subtitle' %}</div>
             {% else %}
             <div class="church-sub">Iyumbu Dodoma</div>
-            <div class="auth-lang" style="display:flex;align-items:center;justify-content:center;gap:0.5rem;flex-wrap:wrap;">
-                <a href="{% url 'members:set_language' 'en' %}" style="color:{% if current_language == 'en' %}#c8a84b{% else %}rgba(255,255,255,0.75){% endif %};font-weight:600;text-decoration:none;font-size:11px;">EN</a>
-                <span style="color:rgba(255,255,255,0.3);">|</span>
-                <a href="{% url 'members:set_language' 'sw' %}" style="color:{% if current_language == 'sw' %}#c8a84b{% else %}rgba(255,255,255,0.75){% endif %};font-weight:600;text-decoration:none;font-size:11px;">SW</a>
+            <div class="auth-lang-compact">
+                <a href="{% url 'members:set_language' 'en' %}" class="{% if current_language == 'en' %}is-active{% endif %}">EN</a>
+                <span class="auth-lang-sep">|</span>
+                <a href="{% url 'members:set_language' 'sw' %}" class="{% if current_language == 'sw' %}is-active{% endif %}">SW</a>
             </div>
             {% endif %}
             {% if auth_mode == 'register' %}<div class="page-title">{% church_t 'welcome_church_community' %}</div>{% endif %}

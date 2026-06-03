@@ -19,14 +19,15 @@
         <h1 class="topnav-title">{% block page_title %}{% endblock %}</h1>
         {% block page_subtitle %}<p class="topnav-subtitle">PHM-ARCC Iyumbu Dodoma</p>{% endblock %}
       </div>
-      {% if user.is_authenticated %}
-      {% include 'church_layout/_profile_dropdown.html' %}
-      {% endif %}
-      <div class="topnav-actions">
-        {% block page_header_actions %}
-        {% include 'members/language_selector.html' %}
-        <span class="welcome-pill">{{ user.first_name }} {{ user.last_name }}</span>
-        {% endblock %}
+      <div class="topnav-end">
+        <div class="topnav-actions">
+          {% block page_header_actions %}
+          {% include 'members/language_selector.html' %}
+          {% endblock %}
+        </div>
+        {% if user.is_authenticated %}
+        {% include 'church_layout/_profile_dropdown.html' %}
+        {% endif %}
       </div>
     </header>
 

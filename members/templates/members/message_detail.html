@@ -8,7 +8,6 @@
 {% block page_header_actions %}
 <a href="{% url 'members:message_list' %}" class="action-btn"><i class="fas fa-arrow-left"></i> Back</a>
 {% include 'members/language_selector.html' %}
-<span class="welcome-pill">{{ user.first_name }} {{ user.last_name }}</span>
 {% endblock %}
 
 {% block page_extra_css %}
