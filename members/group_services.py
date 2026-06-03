@@ -14,32 +14,59 @@ OFFICER_MEMBERSHIP_ROLES = frozenset(
 
 AUTO_CHURCH_GROUPS = [
     {
-        "name": "Kundi la Vijana PHM-ARCC",
+        "name": "Idara ya Vijana (CFD'S)",
         "group_type": "youth",
-        "description": "Kundi la vijana wa kanisa — shughuli, mafundisho, na huduma.",
+        "description": "Idara ya vijana wa kanisa — shughuli, mafundisho, na huduma.",
     },
     {
-        "name": "Kundi la Akina Mama PHM-ARCC",
+        "name": "Idara ya Wanawake (WWM)",
         "group_type": "women",
-        "description": "Kundi la akina mama — maombi, huduma, na mikutano.",
+        "description": "Idara ya wanawake — maombi, huduma, na mikutano.",
     },
 ]
 
+LEGACY_GROUP_NAMES = {
+    "youth": "Kundi la Vijana PHM-ARCC",
+    "women": "Kundi la Akina Mama PHM-ARCC",
+}
+
 
 def ensure_default_church_groups():
-    """Create Vijana and Akina Mama groups if missing (idempotent)."""
+    """Create or update default youth and women departments (idempotent)."""
     created = 0
     for data in AUTO_CHURCH_GROUPS:
-        _, was_created = ChurchGroup.objects.get_or_create(
+        group = ChurchGroup.objects.filter(group_type=data["group_type"]).first()
+        if group:
+            updated_fields = []
+            if group.name != data["name"]:
+                group.name = data["name"]
+                updated_fields.append("name")
+            if group.description != data["description"]:
+                group.description = data["description"]
+                updated_fields.append("description")
+            if updated_fields:
+                group.save(update_fields=updated_fields)
+            continue
+
+        legacy_name = LEGACY_GROUP_NAMES.get(data["group_type"])
+        if legacy_name:
+            legacy_group = ChurchGroup.objects.filter(name=legacy_name).first()
+            if legacy_group:
+                legacy_group.name = data["name"]
+                legacy_group.group_type = data["group_type"]
+                legacy_group.description = data["description"]
+                legacy_group.save(
+                    update_fields=["name", "group_type", "description"]
+                )
+                continue
+
+        ChurchGroup.objects.create(
             name=data["name"],
-            defaults={
-                "group_type": data["group_type"],
-                "description": data["description"],
-                "is_active": True,
-            },
+            group_type=data["group_type"],
+            description=data["description"],
+            is_active=True,
         )
-        if was_created:
-            created += 1
+        created += 1
     return created
 
 

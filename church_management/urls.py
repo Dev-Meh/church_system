@@ -8,6 +8,7 @@ from django.conf.urls.static import static
 from members.views import home, dashboard, ProfileView, ProfileUpdateView, CustomLoginView
 from members.university_student_views import (
     university_student_list,
+    university_student_print,
     university_student_create,
     university_student_detail,
     university_student_edit,
@@ -21,6 +22,7 @@ urlpatterns = [
     path('dashboard/', dashboard, name='dashboard'),
     # Wanafunzi wa chuo (majina ya URL bila namespace — pamoja na members:...)
     path('university-students/', university_student_list, name='university_student_list'),
+    path('university-students/print/', university_student_print, name='university_student_print'),
     path('university-students/new/', university_student_create, name='university_student_create'),
     path('university-students/<int:pk>/', university_student_detail, name='university_student_detail'),
     path('university-students/<int:pk>/edit/', university_student_edit, name='university_student_edit'),

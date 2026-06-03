@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ report_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #e8e8e8; }
+  .print-toolbar {
+    max-width: 1100px;
+    margin: 16px auto 0;
+    padding: 0 12px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .print-toolbar .btn {
+    border: none;
+    border-radius: 6px;
+    padding: 9px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 13px;
+  }
+  .btn-print { background: #1a3a5c; color: #fff; }
+  .btn-back { background: #fff; color: #333; border: 1px solid #ccc; }
+
+  .print-page {
+    max-width: 1100px;
+    margin: 12px auto 24px;
+    padding: 20px 24px;
+    background: #fff;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+    color: #000;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .report-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    margin: 0 0 4px;
+  }
+
+  .report-meta {
+    text-align: center;
+    font-size: 12px;
+    margin: 0 0 14px;
+    color: #333;
+  }
+
+  .summary-line {
+    font-size: 11px;
+    margin: 0 0 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    justify-content: center;
+  }
+
+  .student-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+
+  .student-table th,
+  .student-table td {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    vertical-align: top;
+  }
+
+  .student-table th {
+    background: #f5f5f5;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 9px;
+  }
+
+  .center { text-align: center; }
+
+  @media print {
+    body { background: #fff !important; margin: 0; }
+    .print-toolbar,
+    .navbar,
+    .alert,
+    .container.mt-3 { display: none !important; }
+    .print-page {
+      max-width: none;
+      margin: 0;
+      padding: 10mm 12mm;
+      box-shadow: none;
+    }
+    .student-table { font-size: 9px; }
+    .student-table th,
+    .student-table td { padding: 4px 6px; }
+    @page { margin: 8mm; size: landscape; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="print-toolbar">
+  <button type="button" class="btn btn-print" onclick="window.print()">Chapisha / PDF</button>
+  <a class="btn btn-back" href="{% url 'members:university_student_list' %}?tab={{ tab }}{% if search_q %}&amp;q={{ search_q|urlencode }}{% endif %}">Rudi Orodha</a>
+</div>
+<div class="print-page">
+  {% include 'donations/includes/print_brand.html' %}
+  <h2 class="report-title">{{ report_title }}</h2>
+  <p class="report-meta">Tarehe ya chapisho: {{ report_date|date:"d/m/Y" }}</p>
+  <div class="summary-line">
+    <span><strong>Orodha:</strong> {{ tab_label }}</span>
+    <span><strong>Jumla:</strong> {{ records|length }}</span>
+    {% if search_q %}<span><strong>Tafuta:</strong> {{ search_q }}</span>{% endif %}
+    <span><strong>Wanaosomea:</strong> {{ counts.studying }}</span>
+    <span><strong>Waliohitimu:</strong> {{ counts.completed }}</span>
+    <span><strong>Mwaka wa mwisho ({{ current_year }}):</strong> {{ counts.final_year }}</span>
+  </div>
+
+  {% if records %}
+  <table class="student-table">
+    <thead>
+      <tr>
+        <th class="center">#</th>
+        <th>Mwanachama</th>
+        <th>Simu</th>
+        <th>Chuo</th>
+        <th>Kozi</th>
+        <th>Ndaki</th>
+        <th>Kiwango</th>
+        <th class="center">Alianza</th>
+        <th class="center">Kutarajiwa</th>
+        <th class="center">Alihitimu</th>
+        <th>Hali</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in records %}
+      <tr>
+        <td class="center">{{ forloop.counter }}</td>
+        <td>{{ r.member.full_name }}</td>
+        <td>{{ r.member.phone_number|default:"—" }}</td>
+        <td>{{ r.institution }}</td>
+        <td>{{ r.course }}</td>
+        <td>{{ r.faculty|default:"—" }}</td>
+        <td>{{ r.get_level_display }}</td>
+        <td class="center">{% if r.year_started %}{{ r.year_started }}{% else %}—{% endif %}</td>
+        <td class="center">{% if r.expected_completion_year %}{{ r.expected_completion_year }}{% else %}—{% endif %}</td>
+        <td class="center">{% if r.year_completed %}{{ r.year_completed }}{% else %}—{% endif %}</td>
+        <td>{{ r.get_status_display }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="text-align:center;font-size:12px;">Hakuna rekodi kwa chaguo hili.</p>
+  {% endif %}
+</div>
+{% endblock %}

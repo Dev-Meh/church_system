@@ -7,10 +7,20 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from donations.print_branding import church_print_context
+
 from .forms import UniversityStudentRecordForm
-from .models import ChurchUser, UniversityStudentRecord
+from .models import UniversityStudentRecord
 from .permissions import can_manage_members
 from .university_student_services import promote_due_university_graduates
+
+TAB_LABELS = {
+    "studying": "Wanaosomea",
+    "completed": "Waliohitimu",
+    "paused": "Wamesimama",
+    "final_year": "Mwaka wa mwisho",
+    "all": "Wote",
+}
 
 
 def _require_pastor(view_func):
@@ -24,6 +34,66 @@ def _require_pastor(view_func):
     return wrapper
 
 
+def _current_year():
+    return timezone.now().year
+
+
+def _search_filter(qs, q):
+    if not q:
+        return qs
+    return qs.filter(
+        Q(member__first_name__icontains=q)
+        | Q(member__last_name__icontains=q)
+        | Q(institution__icontains=q)
+        | Q(course__icontains=q)
+        | Q(faculty__icontains=q)
+    )
+
+
+def get_university_student_queryset(tab, q="", current_year=None):
+    current_year = current_year or _current_year()
+    qs = UniversityStudentRecord.objects.select_related(
+        "member", "recorded_by"
+    ).order_by("member__last_name", "member__first_name", "-year_started")
+
+    if tab == "studying":
+        qs = qs.filter(status="studying")
+    elif tab == "completed":
+        qs = qs.filter(status="completed")
+    elif tab == "paused":
+        qs = qs.filter(status="paused")
+    elif tab == "final_year":
+        qs = qs.filter(status="studying", expected_completion_year=current_year)
+
+    return _search_filter(qs, q)
+
+
+def get_university_student_counts(current_year=None):
+    current_year = current_year or _current_year()
+    return {
+        "studying": UniversityStudentRecord.objects.filter(status="studying").count(),
+        "completed": UniversityStudentRecord.objects.filter(status="completed").count(),
+        "paused": UniversityStudentRecord.objects.filter(status="paused").count(),
+        "final_year": UniversityStudentRecord.objects.filter(
+            status="studying",
+            expected_completion_year=current_year,
+        ).count(),
+        "all": UniversityStudentRecord.objects.count(),
+    }
+
+
+def _tab_report_title(tab, current_year):
+    if tab == "studying":
+        return "ORODHA YA WANAFUNZI WANAOSOMEA"
+    if tab == "completed":
+        return "ORODHA YA WANAFUNZI WALIOHITIMU"
+    if tab == "paused":
+        return "ORODHA YA WANAFUNZI WAMESIMAMA"
+    if tab == "final_year":
+        return f"ORODHA YA WANAFUNZI WA MWAKA WA MWISHO ({current_year})"
+    return "ORODHA YA WANAFUNZI WA CHUO (WOTE)"
+
+
 @_require_pastor
 def university_student_list(request):
     promoted = promote_due_university_graduates()
@@ -35,31 +105,11 @@ def university_student_list(request):
         )
 
     tab = request.GET.get("tab", "studying")
+    if tab not in TAB_LABELS:
+        tab = "studying"
     q = (request.GET.get("q") or "").strip()
-
-    qs = UniversityStudentRecord.objects.select_related("member", "recorded_by")
-    if tab == "studying":
-        qs = qs.filter(status="studying")
-    elif tab == "completed":
-        qs = qs.filter(status="completed")
-    elif tab == "paused":
-        qs = qs.filter(status="paused")
-
-    if q:
-        qs = qs.filter(
-            Q(member__first_name__icontains=q)
-            | Q(member__last_name__icontains=q)
-            | Q(institution__icontains=q)
-            | Q(course__icontains=q)
-            | Q(faculty__icontains=q)
-        )
-
-    counts = {
-        "studying": UniversityStudentRecord.objects.filter(status="studying").count(),
-        "completed": UniversityStudentRecord.objects.filter(status="completed").count(),
-        "paused": UniversityStudentRecord.objects.filter(status="paused").count(),
-        "all": UniversityStudentRecord.objects.count(),
-    }
+    current_year = _current_year()
+    qs = get_university_student_queryset(tab, q, current_year)
 
     return render(
         request,
@@ -68,8 +118,34 @@ def university_student_list(request):
             "records": qs[:200],
             "tab": tab,
             "search_q": q,
-            "counts": counts,
+            "counts": get_university_student_counts(current_year),
+            "current_year": current_year,
         },
+    )
+
+
+@_require_pastor
+def university_student_print(request):
+    tab = request.GET.get("tab", "studying")
+    if tab not in TAB_LABELS:
+        tab = "studying"
+    q = (request.GET.get("q") or "").strip()
+    current_year = _current_year()
+    records = list(get_university_student_queryset(tab, q, current_year))
+
+    return render(
+        request,
+        "members/university_student_print.html",
+        church_print_context(
+            records=records,
+            tab=tab,
+            tab_label=TAB_LABELS[tab],
+            search_q=q,
+            counts=get_university_student_counts(current_year),
+            current_year=current_year,
+            report_title=_tab_report_title(tab, current_year),
+            report_date=timezone.now(),
+        ),
     )
 
 

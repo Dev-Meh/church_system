@@ -35,7 +35,7 @@ class LanguageManager:
         'church_departments_page': {'en': 'Church Departments', 'sw': 'Idara za Kanisa'},
         'church_departments_subtitle': {
             'en': 'Youth, Women, Choir, and other church ministries',
-            'sw': 'Vijana, Akina Mama, Kwaya, na idara nyingine',
+            'sw': 'Idara ya Vijana (CFD\'S), Idara ya Wanawake (WWM), Kwaya, na idara nyingine',
         },
         'date_of_birth': {'en': 'Date of Birth *', 'sw': 'Tarehe ya kuzaliwa *'},
         'gender': {'en': 'Gender *', 'sw': 'Jinsia *'},

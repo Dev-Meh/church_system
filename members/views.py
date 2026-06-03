@@ -596,7 +596,7 @@ def group_list(request):
         if created:
             messages.success(
                 request,
-                f"Makundi {created} ya msingi yameundwa (Vijana na/au Akina Mama). "
+                f"Makundi {created} ya msingi yameundwa (Idara ya Vijana na/au Idara ya Wanawake). "
                 "Endesha sync wanachama kutoka server ikiwa unahitaji, au hifadhi wasifu wa mwanachama.",
             )
 

@@ -183,8 +183,8 @@ class MinistryMembership(models.Model):
 
 class ChurchGroup(models.Model):
     GROUP_TYPE_CHOICES = [
-        ("youth", "Vijana"),
-        ("women", "Akina Mama"),
+        ("youth", "Idara ya Vijana (CFD'S)"),
+        ("women", "Idara ya Wanawake (WWM)"),
         ("choir", "Kwaya"),
         ("men", "Akina Baba"),
         ("elders", "Wazee"),
@@ -233,7 +233,7 @@ class ChurchGroup(models.Model):
 
     @property
     def display_title(self):
-        """Kichwa cha ukurasa: Vijana, Akina Mama, Kwaya, n.k."""
+        """Kichwa cha ukurasa: Idara ya Vijana, Idara ya Wanawake, Kwaya, n.k."""
         return self.get_group_type_display()
 
 
