@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 from .forms import UniversityStudentRecordForm
 from .models import ChurchUser, UniversityStudentRecord
 from .permissions import can_manage_members
+from .university_student_services import promote_due_university_graduates
 
 
 def _require_pastor(view_func):
@@ -25,6 +26,14 @@ def _require_pastor(view_func):
 
 @_require_pastor
 def university_student_list(request):
+    promoted = promote_due_university_graduates()
+    if promoted:
+        messages.info(
+            request,
+            f"Wanafunzi {promoted} wametambuliwa kiotomatiki kama waliohitimu "
+            "(mwaka wa kutarajiwa kuhitimu umefika).",
+        )
+
     tab = request.GET.get("tab", "studying")
     q = (request.GET.get("q") or "").strip()
 
@@ -118,6 +127,7 @@ def university_student_edit(request, pk):
 
 @_require_pastor
 def university_student_detail(request, pk):
+    promote_due_university_graduates()
     record = get_object_or_404(
         UniversityStudentRecord.objects.select_related("member", "recorded_by"),
         pk=pk,

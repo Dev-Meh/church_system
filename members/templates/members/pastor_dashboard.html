@@ -33,6 +33,36 @@
 {% endblock %}
 
 {% block page_content %}
+{% if pending_pastors_count %}
+<div class="panel" style="margin-bottom:1rem;border-color:rgba(242,211,122,.35);">
+  <div class="panel-hd">{% church_t 'pastor_pending_verification_title' %} ({{ pending_pastors_count }})</div>
+  <div class="panel-bd">
+    {% for p in pending_pastors %}
+    <div class="item-row">
+      <div><div>{{ p.full_name }}</div><div class="muted">{{ p.email }} · {{ p.date_joined|date:"M d, Y" }}</div></div>
+      <div><a href="{% url 'members:member_list' %}?role=pastor" class="btn-xs btn-xs-primary" style="text-decoration:none;">{% church_t 'view' %}</a></div>
+    </div>
+    {% endfor %}
+    <div class="muted" style="margin-top:0.5rem;">{% church_t 'pastor_pending_verification_contact' %}</div>
+  </div>
+</div>
+{% endif %}
+{% if pending_members_count %}
+<div class="panel" style="margin-bottom:1rem;border-color:rgba(96,165,250,.35);">
+  <div class="panel-hd">{% church_t 'member_pending_approval_title' %} ({{ pending_members_count }})</div>
+  <div class="panel-bd">
+    {% for m in pending_members %}
+    <div class="item-row">
+      <div><div>{{ m.full_name }}</div><div class="muted">{{ m.email|default:m.username }} · {{ m.date_joined|date:"M d, Y" }}</div></div>
+      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;">
+        <a href="{% url 'members:member_list' %}?status=pending" class="btn-xs btn-xs-primary" style="text-decoration:none;">{% church_t 'view' %}</a>
+      </div>
+    </div>
+    {% endfor %}
+    <div class="muted" style="margin-top:0.5rem;">{% church_t 'member_pending_approval_hint' %}</div>
+  </div>
+</div>
+{% endif %}
 <div class="pd-grid">
   <div class="pd-card"><div class="pd-label">{% church_t 'total_members' %}</div><div class="pd-value">{{ total_members }}</div></div>
   <div class="pd-card"><div class="pd-label">{% church_t 'active_members_stat' %}</div><div class="pd-value">{{ active_members }}</div></div>

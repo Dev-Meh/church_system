@@ -193,8 +193,52 @@
         gap: 1rem;
     }
 
+    .register-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem 1.25rem;
+        align-items: start;
+    }
+
+    .register-grid .span-full {
+        grid-column: 1 / -1;
+    }
+
+    .register-grid--3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .register-notice {
+        font-size: 13px;
+        margin-bottom: 1.25rem;
+        padding: 0.85rem 1rem;
+        background: #f0f4f8;
+        border-left: 3px solid #c8a84b;
+        border-radius: 0 8px 8px 0;
+        color: #475569;
+        line-height: 1.5;
+    }
+
+    .field-hint {
+        font-size: 12px;
+        color: #64748b;
+        margin: -0.2rem 0 0.45rem;
+        line-height: 1.4;
+    }
+
+    .field-group {
+        min-width: 0;
+    }
+
     .mb-3 {
         margin-bottom: 1rem;
+    }
+
+    .university-fields-panel .section-title {
+        margin-bottom: 1rem;
+        font-size: 16px;
+        border-bottom: none;
+        padding-bottom: 0;
     }
 
     .pastor-fields {
@@ -203,6 +247,17 @@
         border-radius: 8px;
         border: 1px solid #e9ecef;
         margin-top: 1rem;
+        display: none;
+    }
+    .pastor-fields.is-visible {
+        display: block;
+        animation: fadeUp 0.35s ease both;
+    }
+    .pastor-fields .pastor-req {
+        display: none;
+    }
+    .pastor-fields.is-visible .pastor-req {
+        display: inline;
     }
 
     .pastor-fields-title {
@@ -213,6 +268,55 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+    }
+
+    .university-register-section {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 1.25rem 1.25rem 0.5rem;
+    }
+    .uni-checkbox-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
+    }
+    .uni-checkbox-row .form-check-input {
+        width: 1.15rem;
+        height: 1.15rem;
+        margin-top: 0.2rem;
+        flex-shrink: 0;
+        cursor: pointer;
+        accent-color: #c8a84b;
+    }
+    .uni-checkbox-label {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1a3a5c;
+        cursor: pointer;
+        line-height: 1.35;
+    }
+    .uni-checkbox-hint {
+        font-size: 12px;
+        color: #64748b;
+        margin: 0.5rem 0 0 1.85rem;
+        line-height: 1.45;
+    }
+    .university-fields-panel {
+        display: none;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px dashed #cbd5e1;
+        animation: fadeUp 0.35s ease both;
+    }
+    .university-fields-panel.is-visible {
+        display: block;
+    }
+    .university-fields-panel .uni-req {
+        display: none;
+    }
+    .university-fields-panel.is-visible .uni-req {
+        display: inline;
     }
 
     .submit-btn {
@@ -368,7 +472,9 @@
     }
 
     @media (max-width: 768px) {
-        .two-col {
+        .two-col,
+        .register-grid,
+        .register-grid--3 {
             grid-template-columns: 1fr;
         }
 
@@ -415,6 +521,106 @@
             font-size: 14px;
         }
     }
+
+    .approval-modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+        background: rgba(13, 27, 42, 0.72);
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.28s ease, visibility 0.28s ease;
+    }
+    .approval-modal-overlay.is-open {
+        opacity: 1;
+        visibility: visible;
+    }
+    .approval-modal {
+        width: min(420px, 94vw);
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 18px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(200, 168, 75, 0.35);
+        padding: 1.75rem 1.5rem 1.35rem;
+        text-align: center;
+        transform: translateY(18px) scale(0.96);
+        transition: transform 0.28s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .approval-modal-overlay.is-open .approval-modal {
+        transform: translateY(0) scale(1);
+    }
+    .approval-modal::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #c8a84b, #e8c96b, #c8a84b);
+    }
+    .approval-modal-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1a3a5c 0%, #0d1b2a 100%);
+        color: #f2d37a;
+        font-size: 28px;
+        box-shadow: 0 10px 24px rgba(26, 58, 92, 0.25);
+    }
+    .approval-modal-title {
+        font-family: 'Cinzel', serif;
+        font-size: 1.25rem;
+        color: #1a3a5c;
+        margin: 0 0 0.5rem;
+        line-height: 1.35;
+    }
+    .approval-modal-lead {
+        font-size: 15px;
+        font-weight: 700;
+        color: #c8a84b;
+        margin: 0 0 0.75rem;
+    }
+    .approval-modal-body,
+    .approval-modal-steps,
+    .approval-modal-contact {
+        font-size: 14px;
+        color: #475569;
+        line-height: 1.55;
+        margin: 0 0 0.65rem;
+    }
+    .approval-modal-contact {
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 1.15rem;
+    }
+    .approval-modal-btn {
+        width: 100%;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #c8a84b 0%, #b39843 100%);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .approval-modal-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(200, 168, 75, 0.35);
+    }
 </style>
 
 <div class="page-bg{% if auth_mode == 'login' %} page-bg--login{% endif %}">
@@ -450,9 +656,9 @@
                 <form method="post" action="{% url 'login' %}">
                     {% csrf_token %}
                     
-                    {% if form.non_field_errors %}
+                    {% if login_form.non_field_errors and not show_pending_approval_modal %}
                         <div class="alert alert-danger">
-                            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                            {% for error in login_form.non_field_errors %}{{ error }}{% endfor %}
                         </div>
                     {% endif %}
 
@@ -496,31 +702,24 @@
                     <!-- Account Information -->
                     <div class="form-section">
                         <div class="section-title">{% church_t 'account_information' %}</div>
-                        <p class="text-muted" style="font-size:13px;margin-bottom:1rem;color:rgba(255,255,255,0.55);">
-                            Usajili wa umma ni kwa <strong>wanachama (members)</strong> tu. Mchungaji na msimamizi wanateuliwa na uongozi wa kanisa baada ya kujiunga.
-                        </p>
-                        <div class="two-col">
-                            <div class="mb-3">
+                        <div class="register-notice">{% church_t 'register_public_notice' %}</div>
+                        <div class="register-grid">
+                            <div class="field-group">
                                 <label for="{{ form.username.id_for_label }}" class="form-label">{% church_t 'username' %} <span class="required-star">*</span></label>
                                 {{ form.username }}
                                 {% if form.username.errors %}<div class="text-danger">{% for e in form.username.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
                             </div>
-
-                            <div class="mb-3">
+                            <div class="field-group">
                                 <label for="{{ form.email.id_for_label }}" class="form-label">{% church_t 'email_address' %} <span class="required-star">*</span></label>
                                 {{ form.email }}
                                 {% if form.email.errors %}<div class="text-danger">{% for e in form.email.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
                             </div>
-
-                            <div class="mb-3"></div>
-
-                            <div class="mb-3">
+                            <div class="field-group">
                                 <label for="{{ form.password1.id_for_label }}" class="form-label">{% church_t 'password' %} <span class="required-star">*</span></label>
                                 {{ form.password1 }}
                                 {% if form.password1.errors %}<div class="text-danger">{% for e in form.password1.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
                             </div>
-
-                            <div class="mb-3">
+                            <div class="field-group">
                                 <label for="{{ form.password2.id_for_label }}" class="form-label">{% church_t 'confirm_password' %} <span class="required-star">*</span></label>
                                 {{ form.password2 }}
                                 {% if form.password2.errors %}<div class="text-danger">{% for e in form.password2.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
@@ -531,48 +730,124 @@
                     <!-- Personal Information -->
                     <div class="form-section">
                         <div class="section-title">{% church_t 'personal_information' %}</div>
-                        <div class="two-col">
-                            <div class="mb-3">
+                        <div class="register-grid">
+                            <div class="field-group">
                                 <label for="{{ form.first_name.id_for_label }}" class="form-label">{% church_t 'first_name' %} <span class="required-star">*</span></label>
                                 {{ form.first_name }}
                                 {% if form.first_name.errors %}<div class="text-danger">{% for e in form.first_name.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
                             </div>
-
-                            <div class="mb-3">
+                            <div class="field-group">
                                 <label for="{{ form.last_name.id_for_label }}" class="form-label">{% church_t 'last_name' %} <span class="required-star">*</span></label>
                                 {{ form.last_name }}
                                 {% if form.last_name.errors %}<div class="text-danger">{% for e in form.last_name.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
                             </div>
-
-                            <div class="mb-3">
+                            <div class="field-group">
                                 <label for="{{ form.phone_number.id_for_label }}" class="form-label">{% church_t 'phone_number' %}</label>
                                 {{ form.phone_number }}
                                 {% if form.phone_number.errors %}<div class="text-danger">{% for e in form.phone_number.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
                             </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">{% church_t 'date_of_birth' %}</label>
-                                <p class="text-muted" style="font-size:12px;margin:-0.25rem 0 0.5rem;">Chagua <strong>mwaka</strong>, kisha mwezi na siku.</p>
-                                {{ form.date_of_birth }}
-                                {% if form.date_of_birth.errors %}<div class="text-danger">{% for e in form.date_of_birth.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="{{ form.gender.id_for_label }}" class="form-label">{% church_t 'gender' %}</label>
+                            <div class="field-group">
+                                <label for="{{ form.gender.id_for_label }}" class="form-label">{% church_t 'gender' %} <span class="required-star">*</span></label>
                                 {{ form.gender }}
                                 {% if form.gender.errors %}<div class="text-danger">{% for e in form.gender.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
                             </div>
-
-                            <div class="mb-3">
+                            <div class="field-group span-full">
+                                <label class="form-label">{% church_t 'date_of_birth' %}</label>
+                                <p class="field-hint">{% church_t 'dob_register_hint' %}</p>
+                                {{ form.date_of_birth }}
+                                {% if form.date_of_birth.errors %}<div class="text-danger">{% for e in form.date_of_birth.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                            </div>
+                            <div class="field-group">
                                 <label for="{{ form.occupation.id_for_label }}" class="form-label">{% church_t 'occupation' %}</label>
                                 {{ form.occupation }}
                                 {% if form.occupation.errors %}<div class="text-danger">{% for e in form.occupation.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
                             </div>
+                            <div class="field-group">
+                                <label for="{{ form.marital_status.id_for_label }}" class="form-label">{% church_t 'marital_status' %}</label>
+                                {{ form.marital_status }}
+                                {% if form.marital_status.errors %}<div class="text-danger">{% for e in form.marital_status.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
 
-                            <div class="mb-3" style="grid-column: 1 / -1;">
+                    <!-- Contact & Location -->
+                    <div class="form-section">
+                        <div class="section-title">{% church_t 'contact_location_section' %}</div>
+                        <div class="register-grid">
+                            <div class="field-group span-full">
                                 <label for="{{ form.address.id_for_label }}" class="form-label">{% church_t 'address' %}</label>
                                 {{ form.address }}
                                 {% if form.address.errors %}<div class="text-danger">{% for e in form.address.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                            </div>
+                            <div class="field-group">
+                                <label for="{{ form.city.id_for_label }}" class="form-label">{% church_t 'city' %}</label>
+                                {{ form.city }}
+                                {% if form.city.errors %}<div class="text-danger">{% for e in form.city.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                            </div>
+                            <div class="field-group">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">{% church_t 'country' %}</label>
+                                {{ form.country }}
+                                {% if form.country.errors %}<div class="text-danger">{% for e in form.country.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                            </div>
+                            <div class="field-group">
+                                <label for="{{ form.postal_code.id_for_label }}" class="form-label">{% church_t 'postal_code' %}</label>
+                                {{ form.postal_code }}
+                                {% if form.postal_code.errors %}<div class="text-danger">{% for e in form.postal_code.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mwanafunzi wa chuo (hiari) -->
+                    <div class="form-section university-register-section" id="university-register-section">
+                        <div class="uni-checkbox-row">
+                            {{ form.is_university_student }}
+                            <label class="form-check-label uni-checkbox-label" for="{{ form.is_university_student.id_for_label }}">
+                                {% church_t 'is_university_student_label' %}
+                            </label>
+                        </div>
+                        <p class="uni-checkbox-hint">{% church_t 'is_university_student_hint' %}</p>
+                        {% if form.is_university_student.errors %}
+                        <div class="text-danger">{% for e in form.is_university_student.errors %}<small>{{ e }}</small>{% endfor %}</div>
+                        {% endif %}
+
+                        <div id="university-student-fields" class="university-fields-panel{% if form.is_university_student.value %} is-visible{% endif %}">
+                            <div class="section-title">{% church_t 'university_student_section_title' %}</div>
+                            <div class="register-grid">
+                                <div class="field-group span-full">
+                                    <label for="{{ form.uni_institution.id_for_label }}" class="form-label">{% church_t 'uni_institution_label' %} <span class="required-star uni-req">*</span></label>
+                                    {{ form.uni_institution }}
+                                    {% if form.uni_institution.errors %}<div class="text-danger">{% for e in form.uni_institution.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                                </div>
+                                <div class="field-group span-full">
+                                    <label for="{{ form.uni_course.id_for_label }}" class="form-label">{% church_t 'uni_course_label' %} <span class="required-star uni-req">*</span></label>
+                                    {{ form.uni_course }}
+                                    {% if form.uni_course.errors %}<div class="text-danger">{% for e in form.uni_course.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                                </div>
+                                <div class="field-group">
+                                    <label for="{{ form.uni_faculty.id_for_label }}" class="form-label">{% church_t 'uni_faculty_label' %}</label>
+                                    {{ form.uni_faculty }}
+                                    {% if form.uni_faculty.errors %}<div class="text-danger">{% for e in form.uni_faculty.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                                </div>
+                                <div class="field-group">
+                                    <label for="{{ form.uni_level.id_for_label }}" class="form-label">{% church_t 'uni_level_label' %} <span class="required-star uni-req">*</span></label>
+                                    {{ form.uni_level }}
+                                    {% if form.uni_level.errors %}<div class="text-danger">{% for e in form.uni_level.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                                </div>
+                                <div class="field-group">
+                                    <label for="{{ form.uni_year_started.id_for_label }}" class="form-label">{% church_t 'uni_year_started_label' %}</label>
+                                    {{ form.uni_year_started }}
+                                    {% if form.uni_year_started.errors %}<div class="text-danger">{% for e in form.uni_year_started.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                                </div>
+                                <div class="field-group">
+                                    <label for="{{ form.uni_expected_completion_year.id_for_label }}" class="form-label">{% church_t 'uni_expected_completion_label' %}</label>
+                                    {{ form.uni_expected_completion_year }}
+                                    {% if form.uni_expected_completion_year.errors %}<div class="text-danger">{% for e in form.uni_expected_completion_year.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                                </div>
+                                <div class="field-group span-full">
+                                    <label for="{{ form.uni_notes.id_for_label }}" class="form-label">{% church_t 'uni_notes_label' %}</label>
+                                    {{ form.uni_notes }}
+                                    {% if form.uni_notes.errors %}<div class="text-danger">{% for e in form.uni_notes.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -588,4 +863,64 @@
         </div>
     </div>
 </div>
+
+{% if show_pending_approval_modal or show_registration_pending_modal %}
+<div id="pending-approval-modal" class="approval-modal-overlay is-open" role="dialog" aria-modal="true" aria-labelledby="pending-approval-title">
+    <div class="approval-modal">
+        <div class="approval-modal-icon" aria-hidden="true">✝</div>
+        <h2 id="pending-approval-title" class="approval-modal-title">{% church_t 'member_pending_modal_title' %}</h2>
+        <p class="approval-modal-lead">{% church_t 'member_pending_modal_lead' %}</p>
+        <p class="approval-modal-body">{% church_t 'member_pending_modal_body' %}</p>
+        <p class="approval-modal-steps">{% church_t 'member_pending_modal_steps' %}</p>
+        <p class="approval-modal-contact">{% church_t 'member_pending_modal_contact' %}</p>
+        <button type="button" class="approval-modal-btn" id="close-pending-approval-modal">{% church_t 'member_pending_modal_ok' %}</button>
+    </div>
+</div>
+<script>
+(function () {
+  var modal = document.getElementById('pending-approval-modal');
+  var closeBtn = document.getElementById('close-pending-approval-modal');
+  if (!modal) return;
+
+  function closeModal() {
+    modal.classList.remove('is-open');
+    setTimeout(function () {
+      if (modal.parentNode) modal.parentNode.removeChild(modal);
+    }, 280);
+  }
+
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', function (e) {
+    if (e.target === modal) closeModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeModal();
+  });
+})();
+</script>
+{% endif %}
+
+{% if auth_mode == 'register' %}
+<script>
+(function () {
+  var checkbox = document.getElementById('id_is_university_student');
+  var panel = document.getElementById('university-student-fields');
+  if (!checkbox || !panel) return;
+
+  var requiredIds = ['id_uni_institution', 'id_uni_course', 'id_uni_level'];
+
+  function syncUniversityPanel() {
+    var show = checkbox.checked;
+    panel.classList.toggle('is-visible', show);
+    requiredIds.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.required = show;
+    });
+  }
+
+  checkbox.addEventListener('change', syncUniversityPanel);
+  syncUniversityPanel();
+})();
+</script>
+{% endif %}
 {% endblock %}

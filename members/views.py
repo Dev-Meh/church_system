@@ -95,20 +95,31 @@ class CustomLoginView(LoginView):
         username = (self.request.POST.get('username') or '').strip()
         record_rate_limit_failure('login', self.request, username)
         blocked, retry = is_rate_limited('login', self.request, username)
-        if blocked:
-            messages.error(self.request, rate_limit_message('login', retry))
-        else:
-            messages.error(
-                self.request,
-                'Jina la mtumiaji au nenosiri si sahihi. Jaribu tena.',
-            )
-        return super().form_invalid(form)
+        pending_approval = any(
+            getattr(error, 'code', None) == 'pending_approval'
+            for error in form.non_field_errors.as_data()
+        )
+
+        if not pending_approval:
+            if blocked:
+                messages.error(self.request, rate_limit_message('login', retry))
+            else:
+                messages.error(
+                    self.request,
+                    'Jina la mtumiaji au nenosiri si sahihi. Jaribu tena.',
+                )
+
+        context = self.get_context_data(form=form)
+        context['show_pending_approval_modal'] = pending_approval
+        return self.render_to_response(context)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['login_form'] = self.get_form()
-        context['form'] = ChurchUserRegistrationForm()  # Add registration form for template
+        context['login_form'] = context.get('form') or self.get_form()
+        context['form'] = ChurchUserRegistrationForm()
         context['auth_mode'] = 'login'
+        if self.request.session.pop('show_registration_pending_modal', False):
+            context['show_registration_pending_modal'] = True
         return context
 
 def custom_logout(request):
@@ -150,7 +161,7 @@ class RegisterView(CreateView):
     
     def form_valid(self, form):
         response = super().form_valid(form)
-        messages.success(self.request, 'Registration successful! Please log in with your new account.')
+        self.request.session['show_registration_pending_modal'] = True
         return response
     
     def get_context_data(self, **kwargs):
@@ -330,6 +341,33 @@ def demote_from_secretary(request, user_id):
 
 @login_required
 @require_POST
+def approve_pastor(request, user_id):
+    """Admin or verified pastor approves a self-registered pastor."""
+    if not can_promote_to_pastor(request.user):
+        messages.error(request, 'Huna ruhusa ya kuidhinisha mchungaji.')
+        return redirect('dashboard')
+
+    pastor_user = get_object_or_404(
+        ChurchUser,
+        id=user_id,
+        role='pastor',
+        is_verified_pastor=False,
+    )
+    pastor_user.is_verified_pastor = True
+    pastor_user.is_staff = True
+    pastor_user.pastor_verification_date = timezone.now()
+    pastor_user.save(
+        update_fields=['is_verified_pastor', 'is_staff', 'pastor_verification_date']
+    )
+    messages.success(
+        request,
+        f'{pastor_user.full_name} sasa ni mchungaji aliyethibitishwa.',
+    )
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
+
+
+@login_required
+@require_POST
 def promote_to_pastor(request, user_id):
     """Admin or verified pastor appoints a member as verified pastor."""
     if not can_promote_to_pastor(request.user):
@@ -393,6 +431,28 @@ def promote_to_admin(request, user_id):
         f'{member_user.full_name} sasa ni msimamizi (administrator) wa mfumo.',
     )
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('members:member_list')))
+
+
+@login_required
+@require_POST
+def approve_member(request, user_id):
+    """Pastor/admin approves a self-registered member."""
+    if not can_manage_members(request.user):
+        messages.error(request, 'Huna ruhusa ya kuidhinisha wanachama.')
+        return redirect('dashboard')
+
+    member_user = get_object_or_404(ChurchUser, id=user_id, role='member')
+    if member_user.is_active_member:
+        messages.info(request, f'{member_user.full_name} tayari ameidhinishwa.')
+    else:
+        member_user.is_active = True
+        member_user.is_active_member = True
+        member_user.save(update_fields=['is_active', 'is_active_member'])
+        messages.success(
+            request,
+            f'{member_user.full_name} ameidhinishwa — anaweza kuingia na kutumia mfumo sasa.',
+        )
+    return _redirect_member_list(request)
 
 
 @login_required

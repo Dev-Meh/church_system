@@ -172,7 +172,8 @@ class PastorRegistrationForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.role = 'pastor'
-        user.is_staff = True  # Pastors can access admin
+        user.is_staff = False
+        user.is_verified_pastor = False
         
         # Save pastor-specific info in user fields (we'll add these fields to model later)
         user.pastoral_license = self.cleaned_data['pastoral_license']

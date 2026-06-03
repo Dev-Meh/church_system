@@ -12,6 +12,7 @@ from django.db.models.functions import TruncMonth
 from datetime import timedelta
 import json
 from .models import ChurchUser, UniversityStudentRecord
+from .university_student_services import promote_due_university_graduates
 from donations.models import Donation, DonationCampaign
 from .models_message import MessageRecipient
 from .message_queries import member_inbox_queryset, church_inbox_unread_count
@@ -49,6 +50,7 @@ def dashboard(request):
 
 def pastor_dashboard(request):
     """Pastor-specific dashboard with member and donation oversight"""
+    promote_due_university_graduates()
     user = request.user
     
     # Member statistics
@@ -105,6 +107,24 @@ def pastor_dashboard(request):
     ).count()
     university_students_alumni = UniversityStudentRecord.objects.filter(
         status='completed'
+    ).count()
+    pending_pastors = ChurchUser.objects.filter(
+        role='pastor',
+        is_verified_pastor=False,
+    ).order_by('-date_joined')[:5]
+    pending_pastors_count = ChurchUser.objects.filter(
+        role='pastor',
+        is_verified_pastor=False,
+    ).count()
+    pending_members = ChurchUser.objects.filter(
+        role='member',
+        is_active=True,
+        is_active_member=False,
+    ).order_by('-date_joined')[:5]
+    pending_members_count = ChurchUser.objects.filter(
+        role='member',
+        is_active=True,
+        is_active_member=False,
     ).count()
     
     # Donation trend (last 6 months)
@@ -203,6 +223,10 @@ def pastor_dashboard(request):
         'registration_chart_data': json.dumps(registration_chart_data),
         'university_students_studying': university_students_studying,
         'university_students_alumni': university_students_alumni,
+        'pending_pastors': pending_pastors,
+        'pending_pastors_count': pending_pastors_count,
+        'pending_members': pending_members,
+        'pending_members_count': pending_members_count,
     }
     
     return render(request, 'members/pastor_dashboard.html', context)
@@ -320,8 +344,10 @@ class MemberListView(LoginRequiredMixin, ListView):
 
         if status == 'active':
             qs = qs.filter(is_active=True, is_active_member=True)
+        elif status == 'pending':
+            qs = qs.filter(is_active=True, is_active_member=False)
         elif status == 'inactive':
-            qs = qs.filter(Q(is_active=False) | Q(is_active_member=False))
+            qs = qs.filter(is_active=False)
 
         return qs.order_by('role', 'first_name', 'last_name')
 
@@ -343,6 +369,7 @@ class MemberListView(LoginRequiredMixin, ListView):
         context['status_choices'] = [
             ('', 'Hali zote'),
             ('active', 'Hai (active)'),
+            ('pending', 'Inasubiri uidhinisho'),
             ('inactive', 'Imesimamishwa'),
         ]
         return context

@@ -210,6 +210,9 @@
                       <option value="{% url 'members:promote_to_accountant' member.id %}" data-confirm="Teua {{ member.full_name }} kuwa Accountant?">Teua: Accountant</option>
                     {% elif member.role == 'pastor' %}
                       {% if can_promote_pastor %}
+                      {% if not member.is_verified_pastor %}
+                      <option value="{% url 'members:approve_pastor' member.id %}" data-confirm="Thibitisha {{ member.full_name }} kama mchungaji?">Thibitisha: Mchungaji</option>
+                      {% endif %}
                       <option value="{% url 'members:demote_from_pastor' member.id %}" data-confirm="Ondoa cheo cha mchungaji kwa {{ member.full_name }}?">Ondoa: Mchungaji</option>
                       {% endif %}
                     {% elif member.role == 'secretary' %}
@@ -230,17 +233,24 @@
             <td>
               {% if member.is_active and member.is_active_member %}
               <span class="badge-ok">Active</span>
+              {% elif member.is_active and not member.is_active_member %}
+              <span class="badge-off">Inasubiri uidhinisho</span>
               {% else %}
-              <span class="badge-off">Inactive</span>
+              <span class="badge-off">Imesimamishwa</span>
               {% endif %}
             </td>
             <td>
               <div class="actions-cell">
                 <a href="{% url 'members:admin_reset_password' member.id %}" class="btn-xs">Nenosiri</a>
+                {% if member.role == 'member' and member.is_active and not member.is_active_member %}
+                <form method="post" action="{% url 'members:approve_member' member.id %}" style="display:inline;">{% csrf_token %}
+                  <button type="submit" class="btn-xs btn-xs-success">Idhinisha</button>
+                </form>
+                {% endif %}
                 <form method="post" action="{% url 'members:toggle_member_active' member.id %}" style="display:inline;">{% csrf_token %}
                   {% if member.is_active and member.is_active_member %}
                   <button type="submit" class="btn-xs btn-xs-danger">Simamisha</button>
-                  {% else %}
+                  {% elif not member.is_active %}
                   <button type="submit" class="btn-xs btn-xs-success">Washa</button>
                   {% endif %}
                 </form>

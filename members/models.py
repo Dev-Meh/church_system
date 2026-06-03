@@ -314,7 +314,7 @@ class UniversityStudentRecord(models.Model):
     faculty = models.CharField(
         max_length=200,
         blank=True,
-        verbose_name="Kitivo / Somo",
+        verbose_name="Ndaki",
     )
     level = models.CharField(
         max_length=20,

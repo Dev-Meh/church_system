@@ -27,7 +27,7 @@
   <div class="row"><span class="lbl">Hali</span><span class="val badge-{{ record.status }}">{{ record.get_status_display }}</span></div>
   <div class="row"><span class="lbl">Chuo</span><span class="val">{{ record.institution }}</span></div>
   <div class="row"><span class="lbl">Kozi</span><span class="val">{{ record.course }}</span></div>
-  {% if record.faculty %}<div class="row"><span class="lbl">Kitivo</span><span class="val">{{ record.faculty }}</span></div>{% endif %}
+  {% if record.faculty %}<div class="row"><span class="lbl">Ndaki</span><span class="val">{{ record.faculty }}</span></div>{% endif %}
   <div class="row"><span class="lbl">Kiwango</span><span class="val">{{ record.get_level_display }}</span></div>
   {% if record.year_started %}<div class="row"><span class="lbl">Alianza</span><span class="val">{{ record.year_started }}</span></div>{% endif %}
   {% if record.expected_completion_year %}<div class="row"><span class="lbl">Kutarajiwa kuhitimu</span><span class="val">{{ record.expected_completion_year }}</span></div>{% endif %}
