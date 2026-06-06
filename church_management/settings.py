@@ -53,6 +53,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'members.middleware.AdminSecurityMiddleware',
     'members.middleware.SecurityHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -74,8 +75,9 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
+                *(('django.template.context_processors.debug',) if DEBUG else ()),
                 'django.template.context_processors.request',
+                'django.template.context_processors.csrf',
                 'django.template.context_processors.media',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -168,6 +170,19 @@ ADMIN_URL = os.getenv('ADMIN_URL', 'admin/').strip()
 if ADMIN_URL and not ADMIN_URL.endswith('/'):
     ADMIN_URL = f'{ADMIN_URL}/'
 
+_insecure_admin_paths = {'admin/', 'administrator/', 'django-admin/'}
+if not DEBUG and ADMIN_URL.lower() in _insecure_admin_paths:
+    raise ImproperlyConfigured(
+        'Set a secret ADMIN_URL in .env for production (not "admin/"). '
+        'Example: ADMIN_URL=phm-manage-k7x2m9p4/'
+    )
+
+_admin_allowed_ips = os.getenv('ADMIN_ALLOWED_IPS', '').strip()
+ADMIN_ALLOWED_IPS = {ip.strip() for ip in _admin_allowed_ips.split(',') if ip.strip()}
+
+ADMIN_RATE_LIMIT_ATTEMPTS = int(os.getenv('ADMIN_RATE_LIMIT_ATTEMPTS', '5'))
+ADMIN_RATE_LIMIT_LOCKOUT = int(os.getenv('ADMIN_RATE_LIMIT_LOCKOUT', '900'))
+
 # ── SESSION SECURITY ────────────────────────────
 SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', '1800'))
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
@@ -178,6 +193,8 @@ SESSION_COOKIE_NAME = os.getenv('SESSION_COOKIE_NAME', 'phmarcc_sessionid')
 
 # ── CSRF PROTECTION ─────────────────────────────
 CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_NAME = os.getenv('CSRF_COOKIE_NAME', 'phmarcc_xsrf')
+CSRF_HEADER_NAME = os.getenv('CSRF_HEADER_NAME', 'HTTP_X_PHMARCC_XSRF')
 CSRF_COOKIE_SAMESITE = os.getenv('CSRF_COOKIE_SAMESITE', 'Lax')
 CSRF_FAILURE_VIEW = 'members.views.csrf_failure'
 CSRF_USE_SESSIONS = False
@@ -213,6 +230,10 @@ CONTENT_SECURITY_POLICY = os.getenv(
     "form-action 'self'",
 )
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+# ── HIDE TECH STACK (headers, cookies, generic errors) ──
+HIDE_TECH_STACK = os.getenv('HIDE_TECH_STACK', 'True' if not DEBUG else 'False') == 'True'
+SERVER_SIGNATURE = os.getenv('SERVER_SIGNATURE', '').strip()
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -258,6 +279,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_RENDERER_CLASSES': (
+        ['rest_framework.renderers.JSONRenderer']
+        if not DEBUG
+        else [
+            'rest_framework.renderers.JSONRenderer',
+            'rest_framework.renderers.BrowsableAPIRenderer',
+        ]
+    ),
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',

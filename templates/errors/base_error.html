@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block error_title %}Hitilafu{% endblock %} — PHM-ARCC</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0d1b2a; color: #e8eef5; padding: 1.5rem;
+    }
+    .card {
+      max-width: 420px; width: 100%; text-align: center;
+      background: #152333; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 2rem 1.5rem;
+    }
+    .code { font-size: 3rem; font-weight: 800; color: #c8a84b; line-height: 1; }
+    h1 { font-size: 1.15rem; margin: 0.75rem 0 0.5rem; }
+    p { margin: 0 0 1.25rem; color: rgba(255,255,255,0.65); font-size: 0.95rem; line-height: 1.5; }
+    a {
+      display: inline-block; padding: 0.55rem 1.1rem; border-radius: 8px;
+      background: #c8a84b; color: #0d1b2a; text-decoration: none; font-weight: 700; font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="code">{% block error_code %}—{% endblock %}</div>
+    <h1>{% block error_title %}Hitilafu{% endblock %}</h1>
+    <p>{% block error_message %}Tafadhali jaribu tena.{% endblock %}</p>
+    <a href="/">Rudi nyumbani</a>
+  </div>
+</body>
+</html>

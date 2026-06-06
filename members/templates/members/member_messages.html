@@ -100,21 +100,15 @@
 function markAsRead(recipientId) {
   fetch(`/members/mark-read/${recipientId}/`, {
     method: 'POST',
-    headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' }
+    headers: { 'X-Phmarcc-Xsrf': getCsrfToken(), 'Content-Type': 'application/json' }
   })
   .then(r => r.json())
   .then(data => { if (data.status === 'success') location.reload(); })
   .catch(err => console.error(err));
 }
-function getCookie(name) {
-  let v = null;
-  if (document.cookie) {
-    document.cookie.split(';').forEach(c => {
-      c = c.trim();
-      if (c.startsWith(name + '=')) v = decodeURIComponent(c.substring(name.length + 1));
-    });
-  }
-  return v;
+function getCsrfToken() {
+  var meta = document.querySelector('meta[name="csrf-token"]');
+  return meta && meta.content ? meta.content : '';
 }
 </script>
 {% endblock %}

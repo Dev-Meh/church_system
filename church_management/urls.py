@@ -1,6 +1,3 @@
-"""
-URL configuration for church_management project.
-"""
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -14,6 +11,10 @@ from members.university_student_views import (
     university_student_edit,
     university_student_mark_completed,
 )
+
+admin.site.site_header = 'PHM-ARCC Utawala'
+admin.site.site_title = 'PHM-ARCC'
+admin.site.index_title = 'Usimamizi wa mfumo'
 
 urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
@@ -40,6 +41,10 @@ urlpatterns = [
     path('donations/', include('donations.urls')),
     path('api/', include('members.api_urls')),  # NEW: API endpoints
 ]
+
+handler404 = 'members.error_views.page_not_found'
+handler500 = 'members.error_views.server_error'
+handler403 = 'members.error_views.permission_denied'
 
 if settings.DEBUG or getattr(settings, 'SERVE_MEDIA_FILES', False):
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

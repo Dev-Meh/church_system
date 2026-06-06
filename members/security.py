@@ -19,6 +19,8 @@ def _cache_key(scope, identifier):
 def _max_attempts(scope):
     if scope == "login":
         return getattr(settings, "LOGIN_RATE_LIMIT_ATTEMPTS", 5)
+    if scope == "admin":
+        return getattr(settings, "ADMIN_RATE_LIMIT_ATTEMPTS", 5)
     if scope == "password_reset":
         return getattr(settings, "PASSWORD_RESET_RATE_LIMIT_ATTEMPTS", 3)
     if scope == "register":
@@ -29,6 +31,8 @@ def _max_attempts(scope):
 def _lockout_seconds(scope):
     if scope == "login":
         return getattr(settings, "LOGIN_RATE_LIMIT_LOCKOUT", 900)
+    if scope == "admin":
+        return getattr(settings, "ADMIN_RATE_LIMIT_LOCKOUT", 900)
     if scope == "password_reset":
         return getattr(settings, "PASSWORD_RESET_RATE_LIMIT_WINDOW", 3600)
     if scope == "register":
@@ -88,6 +92,10 @@ def rate_limit_message(scope, retry_seconds):
     if scope == "login":
         return (
             f"Majaribio mengi ya kuingia. Subiri dakika {minutes} kisha jaribu tena."
+        )
+    if scope == "admin":
+        return (
+            f"Majaribio mengi ya kuingia admin. Subiri dakika {minutes} kisha jaribu tena."
         )
     if scope == "password_reset":
         return (
