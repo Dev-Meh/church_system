@@ -5,90 +5,116 @@
 {% block page_title %}{{ sermon.title|truncatechars:48 }}{% endblock %}
 {% block page_subtitle %}
 <p class="topnav-subtitle">
-  {{ sermon.sermon_date|date:"F d, Y" }}{% if sermon.speaker %} — {{ sermon.speaker.full_name }}{% endif %}
+  {{ sermon.sermon_date|date:"d M Y, H:i" }}{% if sermon.speaker %} — {{ sermon.speaker.full_name }}{% endif %}
 </p>
 {% endblock %}
 
 {% block page_header_actions %}
-<a href="{% url 'dashboard' %}" class="btn-back-dashboard">
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-  {% church_t 'back_to_dashboard' %}
-</a>
 <a href="{% url 'sermons:sermon_list' %}" class="btn-back-dashboard" style="border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);">
-  {% church_t 'sermons' %}
+  ← {% church_t 'sermons' %}
 </a>
 {% include 'members/language_selector.html' %}
 {% endblock %}
 
 {% block page_extra_css %}
+{% include 'sermons/includes/voice_styles.html' %}
 <style>
 .btn-back-dashboard {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(200,168,75,0.35);
-  border-radius: 8px;
-  color: #c8a84b;
-  font-size: 12px;
-  font-weight: 700;
-  text-decoration: none;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin-right: 0.5rem;
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(200,168,75,0.35);
+  border-radius: 8px; color: #c8a84b; font-size: 12px; font-weight: 700;
+  text-decoration: none; text-transform: uppercase; letter-spacing: 0.4px; margin-right: 0.5rem;
 }
-.btn-back-dashboard:hover { background: rgba(200,168,75,0.12); color: #f2d98d; }
-.sermon-detail-panel {
-  background: #152333;
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: 12px;
-  padding: 1.5rem;
+.detail-layout { display: grid; gap: 1rem; max-width: 760px; }
+.panel {
+  background: #152333; border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px; padding: 1.25rem 1.35rem;
 }
-.sermon-detail-panel h6 {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #c8a84b;
-  margin-bottom: 0.5rem;
+.panel h6 {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+  color: #c8a84b; margin: 0 0 0.65rem;
 }
-.sermon-detail-panel p,
-.sermon-detail-panel div { color: rgba(255,255,255,0.85); line-height: 1.6; font-size: 14px; }
-.sermon-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.panel p, .panel div.body-text { color: rgba(255,255,255,0.85); line-height: 1.65; font-size: 14px; }
+.sermon-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.25rem; }
 .btn-sermon {
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 700;
-  text-decoration: none;
-  border: 1px solid rgba(255,255,255,0.2);
-  color: #fff;
-  background: rgba(255,255,255,0.06);
+  padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700;
+  text-decoration: none; border: 1px solid rgba(255,255,255,0.2); color: #fff; background: rgba(255,255,255,0.06);
 }
 .btn-sermon:hover { border-color: #c8a84b; color: #c8a84b; }
+.voice-panel { background: rgba(15,30,46,0.95); border-color: rgba(37,211,102,0.2); }
+.voice-panel-label { font-size: 11px; color: #25d366; font-weight: 700; text-transform: uppercase; margin-bottom: 0.75rem; }
+.thumb { max-width: 100%; border-radius: 12px; margin-bottom: 0.5rem; }
+.download-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.85rem; }
+.related-list a { color: #c8a84b; text-decoration: none; font-weight: 600; }
+.related-list p { margin: 0.4rem 0; font-size: 13px; }
+video { width: 100%; border-radius: 12px; background: #000; }
 </style>
 {% endblock %}
 
 {% block page_content %}
-{% if user.role == 'pastor' and user.is_verified_pastor or user.role == 'admin' %}
-<div class="sermon-actions">
-  <a href="{% url 'sermons:sermon_update' sermon.pk %}" class="btn-sermon">Edit</a>
-  <a href="{% url 'sermons:sermon_delete' sermon.pk %}" class="btn-sermon">Delete</a>
-</div>
-{% endif %}
-
-<div class="sermon-detail-panel">
-  {% if sermon.bible_references %}
-  <h6>Bible References</h6>
-  <p class="mb-3">{{ sermon.bible_references }}</p>
+<div class="detail-layout">
+  {% if can_manage_sermons %}
+  <div class="sermon-actions">
+    <a href="{% url 'sermons:sermon_update' sermon.pk %}" class="btn-sermon">Hariri</a>
+    <a href="{% url 'sermons:sermon_delete' sermon.pk %}" class="btn-sermon">Futa</a>
+    {% if not sermon.is_published %}<span class="btn-sermon" style="border-color:#e67e22;color:#e67e22;">Rasimu</span>{% endif %}
+  </div>
   {% endif %}
 
-  <h6>Message</h6>
-  <div class="mb-3">{{ sermon.description|linebreaks }}</div>
+  {% if sermon.thumbnail and not sermon.video_file %}
+  <img src="{{ sermon.thumbnail.url }}" alt="{{ sermon.title }}" class="thumb">
+  {% endif %}
 
-  {% if sermon.notes %}
-  <h6>Notes</h6>
-  <div>{{ sermon.notes|linebreaks }}</div>
+  {% if sermon.video_file %}
+  <section class="panel video-panel">
+    <div class="video-panel-label">🎬 Video ya hubo</div>
+    {% include 'sermons/includes/video_player.html' with video_url=sermon.video_file.url poster_url=sermon.thumbnail.url|default:'' %}
+    <div class="download-row">
+      <a href="{% url 'sermons:sermon_download' sermon.pk 'video' %}" class="btn-sermon">Pakua video</a>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if sermon.audio_file %}
+  <section class="panel voice-panel">
+    <div class="voice-panel-label">🎙️ Voice note</div>
+    {% include 'sermons/includes/voice_player.html' with audio_url=sermon.audio_file.url %}
+    <div class="download-row">
+      <a href="{% url 'sermons:sermon_download' sermon.pk 'audio' %}" class="btn-sermon">Pakua sauti</a>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="panel">
+    {% if sermon.bible_references %}
+    <h6>{% church_t 'bible_references_label' %}</h6>
+    <p style="margin-bottom:1rem;">{{ sermon.bible_references }}</p>
+    {% endif %}
+
+    <h6>Ujumbe</h6>
+    <div class="body-text">{{ sermon.description|linebreaks }}</div>
+
+    {% if sermon.notes %}
+    <h6 style="margin-top:1rem;">{% church_t 'sermon_notes_label' %}</h6>
+    <div class="body-text">{{ sermon.notes|linebreaks }}</div>
+    {% endif %}
+
+    {% if sermon.slides %}
+    <div class="download-row">
+      <a href="{% url 'sermons:sermon_download' sermon.pk 'slides' %}" class="btn-sermon">Pakua slides / PDF</a>
+    </div>
+    {% endif %}
+  </section>
+  {% if related_sermons %}
+  <section class="panel related-list">
+    <h6>Mahubiri mengine</h6>
+    {% for rel in related_sermons %}
+    <p>
+      <a href="{% url 'sermons:sermon_detail' rel.pk %}">{{ rel.title }}</a>
+      <span style="opacity:0.5;"> · {{ rel.sermon_date|date:"d M Y" }}{% if rel.video_file %} · 🎬{% elif rel.audio_file %} · 🎙️{% endif %}</span>
+    </p>
+    {% endfor %}
+  </section>
   {% endif %}
 </div>
 {% endblock %}

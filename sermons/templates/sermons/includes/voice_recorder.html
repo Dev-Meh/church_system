@@ -1,0 +1,132 @@
+<div class="voice-recorder" id="voice-recorder">
+  <div class="voice-recorder-label">Rekodi sauti hapa (kama WhatsApp)</div>
+  <div class="voice-recorder-bar">
+    <button type="button" class="voice-mic-btn" id="voice-mic-btn" aria-label="Rekodi sauti">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+        <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/>
+      </svg>
+    </button>
+    <div class="voice-recorder-info">
+      <div class="voice-recorder-status" id="voice-status">Bonyeza mic kuanza kurekodi</div>
+      <div class="voice-recorder-timer" id="voice-timer">0:00</div>
+    </div>
+    <button type="button" class="voice-clear-btn hidden" id="voice-clear-btn">Futa</button>
+  </div>
+  <audio class="voice-preview hidden" id="voice-preview" controls playsinline></audio>
+  <p class="voice-recorder-hint">Rekodi hubo lako, sikiliza, kisha hifadhi. Unaweza pia kupakia faili ya sauti chini.</p>
+</div>
+
+<script>
+(function () {
+  const micBtn = document.getElementById('voice-mic-btn');
+  const statusEl = document.getElementById('voice-status');
+  const timerEl = document.getElementById('voice-timer');
+  const previewEl = document.getElementById('voice-preview');
+  const clearBtn = document.getElementById('voice-clear-btn');
+  const fileInput = document.getElementById('id_audio_file');
+
+  if (!micBtn || !fileInput) return;
+
+  let mediaRecorder = null;
+  let chunks = [];
+  let stream = null;
+  let timerInterval = null;
+  let startedAt = null;
+  let recordedBlob = null;
+
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return m + ':' + String(s).padStart(2, '0');
+  }
+
+  function updateTimer() {
+    if (!startedAt) return;
+    const elapsed = (Date.now() - startedAt) / 1000;
+    timerEl.textContent = formatTime(elapsed);
+  }
+
+  function setFileFromBlob(blob) {
+    const ext = blob.type.includes('webm') ? 'webm' : 'ogg';
+    const file = new File([blob], 'voice-note-' + Date.now() + '.' + ext, { type: blob.type || 'audio/webm' });
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+  }
+
+  function clearRecording() {
+    recordedBlob = null;
+    chunks = [];
+    previewEl.classList.add('hidden');
+    previewEl.removeAttribute('src');
+    previewEl.load();
+    clearBtn.classList.add('hidden');
+    micBtn.classList.remove('recording');
+    statusEl.textContent = 'Bonyeza mic kuanza kurekodi';
+    timerEl.textContent = '0:00';
+    fileInput.value = '';
+  }
+
+  clearBtn.addEventListener('click', clearRecording);
+
+  async function startRecording() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      statusEl.textContent = 'Ruhusu mic kwenye browser, kisha jaribu tena.';
+      return;
+    }
+
+    chunks = [];
+    const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? { mimeType: 'audio/webm;codecs=opus' }
+      : undefined;
+    mediaRecorder = new MediaRecorder(stream, options);
+
+    mediaRecorder.ondataavailable = function (e) {
+      if (e.data && e.data.size > 0) chunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = function () {
+      if (stream) {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        stream = null;
+      }
+      if (!chunks.length) return;
+
+      recordedBlob = new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+      setFileFromBlob(recordedBlob);
+      previewEl.src = URL.createObjectURL(recordedBlob);
+      previewEl.classList.remove('hidden');
+      clearBtn.classList.remove('hidden');
+      statusEl.textContent = 'Rekodi imekamilika — sikiliza au hifadhi hubo';
+      micBtn.classList.remove('recording');
+    };
+
+    mediaRecorder.start(250);
+    startedAt = Date.now();
+    micBtn.classList.add('recording');
+    statusEl.textContent = 'Inarekodi… bonyeza tena kusitisha';
+    timerInterval = setInterval(updateTimer, 250);
+  }
+
+  function stopRecording() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    startedAt = null;
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+  }
+
+  micBtn.addEventListener('click', function () {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      stopRecording();
+    } else {
+      if (recordedBlob) clearRecording();
+      startRecording();
+    }
+  });
+})();
+</script>

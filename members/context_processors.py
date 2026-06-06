@@ -3,6 +3,7 @@ from .permissions import (
     can_manage_church_communications,
     can_create_church_announcements,
     can_manage_church_groups,
+    can_manage_sermons,
     has_church_leadership,
 )
 from .app_nav import resolve_active_nav
@@ -40,6 +41,9 @@ def church_permissions_context(request):
         ),
         'can_manage_church_groups': (
             can_manage_church_groups(user) if user.is_authenticated else False
+        ),
+        'can_manage_sermons': (
+            can_manage_sermons(user) if user.is_authenticated else False
         ),
     }
 

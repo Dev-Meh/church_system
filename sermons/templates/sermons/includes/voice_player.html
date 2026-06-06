@@ -1,0 +1,86 @@
+<div class="wa-voice-player" data-audio-src="{{ audio_url }}">
+  <button type="button" class="wa-voice-play" aria-label="Sikiliza">
+    <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+    <svg class="icon-pause hidden" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6V5zm8 0h4v14h-4V5z"/></svg>
+  </button>
+  <div class="wa-voice-track">
+    <div class="wa-voice-bars" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <input type="range" class="wa-voice-seek" min="0" max="100" value="0" aria-label="Muda wa sauti">
+  </div>
+  <span class="wa-voice-time">0:00</span>
+  <audio preload="metadata" playsinline class="wa-voice-audio" src="{{ audio_url }}"></audio>
+</div>
+
+<script>
+(function () {
+  document.querySelectorAll('.wa-voice-player').forEach(function (player) {
+    if (player.dataset.bound) return;
+    player.dataset.bound = '1';
+
+    const audio = player.querySelector('.wa-voice-audio');
+    const playBtn = player.querySelector('.wa-voice-play');
+    const seek = player.querySelector('.wa-voice-seek');
+    const timeEl = player.querySelector('.wa-voice-time');
+    const iconPlay = player.querySelector('.icon-play');
+    const iconPause = player.querySelector('.icon-pause');
+    const bars = player.querySelector('.wa-voice-bars');
+
+    function fmt(t) {
+      if (!isFinite(t)) return '0:00';
+      const m = Math.floor(t / 60);
+      const s = Math.floor(t % 60);
+      return m + ':' + String(s).padStart(2, '0');
+    }
+
+    function syncUI() {
+      const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+      seek.value = pct;
+      timeEl.textContent = fmt(audio.currentTime);
+    }
+
+    playBtn.addEventListener('click', function () {
+      if (audio.paused) {
+        document.querySelectorAll('.wa-voice-audio').forEach(function (a) {
+          if (a !== audio) a.pause();
+        });
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    });
+
+    audio.addEventListener('play', function () {
+      player.classList.add('playing');
+      iconPlay.classList.add('hidden');
+      iconPause.classList.remove('hidden');
+    });
+
+    audio.addEventListener('pause', function () {
+      player.classList.remove('playing');
+      iconPlay.classList.remove('hidden');
+      iconPause.classList.add('hidden');
+    });
+
+    audio.addEventListener('timeupdate', syncUI);
+    audio.addEventListener('loadedmetadata', function () {
+      timeEl.textContent = fmt(audio.duration);
+    });
+
+    seek.addEventListener('input', function () {
+      if (audio.duration) {
+        audio.currentTime = (seek.value / 100) * audio.duration;
+      }
+    });
+
+    if (bars) {
+      bars.addEventListener('click', function () {
+        playBtn.click();
+      });
+    }
+  });
+})();
+</script>

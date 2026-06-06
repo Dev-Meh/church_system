@@ -1,0 +1,48 @@
+{% extends 'church_layout/app_shell.html' %}
+{% load i18n_church %}
+
+{% block title %}{% church_t 'sermon_dashboard_btn' %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_t 'sermon_dashboard_btn' %}{% endblock %}
+
+{% block page_header_actions %}
+<a href="{% url 'sermons:sermon_create' %}" class="btn-save" style="text-decoration:none;padding:8px 14px;border-radius:6px;">{% church_t 'create_new_sermon' %}</a>
+<a href="{% url 'sermons:sermon_list' %}" class="btn-cancel" style="text-decoration:none;padding:8px 14px;border-radius:6px;margin-left:0.35rem;">{% church_t 'sermons' %}</a>
+{% endblock %}
+
+{% block page_extra_css %}
+<style>
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.75rem;margin-bottom:1.25rem;}
+.stat{background:#152333;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:1rem;}
+.stat .label{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;}
+.stat .value{font-size:24px;color:#c8a84b;font-weight:700;margin-top:0.25rem;}
+.list{background:#152333;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;}
+.row{display:flex;justify-content:space-between;gap:1rem;padding:0.85rem 1rem;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;color:#fff;}
+.row:last-child{border-bottom:none;}
+.row a{color:#c8a84b;text-decoration:none;font-weight:600;}
+.muted{color:rgba(255,255,255,0.45);font-size:12px;}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="stats">
+  <div class="stat"><div class="label">Jumla</div><div class="value">{{ total_sermons }}</div></div>
+  <div class="stat"><div class="label">Yaliyochapishwa</div><div class="value">{{ published_sermons }}</div></div>
+  <div class="stat"><div class="label">Maoni</div><div class="value">{{ total_views }}</div></div>
+  <div class="stat"><div class="label">Pakua</div><div class="value">{{ total_downloads }}</div></div>
+</div>
+
+<div class="list">
+  <div class="row" style="background:rgba(200,168,75,0.08);color:#c8a84b;font-weight:700;">Mahubiri ya hivi karibuni</div>
+  {% for sermon in recent_sermons %}
+  <div class="row">
+    <div>
+      <a href="{% url 'sermons:sermon_detail' sermon.pk %}">{{ sermon.title }}</a>
+      <div class="muted">{{ sermon.sermon_date|date:"d M Y" }}{% if not sermon.is_published %} · Rasimu{% endif %}</div>
+    </div>
+    <div class="muted">{{ sermon.view_count }} maoni</div>
+  </div>
+  {% empty %}
+  <div class="row muted">Hakuna mahubiri bado.</div>
+  {% endfor %}
+</div>
+{% endblock %}

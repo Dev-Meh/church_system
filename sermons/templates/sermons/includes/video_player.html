@@ -1,0 +1,13 @@
+<div class="inline-video-player">
+  <video
+    class="inline-video"
+    controls
+    playsinline
+    webkit-playsinline
+    preload="metadata"
+    src="{{ video_url }}"
+    {% if poster_url %}poster="{{ poster_url }}"{% endif %}
+  >
+    Browser yako haiwezi kucheza video hii. <a href="{{ video_url }}" style="color:#c8a84b;">Pakua faili</a>
+  </video>
+</div>

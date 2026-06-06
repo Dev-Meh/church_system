@@ -10,6 +10,7 @@ urlpatterns = [
     path('create/', views.SermonCreateView.as_view(), name='sermon_create'),
     path('<int:pk>/edit/', views.SermonUpdateView.as_view(), name='sermon_update'),
     path('<int:pk>/delete/', views.SermonDeleteView.as_view(), name='sermon_delete'),
+    path('<int:pk>/download/<str:file_type>/', views.sermon_download, name='sermon_download'),
     
     # Sermon Series
     path('series/', views.SermonSeriesListView.as_view(), name='series_list'),

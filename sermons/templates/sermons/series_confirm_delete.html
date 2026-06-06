@@ -1,0 +1,29 @@
+{% extends 'church_layout/app_shell.html' %}
+{% load i18n_church %}
+
+{% block title %}Futa Mfululizo - PHM-ARCC{% endblock %}
+{% block page_title %}Futa mfululizo?{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{{ object.title }}</p>{% endblock %}
+
+{% block page_header_actions %}
+<a href="{% url 'sermons:series_list' %}" class="btn-cancel" style="text-decoration:none;padding:8px 14px;border-radius:6px;">← Rudi</a>
+{% endblock %}
+
+{% block page_extra_css %}
+<style>
+.panel{background:#152333;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.5rem;max-width:520px;}
+.btn-danger{padding:10px 18px;background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;border-radius:8px;font-weight:700;cursor:pointer;}
+.btn-cancel-link{display:inline-block;margin-left:0.75rem;color:rgba(255,255,255,0.65);text-decoration:none;font-size:13px;}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="panel">
+  <p style="color:rgba(255,255,255,0.8);">Futa mfululizo <strong>{{ object.title }}</strong>? Mahubiri yaliyomo hayatafutwa, lakini hayatahusishwa tena na mfululizo huu.</p>
+  <form method="post" style="margin-top:1rem;">
+    {% csrf_token %}
+    <button type="submit" class="btn-danger">Futa mfululizo</button>
+    <a href="{% url 'sermons:series_list' %}" class="btn-cancel-link">Ghairi</a>
+  </form>
+</div>
+{% endblock %}

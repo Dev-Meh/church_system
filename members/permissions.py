@@ -66,6 +66,11 @@ def can_manage_members(user):
     return has_church_leadership(user)
 
 
+def can_manage_sermons(user):
+    """Upload and manage church sermons (mahubiri)."""
+    return has_church_leadership(user)
+
+
 def can_manage_church_groups(user):
     """Create/edit church groups: pastor, admin, or secretary."""
     if _role(user) == 'secretary':
