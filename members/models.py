@@ -366,3 +366,8 @@ class UniversityStudentRecord(models.Model):
     @property
     def is_alumni(self):
         return self.status == "completed"
+
+    def get_expected_completion_year(self):
+        from .university_student_services import effective_completion_year
+
+        return effective_completion_year(self)

@@ -1,21 +1,24 @@
 from django.core.management.base import BaseCommand
 
-from members.university_student_services import promote_due_university_graduates
+from members.university_student_services import sync_university_student_records
 
 
 class Command(BaseCommand):
     help = (
-        "Weka wanafunzi wa chuo kuwa waliohitimu baada ya Novemba "
-        "ya mwaka wa kutarajiwa kuhitimu."
+        "Sawazisha wanafunzi wa chuo: jaza mwaka wa kuhitimu, "
+        "rudisha waliohitimu mapema, weka waliohitimu halali."
     )
 
     def handle(self, *args, **options):
-        count = promote_due_university_graduates()
-        if count:
+        sync = sync_university_student_records()
+        if any(sync.values()):
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Wanafunzi {count} wametambuliwa kama waliohitimu."
+                    "Imesawazishwa: "
+                    f"jazwa={sync['backfilled']}, "
+                    f"rudishwa={sync['reverted']}, "
+                    f"hitimu={sync['promoted']}."
                 )
             )
         else:
-            self.stdout.write("Hakuna wanafunzi waliokamilisha kipindi cha kuhitimu leo.")
+            self.stdout.write("Hakuna mabadiliko ya kusawazisha leo.")

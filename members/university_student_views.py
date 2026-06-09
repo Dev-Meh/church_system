@@ -12,7 +12,7 @@ from donations.print_branding import church_print_context
 from .forms import UniversityStudentRecordForm
 from .models import UniversityStudentRecord
 from .permissions import can_manage_members
-from .university_student_services import promote_due_university_graduates
+from .university_student_services import sync_university_student_records
 
 TAB_LABELS = {
     "studying": "Wanaosomea",
@@ -96,12 +96,23 @@ def _tab_report_title(tab, current_year):
 
 @_require_pastor
 def university_student_list(request):
-    promoted = promote_due_university_graduates()
-    if promoted:
+    sync = sync_university_student_records()
+    if sync["backfilled"]:
+        messages.success(
+            request,
+            f"Mwaka wa kuhitimu umejazwa kiotomatiki kwa wanafunzi {sync['backfilled']}.",
+        )
+    if sync["reverted"]:
         messages.info(
             request,
-            f"Wanafunzi {promoted} wametambuliwa kiotomatiki kama waliohitimu "
-            "(msimu wa Novemba wa mwaka wa kutarajiwa kuhitimu umekwisha).",
+            f"Wanafunzi {sync['reverted']} wamerudishwa kwenye 'Wanaosomea' "
+            "(walikuwa wamewekwa waliohitimu mapema).",
+        )
+    if sync["promoted"]:
+        messages.info(
+            request,
+            f"Wanafunzi {sync['promoted']} wametambuliwa kama waliohitimu "
+            "(baada ya Novemba ya mwaka wa kuhitimu).",
         )
 
     tab = request.GET.get("tab", "studying")
@@ -203,7 +214,7 @@ def university_student_edit(request, pk):
 
 @_require_pastor
 def university_student_detail(request, pk):
-    promote_due_university_graduates()
+    sync_university_student_records()
     record = get_object_or_404(
         UniversityStudentRecord.objects.select_related("member", "recorded_by"),
         pk=pk,
