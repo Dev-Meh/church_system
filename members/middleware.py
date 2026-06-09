@@ -1,7 +1,12 @@
 """Security middleware: cache control, HTTP security headers, admin hardening."""
 
+import time
+
 from django.conf import settings
+from django.contrib.auth import logout
 from django.http import HttpResponse, HttpResponseNotFound
+from django.shortcuts import redirect
+from django.urls import reverse
 
 
 def add_private_no_cache_headers(response):
@@ -10,6 +15,51 @@ def add_private_no_cache_headers(response):
     response["Pragma"] = "no-cache"
     response["Expires"] = "0"
     return response
+
+
+class SessionIdleTimeoutMiddleware:
+    """Log out authenticated users after a period of inactivity."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.timeout = int(getattr(settings, 'SESSION_IDLE_TIMEOUT', 1800))
+
+    def _skip_idle_check(self, path):
+        login_path = settings.LOGIN_URL.rstrip('/')
+        prefixes = (
+            '/static/',
+            '/media/',
+            '/members/logout',
+            '/members/register',
+            '/members/password-reset',
+        )
+        if path.startswith(prefixes):
+            return True
+        normalized = (path or '').rstrip('/') or '/'
+        if normalized == login_path or normalized.startswith(f'{login_path}/'):
+            return True
+        return False
+
+    def __call__(self, request):
+        if (
+            request.user.is_authenticated
+            and hasattr(request, 'session')
+            and not self._skip_idle_check(request.path or '')
+        ):
+            now = int(time.time())
+            last = request.session.get('_last_activity_ts')
+            if last is not None and (now - int(last)) > self.timeout:
+                from django.contrib import messages
+
+                from .language_utils import LanguageManager, get_translation
+
+                lang = LanguageManager.get_current_language(request)
+                messages.info(request, get_translation('session_idle_logout', lang))
+                logout(request)
+                return redirect(reverse('login'))
+            request.session['_last_activity_ts'] = now
+
+        return self.get_response(request)
 
 
 class PreventAuthenticatedPageCacheMiddleware:

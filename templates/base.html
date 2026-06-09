@@ -219,5 +219,8 @@
         });
     </script>
     {% block extra_js %}{% endblock %}
+    {% if user.is_authenticated and session_idle_timeout_seconds %}
+    {% include 'church_layout/_session_idle_logout.html' %}
+    {% endif %}
 </body>
 </html>

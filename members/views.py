@@ -70,7 +70,14 @@ class CustomLoginView(LoginView):
     authentication_form = ChurchUserLoginForm
 
     def dispatch(self, request, *args, **kwargs):
+        from .language_utils import LanguageManager, get_translation
         from .security import is_rate_limited, rate_limit_message
+
+        if request.GET.get('idle') == '1' and not request.user.is_authenticated:
+            messages.info(
+                request,
+                get_translation('session_idle_logout', LanguageManager.get_current_language(request)),
+            )
 
         blocked, retry = is_rate_limited('login', request)
         if blocked:
@@ -123,14 +130,20 @@ class CustomLoginView(LoginView):
         return context
 
 def custom_logout(request):
+    from .language_utils import LanguageManager, get_translation
     from .middleware import add_private_no_cache_headers
 
+    lang = LanguageManager.get_current_language(request)
+    idle = request.GET.get('idle') == '1'
     request.session.pop('django_language', None)
     logout(request)
     response = redirect('login')
     response.delete_cookie(settings.LANGUAGE_COOKIE_NAME)
     add_private_no_cache_headers(response)
-    messages.success(request, 'You have been successfully logged out.')
+    if idle:
+        messages.info(request, get_translation('session_idle_logout', lang))
+    else:
+        messages.success(request, get_translation('logout_success', lang))
     return response
 
 class RegisterView(CreateView):

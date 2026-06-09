@@ -60,6 +60,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'members.middleware.SessionIdleTimeoutMiddleware',
     'members.middleware.PreventAuthenticatedPageCacheMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -184,7 +185,10 @@ ADMIN_RATE_LIMIT_ATTEMPTS = int(os.getenv('ADMIN_RATE_LIMIT_ATTEMPTS', '5'))
 ADMIN_RATE_LIMIT_LOCKOUT = int(os.getenv('ADMIN_RATE_LIMIT_LOCKOUT', '900'))
 
 # ── SESSION SECURITY ────────────────────────────
-SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', '1800'))
+# Auto-logout after this many seconds without activity (browser + server).
+SESSION_IDLE_TIMEOUT = int(os.getenv('SESSION_IDLE_TIMEOUT', os.getenv('SESSION_COOKIE_AGE', '1800')))
+SESSION_COOKIE_AGE = SESSION_IDLE_TIMEOUT
+SESSION_IDLE_WARNING = int(os.getenv('SESSION_IDLE_WARNING', '120'))
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', 'Lax')

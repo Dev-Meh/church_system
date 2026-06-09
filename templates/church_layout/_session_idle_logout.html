@@ -1,0 +1,139 @@
+{% load i18n_church %}
+<style>
+.session-idle-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(7, 18, 33, 0.72);
+}
+.session-idle-overlay.is-open { display: flex; }
+.session-idle-modal {
+  width: min(100%, 380px);
+  background: linear-gradient(180deg, #12253f, #0f1f35);
+  border: 1px solid rgba(200, 168, 75, 0.35);
+  border-radius: 14px;
+  padding: 1.25rem 1.35rem;
+  color: #eaf2ff;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+.session-idle-modal h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: #f2d37a;
+}
+.session-idle-modal p {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.45;
+}
+.session-idle-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.session-idle-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.session-idle-btn-primary {
+  background: linear-gradient(135deg, #c8a84b, #a07820);
+  color: #fff;
+}
+.session-idle-btn-ghost {
+  background: rgba(255, 255, 255, 0.08);
+  color: #dce8fb;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+</style>
+<div id="session-idle-overlay" class="session-idle-overlay" role="dialog" aria-modal="true" aria-labelledby="session-idle-title" hidden>
+  <div class="session-idle-modal">
+    <h3 id="session-idle-title">{% church_t 'session_idle_warning' %}</h3>
+    <p>{% church_t 'session_idle_logout' %}</p>
+    <div class="session-idle-actions">
+      <button type="button" class="session-idle-btn session-idle-btn-primary" id="session-idle-stay">{% church_t 'session_idle_stay' %}</button>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var timeoutSec = {{ session_idle_timeout_seconds|default:0 }};
+  var warningSec = {{ session_idle_warning_seconds|default:120 }};
+  if (!timeoutSec || timeoutSec < 60) return;
+
+  var logoutUrl = '{% url "members:logout" %}?idle=1';
+  var overlay = document.getElementById('session-idle-overlay');
+  var stayBtn = document.getElementById('session-idle-stay');
+  var idleTimer = null;
+  var warningTimer = null;
+  var activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+
+  function clearTimers() {
+    if (idleTimer) window.clearTimeout(idleTimer);
+    if (warningTimer) window.clearTimeout(warningTimer);
+    idleTimer = null;
+    warningTimer = null;
+  }
+
+  function hideWarning() {
+    if (!overlay) return;
+    overlay.classList.remove('is-open');
+    overlay.hidden = true;
+  }
+
+  function showWarning() {
+    if (!overlay) return;
+    overlay.classList.add('is-open');
+    overlay.hidden = false;
+  }
+
+  function logoutNow() {
+    window.location.href = logoutUrl;
+  }
+
+  function pingServer() {
+    fetch(window.location.pathname + window.location.search, {
+      method: 'GET',
+      credentials: 'same-origin',
+      cache: 'no-store',
+    }).catch(function () {});
+  }
+
+  function resetIdleTimers() {
+    clearTimers();
+    hideWarning();
+    var warningMs = Math.max(0, (timeoutSec - warningSec) * 1000);
+    var idleMs = timeoutSec * 1000;
+    warningTimer = window.setTimeout(showWarning, warningMs);
+    idleTimer = window.setTimeout(logoutNow, idleMs);
+  }
+
+  function onActivity() {
+    resetIdleTimers();
+  }
+
+  function onStaySignedIn() {
+    hideWarning();
+    pingServer();
+    resetIdleTimers();
+  }
+
+  activityEvents.forEach(function (eventName) {
+    document.addEventListener(eventName, onActivity, { passive: true });
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) onActivity();
+  });
+  if (stayBtn) stayBtn.addEventListener('click', onStaySignedIn);
+
+  resetIdleTimers();
+})();
+</script>
