@@ -321,13 +321,24 @@ class UniversityStudentRecord(models.Model):
         choices=LEVEL_CHOICES,
         default="degree",
     )
-    year_started = models.PositiveIntegerField(null=True, blank=True)
+    year_started = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Mwaka alipoanza masomo (kwa kawaida Novemba). Mfano: 2023.",
+    )
     year_completed = models.PositiveIntegerField(
         null=True,
         blank=True,
-        help_text="Mwaka wa kuhitimu (jaza mwanafunzi anapomaliza).",
+        help_text="Mwaka alihitimu (Novemba ya mwaka huo). Mfano: 2026.",
     )
-    expected_completion_year = models.PositiveIntegerField(null=True, blank=True)
+    expected_completion_year = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Mwaka wa kutarajiwa kuhitimu (Novemba). "
+            "Mfano: alianza 2023, atahitimu Novemba 2026 → weka 2026."
+        ),
+    )
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,

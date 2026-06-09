@@ -538,9 +538,9 @@ class UniversityStudentRecordForm(forms.ModelForm):
             "course": "Kozi",
             "faculty": "Ndaki",
             "level": "Kiwango cha elimu",
-            "year_started": "Mwaka alianza",
-            "expected_completion_year": "Mwaka wa kutarajiwa kuhitimu",
-            "year_completed": "Mwaka alihitimu",
+            "year_started": "Mwaka alianza (Novemba)",
+            "expected_completion_year": "Mwaka wa kutarajiwa kuhitimu (Novemba)",
+            "year_completed": "Mwaka alihitimu (Novemba)",
             "status": "Hali",
             "notes": "Maelezo",
         }

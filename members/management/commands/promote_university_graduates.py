@@ -5,8 +5,8 @@ from members.university_student_services import promote_due_university_graduates
 
 class Command(BaseCommand):
     help = (
-        "Weka wanafunzi wa chuo kuwa waliohitimu "
-        "wakati mwaka wa kutarajiwa kuhitimu umefika."
+        "Weka wanafunzi wa chuo kuwa waliohitimu baada ya Novemba "
+        "ya mwaka wa kutarajiwa kuhitimu."
     )
 
     def handle(self, *args, **options):

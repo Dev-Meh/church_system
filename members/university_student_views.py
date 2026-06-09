@@ -101,7 +101,7 @@ def university_student_list(request):
         messages.info(
             request,
             f"Wanafunzi {promoted} wametambuliwa kiotomatiki kama waliohitimu "
-            "(mwaka wa kutarajiwa kuhitimu umefika).",
+            "(msimu wa Novemba wa mwaka wa kutarajiwa kuhitimu umekwisha).",
         )
 
     tab = request.GET.get("tab", "studying")
