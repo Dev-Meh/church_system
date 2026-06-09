@@ -22,5 +22,13 @@
   .chart-wrap { height: 240px; min-height: 200px; }
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="{% static 'js/church_histogram_charts.js' %}?v=2"></script>
+{# Self-hosted first; CDN fallback if static/ was not collected on server #}
+<script src="{% static 'js/chart.umd.min.js' %}?v=1"></script>
+<script>
+if (typeof Chart === 'undefined') {
+  document.write('<scr' + 'ipt src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"><\/scr' + 'ipt>');
+}
+</script>
+<script>
+{% include 'church_layout/_church_histogram_charts.js.html' %}
+</script>

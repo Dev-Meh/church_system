@@ -1,50 +1,13 @@
-/**
- * Histogram (bar) charts — PHM-ARCC dark theme
- * - Value labels drawn on top of each bar
- * - Supports single series or grouped (multi-series) bars
- */
 (function (global) {
   'use strict';
 
   const SCHEMES = {
-    gold: {
-      border: '#c8a84b',
-      fillTop: 'rgba(200, 168, 75, 0.9)',
-      fillBottom: 'rgba(200, 168, 75, 0.3)',
-      hover: 'rgba(242, 211, 122, 0.95)',
-      label: '#f2d37a',
-    },
-    green: {
-      border: '#2ecc71',
-      fillTop: 'rgba(46, 204, 113, 0.85)',
-      fillBottom: 'rgba(46, 204, 113, 0.25)',
-      hover: 'rgba(72, 220, 140, 0.95)',
-      label: '#6fe6a0',
-    },
-    blue: {
-      border: '#5dade2',
-      fillTop: 'rgba(93, 173, 226, 0.8)',
-      fillBottom: 'rgba(93, 173, 226, 0.22)',
-      hover: 'rgba(133, 193, 233, 0.95)',
-      label: '#8fc7ef',
-    },
-    teal: {
-      border: '#1f8f86',
-      fillTop: 'rgba(31, 143, 134, 0.92)',
-      fillBottom: 'rgba(31, 143, 134, 0.45)',
-      hover: 'rgba(46, 178, 167, 0.98)',
-      label: '#3fb9ad',
-    },
-    orange: {
-      border: '#e07a3f',
-      fillTop: 'rgba(224, 122, 63, 0.92)',
-      fillBottom: 'rgba(224, 122, 63, 0.45)',
-      hover: 'rgba(240, 150, 90, 0.98)',
-      label: '#f0975a',
-    },
+    gold: { border: '#c8a84b', fillTop: 'rgba(200, 168, 75, 0.9)', fillBottom: 'rgba(200, 168, 75, 0.3)', hover: 'rgba(242, 211, 122, 0.95)', label: '#f2d37a' },
+    green: { border: '#2ecc71', fillTop: 'rgba(46, 204, 113, 0.85)', fillBottom: 'rgba(46, 204, 113, 0.25)', hover: 'rgba(72, 220, 140, 0.95)', label: '#6fe6a0' },
+    blue: { border: '#5dade2', fillTop: 'rgba(93, 173, 226, 0.8)', fillBottom: 'rgba(93, 173, 226, 0.22)', hover: 'rgba(133, 193, 233, 0.95)', label: '#8fc7ef' },
+    teal: { border: '#1f8f86', fillTop: 'rgba(31, 143, 134, 0.92)', fillBottom: 'rgba(31, 143, 134, 0.45)', hover: 'rgba(46, 178, 167, 0.98)', label: '#3fb9ad' },
+    orange: { border: '#e07a3f', fillTop: 'rgba(224, 122, 63, 0.92)', fillBottom: 'rgba(224, 122, 63, 0.45)', hover: 'rgba(240, 150, 90, 0.98)', label: '#f0975a' },
   };
-
-  // Default palette order for grouped charts (matches reference image: teal + orange)
   const GROUP_ORDER = ['teal', 'orange', 'gold', 'blue', 'green'];
 
   function formatTzs(value) {
@@ -68,7 +31,6 @@
     return g;
   }
 
-  // Plugin: draw the value on top of every bar
   const valueLabelsPlugin = {
     id: 'phmValueLabels',
     afterDatasetsDraw(chart, _args, opts) {
@@ -94,13 +56,12 @@
 
   function buildScheme(name, index) {
     if (name && SCHEMES[name]) return SCHEMES[name];
-    const key = GROUP_ORDER[index % GROUP_ORDER.length];
-    return SCHEMES[key];
+    return SCHEMES[GROUP_ORDER[index % GROUP_ORDER.length]];
   }
 
   function makeDataset(cfg, scheme, isGrouped) {
     return {
-      label: cfg.datasetLabel || cfg.label || 'Thamani',
+      label: cfg.datasetLabel || cfg.label || 'Value',
       data: cfg.data || [],
       borderColor: scheme.border,
       borderWidth: 1.5,
@@ -148,10 +109,10 @@
               const v = ctx.parsed.y;
               const name = ctx.dataset.label || '';
               if (formatY === 'currency') {
-                return `${name}: ${Number(v).toLocaleString('en-US')} TZS`;
+                return name + ': ' + Number(v).toLocaleString('en-US') + ' TZS';
               }
-              if (formatY === 'percent') return `${name}: ${v}%`;
-              return `${name}: ${v}`;
+              if (formatY === 'percent') return name + ': ' + v + '%';
+              return name + ': ' + v;
             },
           },
         },
@@ -175,11 +136,12 @@
   }
 
   function showEmpty(canvas, text) {
+    if (!canvas) return;
     const wrap = canvas.parentElement;
-    if (wrap) {
+    if (wrap && !wrap.querySelector('.chart-empty-note')) {
       const note = document.createElement('p');
       note.className = 'chart-empty-note';
-      note.textContent = text || 'Hakuna data ya kuonyesha bado.';
+      note.textContent = text || 'No data to display yet.';
       wrap.appendChild(note);
     }
     canvas.style.display = 'none';
@@ -188,26 +150,22 @@
   function createHistogram(canvas, config) {
     if (!canvas) return null;
     if (typeof Chart === 'undefined') {
-      showEmpty(canvas, config.loadErrorText || 'Chart library failed to load.');
+      showEmpty(canvas, config.loadErrorText || 'Chart library failed to load. Run collectstatic on the server.');
       return null;
     }
 
     const labels = config.labels || [];
     const formatY = config.formatY || 'currency';
-
-    // Grouped: config.datasets = [{ label, data, colorScheme }, ...]
     const grouped = Array.isArray(config.datasets) && config.datasets.length > 0;
-
     let datasets;
+
     if (grouped) {
       const hasData = config.datasets.some((d) => (d.data || []).some((v) => v));
       if (!labels.length || !hasData) {
         showEmpty(canvas, config.emptyText);
         return null;
       }
-      datasets = config.datasets.map((d, i) =>
-        makeDataset(d, buildScheme(d.colorScheme, i), true)
-      );
+      datasets = config.datasets.map((d, i) => makeDataset(d, buildScheme(d.colorScheme, i), true));
     } else {
       const data = config.data || [];
       if (!labels.length || !data.length || !data.some((v) => v)) {
@@ -215,27 +173,16 @@
         return null;
       }
       const scheme = SCHEMES[config.colorScheme] || SCHEMES.teal;
-      datasets = [
-        makeDataset(
-          { datasetLabel: config.datasetLabel || 'Thamani', data },
-          scheme,
-          false
-        ),
-      ];
+      datasets = [makeDataset({ datasetLabel: config.datasetLabel || 'Value', data }, scheme, false)];
     }
-
-    const showLegend = grouped || !!config.showLegend;
 
     return new Chart(canvas, {
       type: 'bar',
       data: { labels, datasets },
-      options: baseOptions(formatY, showLegend),
+      options: baseOptions(formatY, grouped || !!config.showLegend),
       plugins: [valueLabelsPlugin],
     });
   }
 
-  global.ChurchHistogram = {
-    create: createHistogram,
-    formatTzs,
-  };
+  global.ChurchHistogram = { create: createHistogram, formatTzs: formatTzs };
 })(typeof window !== 'undefined' ? window : this);
