@@ -182,7 +182,6 @@ class SecurityHeadersMiddleware:
             response["Server"] = signature
 
     def _apply_headers(self, response, request):
-_is_secure = request.is_secure()
         path = request.path or ""
 
         response.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")

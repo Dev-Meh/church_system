@@ -1,33 +1,22 @@
-{% extends 'base.html' %}
+{% extends 'church_layout/app_shell.html' %}
+{% load i18n_church %}
 
-{% block title %}List ya Zaka - PHM-ARCC{% endblock %}
+{% block title %}{% church_t 'tithe_list_title' %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_t 'tithe_list_title' %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">PHM-ARCC Iyumbu Dodoma</p>{% endblock %}
 
-{% block extra_css %}
+{% block page_header_actions %}
+<a href="{% url 'donations:tithe_list_print' %}" class="btn-back" target="_blank">{% church_t 'tithe_preview_print' %}</a>
+<a href="{% url 'donations:export_tithe_csv' %}" class="btn-back">{% church_t 'tithe_download_csv' %}</a>
+<a href="{% url 'donations:home' %}" class="btn-back">{% church_t 'back_to_donations' %}</a>
+{% include 'members/language_selector.html' %}
+{% endblock %}
+
+{% block page_extra_css %}
 <style>
-    body { background: #0f1e2e; color: #eaf2ff; }
-    .wrap { max-width: 1200px; margin: 24px auto; padding: 0 14px; }
-    .panel {
-        background: #152333;
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 12px;
-        overflow: hidden;
-    }
-    .panel-head {
-        padding: 14px 18px;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .panel-head h3 {
-        margin: 0;
-        font-size: 15px;
-        color: #f2d27a;
-        text-transform: uppercase;
-        letter-spacing: 0.7px;
-    }
     .btn-back {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
         text-decoration: none;
         color: #fff;
         font-size: 12px;
@@ -35,9 +24,16 @@
         border-radius: 7px;
         border: 1px solid rgba(255,255,255,0.22);
         background: rgba(255,255,255,0.08);
+        margin-right: 0.35rem;
+    }
+    .panel {
+        background: #152333;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        overflow: hidden;
     }
     .tbl-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    table { width: 100%; border-collapse: collapse; min-width: 640px; }
     thead th {
         background: rgba(11, 25, 42, 0.75);
         color: #f2d27a;
@@ -55,18 +51,11 @@
     }
     tbody tr:nth-child(odd) td { background: rgba(255,255,255,0.03); }
     tbody tr:nth-child(even) td { background: rgba(255,255,255,0.06); }
-    .badge {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 999px;
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.4px;
-        text-transform: uppercase;
-    }
-    .money { background: rgba(39, 174, 96, 0.2); color: #6df0a5; }
-    .asset { background: rgba(241, 196, 15, 0.2); color: #f6d86d; }
     .muted { color: rgba(255,255,255,0.6); }
+    .amount-cell {
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+    }
     .pagination { display: flex; gap: 8px; justify-content: center; padding: 14px; }
     .pagination a, .pagination span {
         min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
@@ -74,104 +63,229 @@
         background: rgba(255,255,255,0.07); font-size: 12px;
     }
     .pagination .active { background: #c8a84b; color: #0f1e2e; border-color: #c8a84b; }
+
+    .entry-panel {
+        padding: 16px 18px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        background: rgba(11, 25, 42, 0.35);
+    }
+    .entry-panel h4 {
+        margin: 0 0 6px;
+        font-size: 13px;
+        color: #f2d27a;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+    }
+    .entry-help {
+        font-size: 12px;
+        color: rgba(255,255,255,0.65);
+        margin: 0 0 14px;
+    }
+    .entry-help a {
+        color: #c8a84b;
+        text-decoration: underline;
+    }
+    .entry-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+        align-items: end;
+    }
+    .entry-field { min-width: 0; }
+    .entry-field label {
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.7);
+        margin-bottom: 4px;
+    }
+    .entry-field .form-control,
+    .entry-field .form-select {
+        width: 100%;
+        background: #0f1e2e;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 8px;
+        padding: 10px 12px;
+        color: #fff;
+        font-size: 15px;
+    }
+    .entry-field .sheet-amount-input {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+    .btn-tithe-save {
+        background: linear-gradient(135deg, #c8a84b, #a07820);
+        border: none;
+        border-radius: 8px;
+        padding: 11px 18px;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        cursor: pointer;
+        width: 100%;
+    }
+    .entry-field-span2 { grid-column: span 2; }
+    .entry-errors {
+        color: #ff8787;
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
     @media (max-width: 992px) {
-        .wrap { margin: 16px auto; padding: 0 10px; }
         table { font-size: 12px; }
         th, td { padding: 8px 10px; }
     }
     @media (max-width: 576px) {
-        .wrap { margin: 12px auto; padding: 0 8px; }
         table { font-size: 11px; }
         th, td { padding: 6px 8px; }
-        .panel-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+        .entry-grid { grid-template-columns: 1fr; }
+        .entry-field-span2 { grid-column: span 1; }
     }
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="wrap">
-    <div class="panel">
-        <div class="panel-head">
-            <h3>List ya Waliotoa Zaka</h3>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <a href="{% url 'donations:tithe_list_print' %}" class="btn-back" target="_blank">Preview / Print</a>
-                <a href="{% url 'donations:export_tithe_csv' %}" class="btn-back">Pakua CSV</a>
-                <a href="{% url 'donations:home' %}" class="btn-back">Rudi Donations</a>
+{% block page_content %}
+<div class="panel">
+    {% if can_enter_tithe and tithe_entry_form %}
+    <div class="entry-panel">
+        <h4>{% church_t 'tithe_enter_section' %}</h4>
+        <p class="entry-help">
+            {% church_t 'tithe_enter_help' %}
+            <a href="{% url 'donations:home' %}">{% church_t 'tithe_enter_or_donations' %}</a>
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="tithe_entry">
+            {% if tithe_entry_form.errors %}
+            <div class="entry-errors">
+                {% for error in tithe_entry_form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
             </div>
-        </div>
-        <div class="tbl-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Na.</th>
-                        <th>Tarehe</th>
-                        <th>Jina Kamili</th>
-                        <th>Aina ya Zaka</th>
-                        <th>Kiasi cha Zaka</th>
-                        <th>Aina Nyingine ya Zaka</th>
-                        <th>Maelezo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for d in tithe_donations %}
-                    <tr>
-                        <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
-                        <td>{{ d.contribution_date }}</td>
-                        <td>
-                            {% if d.donor %}
-                                {{ d.donor.full_name|default:d.donor.username }}
-                            {% else %}
-                                <span class="muted">Haijatajwa</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if d.tithe_gift_type == 'asset' %}
-                                <span class="badge asset">Mali</span>
-                            {% else %}
-                                <span class="badge money">Fedha</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if d.tithe_gift_type == 'money' %}
-                                TZS {{ d.amount|floatformat:2 }}
-                            {% else %}
-                                <span class="muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if d.tithe_gift_type == 'asset' and d.tithe_asset_description %}
-                                {{ d.tithe_asset_description }}
-                            {% else %}
-                                <span class="muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td>{% if d.notes %}{{ d.notes|truncatewords:12 }}{% else %}<span class="muted">-</span>{% endif %}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="muted">Hakuna rekodi za zaka bado.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% if is_paginated %}
-        <div class="pagination">
-            {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}">←</a>
             {% endif %}
-            {% for num in page_obj.paginator.page_range %}
-                {% if num == page_obj.number %}
-                    <span class="active">{{ num }}</span>
-                {% else %}
-                    <a href="?page={{ num }}">{{ num }}</a>
-                {% endif %}
-            {% endfor %}
-            {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">→</a>
+            <div class="entry-grid">
+                <div class="entry-field entry-field-span2">
+                    <label for="{{ tithe_entry_form.donor.id_for_label }}">{{ tithe_entry_form.donor.label }} *</label>
+                    {{ tithe_entry_form.donor }}
+                </div>
+                <div class="entry-field">
+                    <label for="{{ tithe_entry_form.contribution_date.id_for_label }}">{{ tithe_entry_form.contribution_date.label }}</label>
+                    {{ tithe_entry_form.contribution_date }}
+                </div>
+                <div class="entry-field">
+                    <label for="{{ tithe_entry_form.payment_method.id_for_label }}">{{ tithe_entry_form.payment_method.label }}</label>
+                    {{ tithe_entry_form.payment_method }}
+                </div>
+                <div class="entry-field">
+                    <label for="{{ tithe_entry_form.zaka_type.id_for_label }}">{{ tithe_entry_form.zaka_type.label }}</label>
+                    {{ tithe_entry_form.zaka_type }}
+                </div>
+                <div class="entry-field" id="tithe-money-wrap">
+                    <label for="{{ tithe_entry_form.amount.id_for_label }}">{{ tithe_entry_form.amount.label }}</label>
+                    {{ tithe_entry_form.amount }}
+                </div>
+                <div class="entry-field entry-field-span2" id="tithe-asset-wrap" style="display:none;">
+                    <label for="{{ tithe_entry_form.asset_description.id_for_label }}">{{ tithe_entry_form.asset_description.label }}</label>
+                    {{ tithe_entry_form.asset_description }}
+                </div>
+                <div class="entry-field entry-field-span2">
+                    <label for="{{ tithe_entry_form.notes.id_for_label }}">{{ tithe_entry_form.notes.label }}</label>
+                    {{ tithe_entry_form.notes }}
+                </div>
+                <div class="entry-field">
+                    <button type="submit" class="btn-tithe-save">{% church_t 'tithe_save_btn' %}</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="tbl-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>{% church_t 'tithe_col_no' %}</th>
+                    <th>{% church_t 'table_date' %}</th>
+                    <th>{% church_t 'tithe_col_full_name' %}</th>
+                    <th>{% church_t 'tithe_col_zaka' %}</th>
+                    <th>{% church_t 'tithe_col_other_zaka' %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in tithe_donations %}
+                <tr>
+                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                    <td>{{ d.contribution_date }}</td>
+                    <td>
+                        {% if d.donor %}
+                            {{ d.donor.full_name|default:d.donor.username }}
+                        {% else %}
+                            <span class="muted">{% church_t 'tithe_not_specified' %}</span>
+                        {% endif %}
+                    </td>
+                    <td class="amount-cell">
+                        {% if d.tithe_gift_type == 'money' %}
+                            TZS {{ d.amount|floatformat:0 }}
+                        {% else %}
+                            <span class="muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if d.tithe_gift_type == 'asset' and d.tithe_asset_description %}
+                            {{ d.tithe_asset_description }}
+                        {% else %}
+                            <span class="muted">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="muted">{% church_t 'tithe_no_records' %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">←</a>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+                <span class="active">{{ num }}</span>
+            {% else %}
+                <a href="?page={{ num }}">{{ num }}</a>
             {% endif %}
-        </div>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">→</a>
         {% endif %}
     </div>
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block page_extra_js %}
+{% if can_enter_tithe and tithe_entry_form %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const zakaType = document.getElementById('{{ tithe_entry_form.zaka_type.id_for_label }}');
+    const moneyWrap = document.getElementById('tithe-money-wrap');
+    const assetWrap = document.getElementById('tithe-asset-wrap');
+    function toggleTitheFields() {
+        const isAsset = zakaType && zakaType.value === 'asset';
+        if (moneyWrap) moneyWrap.style.display = isAsset ? 'none' : 'block';
+        if (assetWrap) assetWrap.style.display = isAsset ? 'block' : 'none';
+    }
+    if (zakaType) {
+        zakaType.addEventListener('change', toggleTitheFields);
+        toggleTitheFields();
+    }
+});
+</script>
+{% endif %}
 {% endblock %}

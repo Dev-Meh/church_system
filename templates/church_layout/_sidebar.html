@@ -64,7 +64,7 @@
     {% if user.is_app_admin or user.role == 'accountant' or user.role == 'pastor' and user.is_verified_pastor %}
     <a class="nav-item{% if active_nav == 'tithe_list' %} active{% endif %}" href="{% url 'donations:tithe_list' %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M5 9h14M7 13h10"/></svg>
-      <span>List ya Zaka</span>
+      <span>{% church_t 'tithe_list_nav' %}</span>
     </a>
     <a class="nav-item{% if active_nav == 'cash_book' %} active{% endif %}" href="{% url 'donations:cash_book' %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8"/></svg>

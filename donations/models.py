@@ -1,3 +1,4 @@
+from decimal import Decimal, ROUND_HALF_UP
 from django.db import models
 from django.utils import timezone
 from members.models import ChurchUser
@@ -72,6 +73,13 @@ GROUP_PAYMENT_CHOICES = [
 
 _PAYMENT_METHOD_SW = dict(GROUP_PAYMENT_CHOICES)
 _GIFT_TYPE_SW = {"money": "Fedha", "asset": "Mali"}
+
+
+def _as_whole_amount(value):
+    """Kiasi kama namba kamili (hakuna desimali)."""
+    if value in (None, ''):
+        return Decimal('0')
+    return Decimal(str(value)).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
 
 
 class Donation(models.Model):
@@ -271,8 +279,64 @@ class Pledge(models.Model):
     
     @property
     def remaining_amount(self):
-        return self.total_amount - self.amount_paid
-    
+        raw = _as_whole_amount(self.total_amount) - _as_whole_amount(self.amount_paid)
+        return max(Decimal('0'), raw)
+
+    @property
+    def debt_balance_display(self):
+        """Salio la deni — namba kamili chanya (TZS) kwa onyesho."""
+        return int(self.remaining_amount)
+
+    @property
+    def has_outstanding_debt(self):
+        return self.debt_balance_display > 0
+
+    @property
+    def debt_balance(self):
+        """
+        Salio la deni kwa hesabu ya ndani (hasi au 0).
+        Ahadi 100000, malipo 40000 → -60000; deni limekwisha → 0.
+        """
+        remaining = self.remaining_amount
+        if remaining <= 0:
+            return Decimal('0')
+        return -remaining
+
+    def apply_payment(self, amount):
+        """Ongeza malipo na futa deni (salio linapungua kwa namba kamili)."""
+        amount = _as_whole_amount(amount)
+        if amount <= 0:
+            return self.debt_balance
+        total = _as_whole_amount(self.total_amount)
+        paid = _as_whole_amount(self.amount_paid) + amount
+        self.amount_paid = min(paid, total)
+        if self.amount_paid >= total:
+            self.amount_paid = total
+            self.status = 'completed'
+        elif self.status == 'overdue':
+            self.status = 'active'
+        self.save(update_fields=['amount_paid', 'status', 'updated_at'])
+        return self.debt_balance
+
+    def reduce_commitment(self, amount):
+        """Punguza ahadi (deni) bila malipo — mfano marekebisho au msamaha."""
+        amount = _as_whole_amount(amount)
+        if amount <= 0:
+            return self.debt_balance
+        remaining = self.remaining_amount
+        if amount > remaining:
+            amount = remaining
+        self.total_amount = _as_whole_amount(self.total_amount) - amount
+        total = _as_whole_amount(self.total_amount)
+        paid = _as_whole_amount(self.amount_paid)
+        if paid >= total:
+            self.amount_paid = total
+            self.status = 'completed'
+        elif self.status == 'overdue':
+            self.status = 'active'
+        self.save(update_fields=['total_amount', 'amount_paid', 'status', 'updated_at'])
+        return self.debt_balance
+
     @property
     def progress_percentage(self):
         if self.total_amount > 0:

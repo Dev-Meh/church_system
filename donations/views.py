@@ -13,13 +13,25 @@ from datetime import timedelta
 import csv
 import json
 from members.models import ChurchUser
-from .models import Donation, DonationCampaign, DonationCategory, DonationNotice, CashBookEntry, Pledge
+from members.language_utils import LanguageManager
+from .models import (
+    Donation,
+    DonationCampaign,
+    DonationCategory,
+    DonationNotice,
+    CashBookEntry,
+    Pledge,
+    _as_whole_amount,
+)
 from .print_branding import church_print_context
 from .forms import (
     DonationForm,
     AccountantDonationEntryForm,
     DonationNoticeForm,
     AccountantSheetEntryForm,
+    PledgePaymentForm,
+    PledgeReduceForm,
+    TitheEntryForm,
     CashBookEntryForm,
     IncomeAllocationReportForm,
 )
@@ -86,6 +98,108 @@ def _can_view_income_allocation(user):
 def _can_view_sadaka(user):
     from members.permissions import can_view_church_sadaka
     return can_view_church_sadaka(user)
+
+
+def _can_manage_construction_pledges(user):
+    from members.permissions import has_church_leadership
+    if has_church_leadership(user):
+        return True
+    return _is_church_wide_accountant(user) and bool(
+        getattr(user, 'can_post_member_donations', False)
+    )
+
+
+def _can_enter_tithe(user):
+    return _can_manage_construction_pledges(user)
+
+
+def _save_tithe_entry(cleaned_data, processed_by):
+    """Rekodi zaka kutoka fomu ya list au sheet."""
+    donor = cleaned_data['donor']
+    contribution_date = cleaned_data['contribution_date']
+    payment_method = cleaned_data['payment_method']
+    zaka_type = cleaned_data.get('zaka_type') or 'money'
+    notes = (cleaned_data.get('notes') or '').strip()
+
+    if zaka_type == 'asset':
+        asset_desc = (cleaned_data.get('asset_description') or '').strip()
+        asset_note = f"Zaka ya mali: {asset_desc}"
+        combined_notes = f"{asset_note}. {notes}".strip() if notes else asset_note
+        return Donation.objects.create(
+            donor=donor,
+            donation_type='tithe',
+            amount=0,
+            payment_method=payment_method,
+            notes=combined_notes,
+            donor_name=donor.full_name,
+            contribution_date=contribution_date,
+            status='completed',
+            processed_by=processed_by,
+            processed_date=timezone.now(),
+            tithe_gift_type='asset',
+            tithe_asset_description=asset_desc,
+        )
+
+    return Donation.objects.create(
+        donor=donor,
+        donation_type='tithe',
+        amount=cleaned_data['amount'],
+        payment_method=payment_method,
+        notes=notes,
+        donor_name=donor.full_name,
+        contribution_date=contribution_date,
+        status='completed',
+        processed_by=processed_by,
+        processed_date=timezone.now(),
+        tithe_gift_type='money',
+    )
+
+
+def _construction_category():
+    return (
+        DonationCategory.objects.filter(name__iexact='Ujenzi').first()
+        or DonationCategory.objects.create(
+            name='Ujenzi',
+            description='Michango na ahadi za ujenzi',
+            is_active=True,
+        )
+    )
+
+
+def _record_pledge_payment(pledge, amount, payment_method, contribution_date, notes, processed_by):
+    """Rekodi malipo ya deni la ahadi na usasishe salio."""
+    construction_category = pledge.category or _construction_category()
+    note_text = f"Malipo ya deni la ujenzi. {notes}".strip() if notes else "Malipo ya deni la ujenzi."
+    Donation.objects.create(
+        donor=pledge.donor,
+        donation_type='special',
+        category=construction_category,
+        amount=amount,
+        payment_method=payment_method,
+        notes=note_text,
+        donor_name=pledge.donor.full_name,
+        contribution_date=contribution_date,
+        status='completed',
+        processed_by=processed_by,
+        processed_date=timezone.now(),
+    )
+    return pledge.apply_payment(amount)
+
+
+def _contributions_list_for_user(user, limit=30):
+    """Michango iliyounganishwa na mwanachama — orodha ya mtu husika tu."""
+    from members.group_permissions import donations_queryset_for_user
+
+    base_qs = (
+        Donation.objects.select_related('donor')
+        .filter(donor__isnull=False)
+        .order_by('-contribution_date', '-donation_date')
+    )
+    if _can_view_all_donations(user):
+        qs = donations_queryset_for_user(user, base_qs)
+    else:
+        qs = base_qs.filter(donor=user)
+    return qs[:limit]
 
 
 def _csv_response(filename):
@@ -179,6 +293,7 @@ def donation_home(request):
         messages.error(request, 'Hujapangiwa kundi la mhasibu.')
         return redirect('members:group_list')
 
+    lang = LanguageManager.get_current_language(request)
     campaigns = DonationCampaign.objects.filter(status='active').order_by('-created_at')
     categories = DonationCategory.objects.all()
     is_accountant = _is_accountant(request.user)
@@ -194,7 +309,7 @@ def donation_home(request):
             if not can_publish_notice:
                 messages.error(request, 'Huna ruhusa ya kutuma taarifa ya michango.')
                 return redirect('donations:home')
-            notice_form = DonationNoticeForm(request.POST)
+            notice_form = DonationNoticeForm(request.POST, language=lang)
             if notice_form.is_valid():
                 notice = notice_form.save(commit=False)
                 notice.created_by = request.user
@@ -203,15 +318,89 @@ def donation_home(request):
                 return redirect('donations:home')
             donor_scope = _allowed_donor_ids(request.user)
             form = (
-                AccountantDonationEntryForm(allowed_donor_ids=donor_scope)
+                AccountantDonationEntryForm(allowed_donor_ids=donor_scope, language=lang)
                 if is_accountant
                 else None
             )
             sheet_form = (
-                AccountantSheetEntryForm(allowed_donor_ids=donor_scope)
+                AccountantSheetEntryForm(allowed_donor_ids=donor_scope, language=lang)
                 if is_accountant
                 else None
             )
+        elif action in ('pay_pledge', 'reduce_pledge'):
+            if not _can_manage_construction_pledges(request.user):
+                messages.error(request, 'Huna ruhusa ya kudhibiti ahadi za ujenzi.')
+                return redirect('donations:home')
+            pledge = get_object_or_404(
+                Pledge.objects.select_related('donor', 'category'),
+                pk=request.POST.get('pledge_id'),
+            )
+            construction_category = _construction_category()
+            if pledge.category_id and pledge.category_id != construction_category.id:
+                messages.error(request, 'Ahadi hii si ya ujenzi.')
+                return redirect('donations:home')
+            if not pledge.has_outstanding_debt:
+                messages.info(request, 'Deni la ahadi hili tayari limekwisha.')
+                return redirect('donations:home')
+
+            if action == 'pay_pledge':
+                pay_form = PledgePaymentForm(
+                    request.POST, pledge=pledge, language=lang
+                )
+                if pay_form.is_valid():
+                    new_balance = _record_pledge_payment(
+                        pledge,
+                        pay_form.cleaned_data['amount'],
+                        pay_form.cleaned_data['payment_method'],
+                        pay_form.cleaned_data['contribution_date'],
+                        pay_form.cleaned_data.get('notes', ''),
+                        request.user,
+                    )
+                    if pledge.debt_balance_display == 0:
+                        messages.success(
+                            request,
+                            f'Malipo yamehifadhiwa. Deni la {pledge.donor.full_name} limefutika kabisa.',
+                        )
+                    else:
+                        messages.success(
+                            request,
+                            f'Malipo yamehifadhiwa. Salio la deni: TZS {pledge.debt_balance_display:,}',
+                        )
+                    return redirect('donations:home')
+                for error in pay_form.non_field_errors():
+                    messages.error(request, error)
+                for field_name, errors in pay_form.errors.items():
+                    label = pay_form.fields[field_name].label or field_name
+                    for error in errors:
+                        messages.error(request, f'{label}: {error}')
+            else:
+                reduce_form = PledgeReduceForm(
+                    request.POST, pledge=pledge, language=lang
+                )
+                if reduce_form.is_valid():
+                    reason = (reduce_form.cleaned_data.get('reason') or '').strip()
+                    reduce_amount = reduce_form.cleaned_data['reduce_amount']
+                    new_balance = pledge.reduce_commitment(reduce_amount)
+                    if reason:
+                        pledge.notes = f"{pledge.notes}\nPunguzo: TZS {int(reduce_amount):,} — {reason}".strip()
+                        pledge.save(update_fields=['notes', 'updated_at'])
+                    if pledge.debt_balance_display == 0:
+                        messages.success(
+                            request,
+                            f'Ahadi imepunguzwa. Deni la {pledge.donor.full_name} limefutika kabisa.',
+                        )
+                    else:
+                        messages.success(
+                            request,
+                            f'Ahadi imepunguzwa. Salio la deni: TZS {pledge.debt_balance_display:,}',
+                        )
+                    return redirect('donations:home')
+                for error in reduce_form.non_field_errors():
+                    messages.error(request, error)
+                for field_name, errors in reduce_form.errors.items():
+                    label = reduce_form.fields[field_name].label or field_name
+                    for error in errors:
+                        messages.error(request, f'{label}: {error}')
         else:
             if not is_accountant:
                 messages.error(request, 'Ni mhasibu mwenye access tu anaweza kuingiza michango manually.')
@@ -226,9 +415,9 @@ def donation_home(request):
                     return redirect('donations:home')
                 donor_scope = _allowed_donor_ids(request.user)
                 sheet_form = AccountantSheetEntryForm(
-                    request.POST, allowed_donor_ids=donor_scope
+                    request.POST, allowed_donor_ids=donor_scope, language=lang
                 )
-                form = AccountantDonationEntryForm(allowed_donor_ids=donor_scope)
+                form = AccountantDonationEntryForm(allowed_donor_ids=donor_scope, language=lang)
                 if sheet_form.is_valid():
                     tithe_donor = sheet_form.cleaned_data.get('donor')
                     construction_donor = sheet_form.cleaned_data.get('construction_donor')
@@ -248,21 +437,17 @@ def donation_home(request):
                     for donation_type, amount in type_amount_map.items():
                         if amount and amount > 0:
                             Donation.objects.create(
-                                donor=tithe_donor if donation_type == 'tithe' else None,
+                                donor=tithe_donor,
                                 donation_type=donation_type,
                                 amount=amount,
                                 payment_method=payment_method,
                                 notes=notes,
-                                donor_name=(
-                                    tithe_donor.full_name
-                                    if tithe_donor and donation_type == 'tithe'
-                                    else 'Michango ya Pamoja'
-                                ),
+                                donor_name=tithe_donor.full_name if tithe_donor else '',
                                 contribution_date=contribution_date,
                                 status='completed',
                                 processed_by=request.user,
                                 processed_date=timezone.now(),
-                                tithe_gift_type='money' if donation_type == 'tithe' else 'money',
+                                tithe_gift_type='money',
                             )
                     if zaka_type == 'asset':
                         asset_note = f"Zaka ya mali: {aina_nyingine_ya_zaka}"
@@ -302,7 +487,10 @@ def donation_home(request):
 
                         if construction_pledge_amount > 0:
                             if pledge:
-                                pledge.total_amount = (pledge.total_amount or 0) + construction_pledge_amount
+                                pledge.total_amount = (
+                                    _as_whole_amount(pledge.total_amount)
+                                    + _as_whole_amount(construction_pledge_amount)
+                                )
                                 if pledge.status != 'active':
                                     pledge.status = 'active'
                                 pledge.save(update_fields=['total_amount', 'status', 'updated_at'])
@@ -342,28 +530,50 @@ def donation_home(request):
                                 processed_date=timezone.now(),
                             )
 
-                            pledge.amount_paid = (pledge.amount_paid or 0) + construction_payment_amount
-                            if pledge.amount_paid >= pledge.total_amount:
-                                pledge.amount_paid = pledge.total_amount
-                                pledge.status = 'completed'
-                            pledge.save(update_fields=['amount_paid', 'status', 'updated_at'])
+                            pledge.apply_payment(construction_payment_amount)
+                            if pledge.debt_balance_display == 0:
+                                messages.success(
+                                    request,
+                                    f'Malipo ya ujenzi yamehifadhiwa. Deni la {construction_donor.full_name} limefutika kabisa.'
+                                )
+                            else:
+                                messages.success(
+                                    request,
+                                    f'Malipo ya ujenzi yamehifadhiwa. Salio la deni: TZS {pledge.debt_balance_display:,}'
+                                )
+                            return redirect('donations:home')
+
+                        if construction_pledge_amount > 0 and pledge:
+                            messages.success(
+                                request,
+                                f'Ahadi imeandikwa kwa {construction_donor.full_name}. '
+                                f'Salio la deni: TZS {pledge.debt_balance_display:,}'
+                            )
+                            return redirect('donations:home')
+
                     messages.success(
                         request,
                         f"Mchango umehifadhiwa kwa mafanikio. Jumla: TZS {sheet_form.cleaned_data['jumla']}"
                     )
                     return redirect('donations:home')
+                else:
+                    for error in sheet_form.non_field_errors():
+                        messages.error(request, error)
+                    for field_name, errors in sheet_form.errors.items():
+                        if field_name == '__all__':
+                            continue
+                        label = sheet_form.fields[field_name].label or field_name
+                        for error in errors:
+                            messages.error(request, f'{label}: {error}')
             else:
                 donor_scope = _allowed_donor_ids(request.user)
                 form = AccountantDonationEntryForm(
-                    request.POST, allowed_donor_ids=donor_scope
+                    request.POST, allowed_donor_ids=donor_scope, language=lang
                 )
-                sheet_form = AccountantSheetEntryForm(allowed_donor_ids=donor_scope)
+                sheet_form = AccountantSheetEntryForm(allowed_donor_ids=donor_scope, language=lang)
                 if form.is_valid():
                     donation = form.save(commit=False)
-                    if donation.donation_type != 'tithe':
-                        donation.donor = None
-                        donation.donor_name = 'Michango ya Pamoja'
-                    elif donation.donor and not donation.donor_name:
+                    if donation.donor and not donation.donor_name:
                         donation.donor_name = donation.donor.full_name
                     if donor_scope is not None and donation.donor_id:
                         from members.group_permissions import groups_accounted_by
@@ -379,20 +589,29 @@ def donation_home(request):
                     donation.save()
                     messages.success(request, 'Mchango umehifadhiwa kikamilifu.')
                     return redirect('donations:home')
-            notice_form = DonationNoticeForm() if can_publish_notice else None
+                else:
+                    for error in form.non_field_errors():
+                        messages.error(request, error)
+                    for field_name, errors in form.errors.items():
+                        if field_name == '__all__':
+                            continue
+                        label = form.fields[field_name].label or field_name
+                        for error in errors:
+                            messages.error(request, f'{label}: {error}')
+            notice_form = DonationNoticeForm(language=lang) if can_publish_notice else None
     else:
         donor_scope = _allowed_donor_ids(request.user)
         form = (
-            AccountantDonationEntryForm(allowed_donor_ids=donor_scope)
+            AccountantDonationEntryForm(allowed_donor_ids=donor_scope, language=lang)
             if is_accountant
             else None
         )
         sheet_form = (
-            AccountantSheetEntryForm(allowed_donor_ids=donor_scope)
+            AccountantSheetEntryForm(allowed_donor_ids=donor_scope, language=lang)
             if is_accountant
             else None
         )
-        notice_form = DonationNoticeForm() if can_publish_notice else None
+        notice_form = DonationNoticeForm(language=lang) if can_publish_notice else None
 
     # Show active donation notices (all members, or targeted member only).
     active_notices = DonationNotice.objects.filter(
@@ -416,10 +635,8 @@ def donation_home(request):
         )
     else:
         church_offering_total = None
-    accountant_sheet_rows = []
+    contributions_list = _contributions_list_for_user(request.user, limit=30)
     construction_pledges = []
-    if can_view_sadaka:
-        accountant_sheet_rows = _get_accountant_sheet_rows()[:20]
     if is_accountant:
         construction_category = DonationCategory.objects.filter(name__iexact='Ujenzi').first()
         if construction_category:
@@ -466,22 +683,26 @@ def donation_home(request):
         'active_notices': active_notices,
         'total_all': my_donations.aggregate(total=models.Sum('amount'))['total'] or 0,
         'total_tithe': totals_map.get('tithe', 0),
+        'total_my_offering': totals_map.get('offering', 0),
         'total_offering': church_offering_total,
         'can_view_sadaka': can_view_sadaka,
+        'can_view_all_donations': _can_view_all_donations(request.user),
         'total_special': totals_map.get('special', 0),
         'total_other': totals_map.get('other', 0),
-        'recent_my_donations': (
-            my_donations.exclude(donation_type='offering')
-            if not can_view_sadaka
-            else my_donations
-        ).order_by('-contribution_date', '-donation_date')[:10],
+        'recent_my_donations': my_donations.order_by(
+            '-contribution_date', '-donation_date'
+        )[:10],
+        'contributions_list': contributions_list,
         'show_management_graphs': request.user.role in {'pastor', 'accountant'},
         'donation_chart_labels': json.dumps(donation_chart_labels),
         'donation_chart_data': json.dumps(donation_chart_data),
         'registration_chart_labels': json.dumps(registration_chart_labels),
         'registration_chart_data': json.dumps(registration_chart_data),
-        'accountant_sheet_rows': accountant_sheet_rows,
         'construction_pledges': construction_pledges,
+        'can_manage_construction_pledges': _can_manage_construction_pledges(request.user),
+        'pledge_payment_form': PledgePaymentForm(language=lang),
+        'pledge_reduce_form': PledgeReduceForm(language=lang),
+        'current_language': lang,
     }
     return render(request, 'donations/donation_home.html', context)
 
@@ -508,8 +729,6 @@ class DonationHistoryView(LoginRequiredMixin, ListView):
             qs = donations_queryset_for_user(self.request.user, base_qs)
         else:
             qs = base_qs.filter(donor=self.request.user)
-        if not _can_view_sadaka(self.request.user):
-            qs = qs.exclude(donation_type='offering')
         return qs
 
     def get_context_data(self, **kwargs):
@@ -519,7 +738,7 @@ class DonationHistoryView(LoginRequiredMixin, ListView):
         by_type = qs.values('donation_type').annotate(total=models.Sum('amount'))
         totals_map = {item['donation_type']: item['total'] or 0 for item in by_type}
         context['total_tithe'] = totals_map.get('tithe', 0)
-        context['total_offering'] = totals_map.get('offering', 0) if can_view_sadaka else 0
+        context['total_offering'] = totals_map.get('offering', 0)
         context['total_special'] = totals_map.get('special', 0)
         context['total_other'] = totals_map.get('other', 0)
         context['total_all'] = qs.aggregate(total=models.Sum('amount'))['total'] or 0
@@ -550,6 +769,48 @@ class TitheContributionListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return _tithe_donations_queryset()
+
+    def post(self, request, *args, **kwargs):
+        from members.language_utils import get_translation
+
+        if request.POST.get('action') != 'tithe_entry':
+            return redirect('donations:tithe_list')
+        if not _can_enter_tithe(request.user):
+            messages.error(request, get_translation('tithe_no_entry_access', LanguageManager.get_current_language(request)))
+            return redirect('donations:tithe_list')
+
+        lang = LanguageManager.get_current_language(request)
+        donor_scope = _allowed_donor_ids(request.user)
+        form = TitheEntryForm(request.POST, allowed_donor_ids=donor_scope, language=lang)
+        if form.is_valid():
+            _save_tithe_entry(form.cleaned_data, request.user)
+            messages.success(request, get_translation('tithe_saved_success', lang))
+            return redirect('donations:tithe_list')
+
+        for error in form.non_field_errors():
+            messages.error(request, error)
+        for field_name, errors in form.errors.items():
+            label = form.fields.get(field_name).label if field_name in form.fields else field_name
+            for error in errors:
+                messages.error(request, f'{label}: {error}')
+
+        self.object_list = self.get_queryset()
+        context = self.get_context_data(tithe_entry_form=form)
+        return self.render_to_response(context)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        lang = LanguageManager.get_current_language(self.request)
+        donor_scope = _allowed_donor_ids(self.request.user)
+        context['can_enter_tithe'] = _can_enter_tithe(self.request.user)
+        if context['can_enter_tithe']:
+            context.setdefault(
+                'tithe_entry_form',
+                TitheEntryForm(allowed_donor_ids=donor_scope, language=lang),
+            )
+        else:
+            context['tithe_entry_form'] = None
+        return context
 
 
 @login_required
@@ -711,33 +972,21 @@ def income_allocation_report_print(request):
 
 @login_required
 def financial_status(request):
-    """View church financial status (for all members)"""
-    total_donations = Donation.objects.aggregate(
-        total=models.Sum('amount')
-    )['total'] or 0
-    
-    recent_donations = Donation.objects.order_by('-donation_date')[:10]
-    campaign_stats = []
-    
-    campaigns = DonationCampaign.objects.filter(status='active')
-    for campaign in campaigns:
-        total = Donation.objects.filter(campaign=campaign).aggregate(
+    """Hali ya fedha: jumla ya kanisa zima inaonekana kwa mchungaji/mhasibu tu."""
+    can_view_sadaka = _can_view_sadaka(request.user)
+    if can_view_sadaka:
+        total_donations = Donation.objects.aggregate(
             total=models.Sum('amount')
         )['total'] or 0
-        progress_percentage = 0
-        if campaign.target_amount and campaign.target_amount > 0:
-            progress_percentage = float((total / campaign.target_amount) * 100)
-        campaign_stats.append({
-            'campaign': campaign,
-            'total': total,
-            'donors': Donation.objects.filter(campaign=campaign).count(),
-            'progress_percentage': progress_percentage,
-        })
-    
+    else:
+        total_donations = None
+
+    recent_donations = Donation.objects.order_by('-donation_date')[:10]
+
     return render(request, 'donations/financial_status.html', {
         'total_donations': total_donations,
         'recent_donations': recent_donations,
-        'campaign_stats': campaign_stats
+        'can_view_sadaka': can_view_sadaka,
     })
 
 
@@ -768,22 +1017,28 @@ def export_donation_history_csv(request):
 
 @login_required
 def export_tithe_list_csv(request):
+    from members.language_utils import get_translation
+
     if not _can_view_tithe_list(request.user):
         messages.error(request, 'Ni mhasibu au mchungaji tu anaweza kupakua report ya zaka.')
         return redirect('donations:home')
 
+    lang = LanguageManager.get_current_language(request)
     qs = _tithe_donations_queryset()
     response = _csv_response('tithe_contributions_report.csv')
     writer = csv.writer(response)
-    writer.writerow(['Date', 'Member', 'Tithe Type', 'Amount', 'Asset Description', 'Notes'])
+    writer.writerow([
+        get_translation('table_date', lang),
+        get_translation('tithe_col_full_name', lang),
+        get_translation('tithe_col_zaka', lang),
+        get_translation('tithe_col_other_zaka', lang),
+    ])
     for donation in qs:
         writer.writerow([
             donation.contribution_date,
             donation.donor.full_name if donation.donor else (donation.donor_name or ''),
-            'Mali' if donation.tithe_gift_type == 'asset' else 'Fedha',
-            int(donation.amount or 0),
+            int(donation.amount or 0) if donation.tithe_gift_type == 'money' else '',
             donation.tithe_asset_description or '',
-            donation.notes or '',
         ])
     return response
 
@@ -824,13 +1079,13 @@ def export_construction_pledges_csv(request):
 
     response = _csv_response('construction_pledges_report.csv')
     writer = csv.writer(response)
-    writer.writerow(['Member', 'Total Pledge', 'Amount Paid', 'Remaining Debt', 'Status', 'Start Date', 'End Date'])
+    writer.writerow(['Member', 'Ahadi (Hasi)', 'Amount Paid', 'Salio Deni (Hasi)', 'Status', 'Start Date', 'End Date'])
     for pledge in pledges:
         writer.writerow([
             pledge.donor.full_name,
-            int(pledge.total_amount or 0),
+            -int(pledge.total_amount or 0),
             int(pledge.amount_paid or 0),
-            int(pledge.remaining_amount or 0),
+            pledge.debt_balance_display,
             pledge.get_status_display(),
             pledge.start_date,
             pledge.end_date,
@@ -914,12 +1169,12 @@ def donation_report_preview(request, report_type):
             pledges = Pledge.objects.filter(category=construction_category).select_related('donor').order_by('-created_at')[:300]
         context.update({
             'report_title': 'Report ya Ahadi za Ujenzi',
-            'columns': ['Mwanachama', 'Ahadi Jumla', 'Kilicholipwa', 'Deni Lililobaki', 'Hali'],
+            'columns': ['Mwanachama', 'Ahadi (Hasi)', 'Kilicholipwa', 'Salio Deni (Hasi)', 'Hali'],
             'rows': [{
                 'mwanachama': p.donor.full_name,
-                'ahadi_jumla': int(p.total_amount or 0),
+                'ahadi_jumla': -int(p.total_amount or 0),
                 'kilicholipwa': int(p.amount_paid or 0),
-                'deni': int(p.remaining_amount or 0),
+                'deni': p.debt_balance_display,
                 'hali': p.get_status_display(),
             } for p in pledges],
         })

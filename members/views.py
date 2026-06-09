@@ -114,7 +114,9 @@ class CustomLoginView(LoginView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['login_form'] = context.get('form') or self.get_form()
-        context['form'] = ChurchUserRegistrationForm()
+        context['form'] = ChurchUserRegistrationForm(
+            language=LanguageManager.get_current_language(self.request),
+        )
         context['auth_mode'] = 'login'
         if self.request.session.pop('show_registration_pending_modal', False):
             context['show_registration_pending_modal'] = True
@@ -153,6 +155,11 @@ class RegisterView(CreateView):
 
         record_rate_limit_failure('register', self.request)
         return super().form_invalid(form)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['language'] = LanguageManager.get_current_language(self.request)
+        return kwargs
     
     def get_success_url(self):
         return reverse_lazy('login')

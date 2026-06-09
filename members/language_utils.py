@@ -159,8 +159,13 @@ class LanguageManager:
     
     @classmethod
     def get_current_language(cls, request):
-        """Get current language from session or default"""
-        return request.session.get('django_language', 'en')
+        """Get current language from session, cookie, or default."""
+        lang = request.session.get('django_language')
+        if not lang:
+            lang = request.COOKIES.get(getattr(settings, 'LANGUAGE_COOKIE_NAME', 'django_language'))
+        if lang in cls.SUPPORTED_LANGUAGES:
+            return lang
+        return 'en'
     
     @classmethod
     def set_language(cls, request, language_code):

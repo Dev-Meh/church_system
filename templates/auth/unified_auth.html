@@ -667,16 +667,12 @@
                 <rect x="6" y="16" width="36" height="8" rx="2" fill="#c8a84b"/>
             </svg>
             <div class="church-name">PHM-ARCC</div>
-            {% if auth_mode == 'register' %}
-            <div class="church-sub">Iyumbu Dodoma &mdash; {% church_t 'cms_subtitle' %}</div>
-            {% else %}
-            <div class="church-sub">Iyumbu Dodoma</div>
+            <div class="church-sub">{% if auth_mode == 'register' %}Iyumbu Dodoma &mdash; {% church_t 'cms_subtitle' %}{% else %}Iyumbu Dodoma{% endif %}</div>
             <div class="auth-lang-compact">
                 <a href="{% url 'members:set_language' 'en' %}" class="{% if current_language == 'en' %}is-active{% endif %}">EN</a>
                 <span class="auth-lang-sep">|</span>
                 <a href="{% url 'members:set_language' 'sw' %}" class="{% if current_language == 'sw' %}is-active{% endif %}">SW</a>
             </div>
-            {% endif %}
             {% if auth_mode == 'register' %}<div class="page-title">{% church_t 'welcome_church_community' %}</div>{% endif %}
             <div class="page-sub">{% if auth_mode == 'register' %}{% church_t 'register_tab' %}{% else %}{% church_t 'login_subtitle' %}{% endif %}</div>
         </div>
@@ -741,7 +737,7 @@
                                 {% if form.username.errors %}<div class="text-danger">{% for e in form.username.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
                             </div>
                             <div class="field-group">
-                                <label for="{{ form.email.id_for_label }}" class="form-label">{% church_t 'email_address' %} <span class="required-star">*</span></label>
+                                <label for="{{ form.email.id_for_label }}" class="form-label">{% church_t 'email_address' %} <span class="text-muted" style="font-weight:400;font-size:11px;">{% church_t 'field_optional' %}</span></label>
                                 {{ form.email }}
                                 {% if form.email.errors %}<div class="text-danger">{% for e in form.email.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
                             </div>
@@ -773,7 +769,7 @@
                                 {% if form.last_name.errors %}<div class="text-danger">{% for e in form.last_name.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
                             </div>
                             <div class="field-group">
-                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">{% church_t 'phone_number' %}</label>
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">{% church_t 'phone_number' %} <span class="text-muted" style="font-weight:400;font-size:11px;">{% church_t 'field_optional' %}</span></label>
                                 {{ form.phone_number }}
                                 {% if form.phone_number.errors %}<div class="text-danger">{% for e in form.phone_number.errors %}<small>{{ e }}</small>{% endfor %}</div>{% endif %}
                             </div>

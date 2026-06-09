@@ -7,13 +7,27 @@
 
 {% block page_extra_css %}
 <style>
-    .donation-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .page-body {
+        max-width: none;
+        width: 100%;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    .donation-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+        width: 100%;
+    }
 
     .donation-form-card, .campaigns-card {
         background: #152333;
         border: 1px solid rgba(255,255,255,0.07);
         border-radius: 12px;
         overflow: hidden;
+        width: 100%;
     }
 
     .card-header {
@@ -73,6 +87,10 @@
     }
 
     .btn-donate:hover { background: linear-gradient(135deg, #a07820, #8a6a18); transform: translateY(-1px); }
+
+    .debt-negative { color: #ff8787; font-weight: 700; }
+    .debt-paid { color: #69db7c; font-weight: 600; }
+    .debt-clear { color: #69db7c; font-weight: 700; }
 
     /* CAMPAIGNS */
     .campaign-list { max-height: 400px; overflow-y: auto; }
@@ -235,6 +253,65 @@
         font-size: 13px;
     }
 
+    .sheet-amounts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: rgba(11, 25, 42, 0.45);
+        border: 1px solid rgba(200, 168, 75, 0.22);
+        border-radius: 10px;
+    }
+
+    .sheet-amount-field {
+        min-width: 0;
+    }
+
+    .sheet-amount-field .form-label {
+        margin-bottom: 4px;
+        line-height: 1.3;
+        white-space: normal;
+    }
+
+    .sheet-amount-input {
+        width: 100% !important;
+        min-width: 0 !important;
+        font-size: 16px !important;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+        padding: 12px 14px !important;
+        letter-spacing: 0.3px;
+    }
+
+    .sheet-amount-total .sheet-total-box {
+        background: #0f1e2e;
+        border: 1px solid rgba(200, 168, 75, 0.35);
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #f2d27a;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .payment-method-select {
+        width: 100%;
+        font-size: 15px !important;
+        line-height: 1.35;
+        padding: 12px 14px !important;
+        white-space: normal;
+        word-wrap: break-word;
+    }
+
+    .sheet-top-fields {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
     .sheet-total-preview {
         margin-top: 10px;
         color: #d6e7ff;
@@ -246,16 +323,91 @@
         letter-spacing: 0.5px;
     }
 
+    .pledge-actions-help {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.65);
+        margin-bottom: 0.75rem;
+    }
+
+    .pledge-action-panel {
+        margin-bottom: 0.5rem;
+    }
+
+    .pledge-action-panel summary {
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: #c8a84b;
+        padding: 4px 0;
+        list-style: none;
+    }
+
+    .pledge-action-panel summary::-webkit-details-marker { display: none; }
+
+    .pledge-action-form {
+        display: grid;
+        gap: 6px;
+        margin-top: 6px;
+        padding: 8px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        min-width: 180px;
+    }
+
+    .pledge-input {
+        padding: 6px 8px !important;
+        font-size: 12px !important;
+    }
+
+    .btn-pledge-pay {
+        background: linear-gradient(135deg, #1a4a2e, #226038);
+        border: none;
+        border-radius: 6px;
+        padding: 7px 10px;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+
+    .btn-pledge-reduce {
+        background: linear-gradient(135deg, #5b3a14, #7a4f18);
+        border: none;
+        border-radius: 6px;
+        padding: 7px 10px;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+
+    .pledge-no-action {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.45);
+    }
+
 
     @media (max-width: 992px) {
-        .donation-grid { grid-template-columns: 1fr; }
         .info-cards { grid-template-columns: 1fr; }
     }
     @media (max-width: 576px) {
         .topbar h2 { font-size: 14px; line-height: 1.25; }
         .chart-wrap { height: 240px; }
-        .sheet-table .form-control { min-width: 0; width: 100%; }
-        .sheet-table th, .sheet-table td { font-size: 11px; padding: 6px 8px; }
+        .sheet-amounts-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.85rem;
+            padding: 0.85rem;
+        }
+        .sheet-amount-field.sheet-amount-date,
+        .sheet-amount-field.sheet-amount-total {
+            grid-column: 1 / -1;
+        }
+        .sheet-top-fields { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
@@ -266,7 +418,7 @@
                 <div class="donation-form-card">
                     <div class="card-header">
                         <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                            <h3>{% if is_accountant %}Uingizaji wa Mchango (Mhasibu){% else %}Taarifa ya Michango{% endif %}</h3>
+                            <h3>{% if is_accountant %}{% church_t 'don_accountant_entry' %}{% else %}{% church_t 'don_member_notice' %}{% endif %}</h3>
                     </div>
                     <div class="card-body">
                         {% if active_notices %}
@@ -275,156 +427,137 @@
                                     <strong>{{ notice.title }}</strong><br>
                                     {{ notice.message }}<br>
                                     <small>
-                                        Imetumwa na {{ notice.created_by.full_name|default:"Msimamizi" }}
-                                        | Inaisha: {{ notice.end_date }}
+                                        {% church_t 'don_sent_by' %} {{ notice.created_by.full_name|default:"Admin" }}
+                                        | {% church_t 'don_expires' %}: {{ notice.end_date }}
                                     </small>
                                 </div>
                             {% endfor %}
                         {% else %}
                             <div class="alert alert-info">
-                                Hakuna taarifa mpya ya michango kwa sasa.
+                                {% church_t 'don_no_notices' %}
                             </div>
                         {% endif %}
 
                         {% if is_accountant %}
-                            <h4 class="sheet-title">Rekodi ya Karatasi ya Mhasibu</h4>
+                            <h4 class="sheet-title">{% church_t 'don_accountant_sheet' %}</h4>
                             <div style="margin-bottom: 10px;">
-                                <a href="{% url 'donations:report_preview' 'accountant_sheet' %}" class="btn-back">Preview Report</a>
-                                <a href="{% url 'donations:export_accountant_sheet_csv' %}" class="btn-back">Download Report (CSV)</a>
+                                <a href="{% url 'donations:report_preview' 'accountant_sheet' %}" class="btn-back">{% church_t 'preview_report' %}</a>
+                                <a href="{% url 'donations:export_accountant_sheet_csv' %}" class="btn-back">{% church_t 'download_report_csv' %}</a>
                             </div>
                             <form method="post">
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="sheet_entry">
 
-                                <h4 class="sheet-title">Michango ya pamoja (hazihitaji jina la mwanachama)</h4>
+                                {% if sheet_form.errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in sheet_form.non_field_errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                    {% for field in sheet_form %}
+                                        {% for error in field.errors %}
+                                            <div><strong>{{ field.label }}:</strong> {{ error }}</div>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <h4 class="sheet-title">{% church_t 'don_enter_member_contrib' %}</h4>
                                 <p class="text-muted" style="font-size:12px;margin-bottom:0.75rem;">
-                                    Sadaka, Malimbuko, Shukrani na safu ya <strong>Malipo Ujenzi</strong> zinaingizwa kama jumla; hazihusishi chaguo la mwanachama.
+                                    {% church_t 'don_enter_member_help' %}
                                 </p>
-                                <div class="form-group">
-                                    <label class="form-label" for="{{ sheet_form.payment_method.id_for_label }}">Njia ya Malipo</label>
-                                    {{ sheet_form.payment_method }}
+                                <div class="sheet-top-fields">
+                                    <div class="form-group mb-0">
+                                        <label class="form-label" for="{{ sheet_form.donor.id_for_label }}">{% church_t 'don_member_label' %} *</label>
+                                        {{ sheet_form.donor }}
+                                    </div>
+                                    <div class="form-group mb-0">
+                                        <label class="form-label" for="{{ sheet_form.payment_method.id_for_label }}">{% church_t 'payment_method' %}</label>
+                                        {{ sheet_form.payment_method }}
+                                    </div>
                                 </div>
 
-                                <div class="table-responsive">
-                                    <table class="table sheet-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Tarehe</th>
-                                                <th>Sadaka</th>
-                                                <th>Zaka</th>
-                                                <th>Malimbuko</th>
-                                                <th>Shukrani</th>
-                                                <th>Malipo Ujenzi</th>
-                                                <th>Jumla</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>{{ sheet_form.contribution_date }}</td>
-                                                <td>{{ sheet_form.sadaka }}</td>
-                                                <td>{{ sheet_form.zaka }}</td>
-                                                <td>{{ sheet_form.malimbuko }}</td>
-                                                <td>{{ sheet_form.shukrani }}</td>
-                                                <td>{{ sheet_form.construction_payment_amount }}</td>
-                                                <td><strong id="sheet-jumla">0</strong></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                <div class="sheet-amounts-grid">
+                                    <div class="sheet-amount-field sheet-amount-date">
+                                        <label class="form-label" for="{{ sheet_form.contribution_date.id_for_label }}">{% church_t 'don_col_date' %}</label>
+                                        {{ sheet_form.contribution_date }}
+                                    </div>
+                                    <div class="sheet-amount-field">
+                                        <label class="form-label" for="{{ sheet_form.sadaka.id_for_label }}">{% church_t 'don_col_offering' %}</label>
+                                        {{ sheet_form.sadaka }}
+                                    </div>
+                                    <div class="sheet-amount-field">
+                                        <label class="form-label" for="{{ sheet_form.zaka.id_for_label }}">{% church_t 'don_col_tithe' %}</label>
+                                        {{ sheet_form.zaka }}
+                                    </div>
+                                    <div class="sheet-amount-field">
+                                        <label class="form-label" for="{{ sheet_form.malimbuko.id_for_label }}">{% church_t 'don_col_special_offering' %}</label>
+                                        {{ sheet_form.malimbuko }}
+                                    </div>
+                                    <div class="sheet-amount-field">
+                                        <label class="form-label" for="{{ sheet_form.shukrani.id_for_label }}">{% church_t 'don_col_thanksgiving' %}</label>
+                                        {{ sheet_form.shukrani }}
+                                    </div>
+                                    <div class="sheet-amount-field">
+                                        <label class="form-label" for="{{ sheet_form.construction_payment_amount.id_for_label }}">{% church_t 'don_col_debt_payment' %}</label>
+                                        {{ sheet_form.construction_payment_amount }}
+                                    </div>
+                                    <div class="sheet-amount-field sheet-amount-total">
+                                        <label class="form-label">{% church_t 'don_col_total' %}</label>
+                                        <div class="sheet-total-box"><span id="sheet-jumla">0</span></div>
+                                    </div>
                                 </div>
 
-                                <h4 class="sheet-title" style="margin-top:1rem;">Zaka (kwa jina la mwanachama)</h4>
+                                <h4 class="sheet-title" style="margin-top:1rem;">{% church_t 'don_zaka_type' %}</h4>
                                 <div class="form-group">
-                                    <label class="form-label" for="{{ sheet_form.donor.id_for_label }}">Mwanachama wa Zaka</label>
-                                    {{ sheet_form.donor }}
-                                    <small class="text-muted">Chagua mtu tu unapoingiza zaka ya fedha au zaka ya mali.</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label" for="{{ sheet_form.zaka_type.id_for_label }}">Aina ya Zaka</label>
+                                    <label class="form-label" for="{{ sheet_form.zaka_type.id_for_label }}">{% church_t 'don_zaka_type' %}</label>
                                     {{ sheet_form.zaka_type }}
                                 </div>
                                 <div class="form-group" id="asset-zaka-wrap" style="display:none;">
-                                    <label class="form-label" for="{{ sheet_form.aina_nyingine_ya_zaka.id_for_label }}">Aina Nyingine ya Zaka (Mali)</label>
+                                    <label class="form-label" for="{{ sheet_form.aina_nyingine_ya_zaka.id_for_label }}">{% church_t 'don_other_gift_type' %}</label>
                                     {{ sheet_form.aina_nyingine_ya_zaka }}
                                 </div>
 
-                                <h4 class="sheet-title" style="margin-top:1rem;">Ujenzi — ahidi na deni (jina tofauti na zaka)</h4>
+                                <h4 class="sheet-title" style="margin-top:1rem;">{% church_t 'don_construction_section' %}</h4>
                                 <div class="form-group">
-                                    <label class="form-label" for="{{ sheet_form.construction_donor.id_for_label }}">Mwanachama wa Ujenzi</label>
+                                    <label class="form-label" for="{{ sheet_form.construction_donor.id_for_label }}">{% church_t 'don_construction_member' %}</label>
                                     {{ sheet_form.construction_donor }}
-                                    <small class="text-muted">Chagua mtu anayeahidi au anayelipa deni la ujenzi (hawahusiani na zaka).</small>
+                                    <small class="text-muted">{% church_t 'don_construction_member_help' %}</small>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label" for="{{ sheet_form.construction_pledge_amount.id_for_label }}">Ahadi Mpya ya Ujenzi (ongeza deni)</label>
+                                    <label class="form-label" for="{{ sheet_form.construction_pledge_amount.id_for_label }}">{% church_t 'don_new_pledge' %}</label>
                                     {{ sheet_form.construction_pledge_amount }}
-                                    <small class="text-muted">Hii ni ahadi (deni), si fedha iliyoingia leo.</small>
+                                    <small class="text-muted">{% church_t 'don_new_pledge_help' %}</small>
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="form-label" for="{{ sheet_form.notes.id_for_label }}">Maelezo (Hiari)</label>
+                                    <label class="form-label" for="{{ sheet_form.notes.id_for_label }}">{% church_t 'don_notes_optional' %}</label>
                                     {{ sheet_form.notes }}
                                 </div>
 
                                 <div class="sheet-total-preview">
-                                    Jumla ya kuingiza: <strong>TZS <span id="sheet-jumla-bottom">0</span></strong>
+                                    {% church_t 'don_total_preview' %} <strong>TZS <span id="sheet-jumla-bottom">0</span></strong>
                                 </div>
 
-                                <button type="submit" class="btn-donate">Hifadhi Mchango</button>
+                                <button type="submit" class="btn-donate">{% church_t 'don_save_contribution' %}</button>
                             </form>
                         {% elif is_accountant_role and not has_accountant_access %}
                             <div class="alert alert-danger mb-0">
-                                Akaunti yako ya mhasibu haina ruhusa ya kuingiza michango kwa sasa.
-                                Mchungaji au admin aende kwenye Members kisha akupe <strong>Grant Access</strong>.
+                                {% church_t 'don_no_accountant_access' %}
                             </div>
                         {% else %}
                             <div class="alert alert-info mb-0">
-                                Michango inaingizwa na mhasibu baada ya kupokea malipo.
-                                Ukiwa member, utaona rekodi zako hapa (Zaka, Maalum, na Mengine). Sadaka ya kanisa inaonekana kwa mchungaji na mhasibu tu.
+                                {% church_t 'don_member_info' %}
                             </div>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Active Campaigns -->
-                <div class="campaigns-card">
-                    <div class="card-header">
-                        <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                        <h3>{% church_t 'active_campaigns' %}</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="campaign-list">
-                            {% if campaigns %}
-                                {% for campaign in campaigns %}
-                                <div class="campaign-item">
-                                    <div class="campaign-title">{{ campaign.title }}</div>
-                                    <div class="campaign-desc">{{ campaign.description|truncatewords:15 }}</div>
-                                    <div class="progress-bar-container">
-                                        <div class="progress-bar-fill" style="width: {{ campaign.progress_percentage|floatformat:0 }}%"></div>
-                                    </div>
-                                    <div class="campaign-stats">
-                                        <span>TZS {{ campaign.current_amount|floatformat:0 }}</span>
-                                        <span>{{ campaign.progress_percentage|floatformat:0 }}%</span>
-                                        <span>TZS {{ campaign.target_amount|floatformat:0 }}</span>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <div style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.4);">
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" style="margin-bottom: 1rem;">
-                                        <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-                                    </svg>
-                                    <p style="font-size: 12px;">{% church_t 'no_active_campaigns' %}</p>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
             </div>
 
             {% if show_management_graphs %}
             <div class="chart-row mt-4">
                 <div class="chart-panel">
-                    <div class="panel-hd">Michango — miezi 6 (histogram)</div>
+                    <div class="panel-hd">{% church_t 'donations_chart_6mo' %}</div>
                     <div class="panel-bd">
                         <div class="chart-wrap">
                             <canvas id="donationTrendChart"></canvas>
@@ -432,7 +565,7 @@
                     </div>
                 </div>
                 <div class="chart-panel">
-                    <div class="panel-hd">Usajili wa wanachama — miezi 6</div>
+                    <div class="panel-hd">{% church_t 'registration_chart_6mo' %}</div>
                     <div class="panel-bd">
                         <div class="chart-wrap">
                             <canvas id="registrationTrendChart"></canvas>
@@ -445,33 +578,33 @@
             {% if can_publish_notice %}
             <div class="panel mt-4">
                 <div class="panel-header">
-                    <h3>Tuma Taarifa ya Michango kwa Member</h3>
+                    <h3>{% church_t 'don_send_notice' %}</h3>
                 </div>
                 <div class="panel-body">
                     <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="create_notice">
                         <div class="form-group">
-                            <label class="form-label" for="{{ notice_form.title.id_for_label }}">Kichwa</label>
+                            <label class="form-label" for="{{ notice_form.title.id_for_label }}">{% church_t 'don_notice_title' %}</label>
                             {{ notice_form.title }}
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="{{ notice_form.message.id_for_label }}">Ujumbe</label>
+                            <label class="form-label" for="{{ notice_form.message.id_for_label }}">{% church_t 'don_notice_message' %}</label>
                             {{ notice_form.message }}
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="{{ notice_form.target_member.id_for_label }}">Mtumiaji wa Kupokea (si lazima)</label>
+                            <label class="form-label" for="{{ notice_form.target_member.id_for_label }}">{% church_t 'don_notice_recipient' %}</label>
                             {{ notice_form.target_member }}
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="{{ notice_form.start_date.id_for_label }}">Tarehe ya Kuanza</label>
+                            <label class="form-label" for="{{ notice_form.start_date.id_for_label }}">{% church_t 'don_notice_start' %}</label>
                             {{ notice_form.start_date }}
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="{{ notice_form.end_date.id_for_label }}">Tarehe ya Mwisho</label>
+                            <label class="form-label" for="{{ notice_form.end_date.id_for_label }}">{% church_t 'don_notice_end' %}</label>
                             {{ notice_form.end_date }}
                         </div>
-                        <button type="submit" class="btn-donate">Tuma Taarifa</button>
+                        <button type="submit" class="btn-donate">{% church_t 'don_send_notice_btn' %}</button>
                     </form>
                 </div>
             </div>
@@ -483,14 +616,14 @@
                     <div class="info-icon">
                         <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
                     </div>
-                    <div class="info-title">Jumla ya Michango Yangu</div>
+                    <div class="info-title">{% church_t 'don_my_total' %}</div>
                     <div class="info-value">{{ total_all|floatformat:0 }}</div>
                 </div>
                 <div class="info-card" style="background: linear-gradient(135deg, #1a4a2e, #226038);">
                     <div class="info-icon">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                     </div>
-                    <div class="info-title">Zaka</div>
+                    <div class="info-title">{% church_t 'don_col_tithe' %}</div>
                     <div class="info-value">{{ total_tithe|floatformat:0 }}</div>
                 </div>
                 {% if can_view_sadaka %}
@@ -498,54 +631,62 @@
                     <div class="info-icon">
                         <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                     </div>
-                    <div class="info-title">Sadaka (Jumla ya Kanisa)</div>
+                    <div class="info-title">{% church_t 'don_church_offering_total' %}</div>
                     <div class="info-value">{{ total_offering|floatformat:0 }}</div>
+                </div>
+                {% else %}
+                <div class="info-card" style="background: linear-gradient(135deg, #0e3a44, #165060);">
+                    <div class="info-icon">
+                        <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                    <div class="info-title">{% church_t 'don_my_offering' %}</div>
+                    <div class="info-value">{{ total_my_offering|floatformat:0 }}</div>
                 </div>
                 {% endif %}
             </div>
 
             <div class="info-cards mt-3">
                 <div class="info-card" style="background: linear-gradient(135deg, #5b2a86, #7a3fb5);">
-                    <div class="info-title">Mchango Maalum</div>
+                    <div class="info-title">{% church_t 'dtype_special' %}</div>
                     <div class="info-value">{{ total_special|floatformat:0 }}</div>
                 </div>
                 <div class="info-card" style="background: linear-gradient(135deg, #3c3c3c, #5f5f5f);">
-                    <div class="info-title">Michango Mengine</div>
+                    <div class="info-title">{% church_t 'don_other_contributions' %}</div>
                     <div class="info-value">{{ total_other|floatformat:0 }}</div>
-                </div>
-                <div class="info-card" style="background: linear-gradient(135deg, #0e3a44, #165060);">
-                    <div class="info-title">Kampeni Hai</div>
-                    <div class="info-value">{{ campaigns|length }}</div>
                 </div>
             </div>
 
             <div class="panel mt-4">
                 <div class="panel-header">
-                    <h3>Rekodi 10 za Karibuni (Mimi)</h3>
+                    <h3>{% if can_view_all_donations %}{% church_t 'don_contrib_list_all' %}{% else %}{% church_t 'don_contrib_list_mine' %}{% endif %}</h3>
                 </div>
                 <div class="panel-body">
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Tarehe</th>
-                                    <th>Aina</th>
-                                    <th>Kiasi</th>
-                                    <th>Njia ya Malipo</th>
-                                    <th>Campaign</th>
+                                    <th>{% church_t 'don_col_date' %}</th>
+                                    {% if can_view_all_donations %}<th>{% church_t 'don_col_member' %}</th>{% endif %}
+                                    <th>{% church_t 'don_col_type' %}</th>
+                                    <th>{% church_t 'don_col_amount' %}</th>
+                                    <th>{% church_t 'payment_method' %}</th>
+                                    <th>{% church_t 'don_col_details' %}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for donation in recent_my_donations %}
+                                {% for donation in contributions_list %}
                                 <tr>
                                     <td>{{ donation.contribution_date }}</td>
-                                    <td>{{ donation.get_donation_type_display }}</td>
+                                    {% if can_view_all_donations %}
+                                    <td>{{ donation.donor.full_name }}</td>
+                                    {% endif %}
+                                    <td>{% church_dtype donation.donation_type %}</td>
                                     <td>{{ donation.amount|floatformat:2 }}</td>
-                                    <td>{{ donation.get_payment_method_display }}</td>
-                                    <td>{% if donation.campaign %}{{ donation.campaign.title }}{% else %}-{% endif %}</td>
+                                    <td>{% church_pmethod donation.payment_method %}</td>
+                                    <td>{% if donation.notes %}{{ donation.notes|truncatewords:8 }}{% else %}—{% endif %}</td>
                                 </tr>
                                 {% empty %}
-                                <tr><td colspan="5" class="text-muted">Hakuna rekodi za michango bado.</td></tr>
+                                <tr><td colspan="{% if can_view_all_donations %}6{% else %}5{% endif %}" class="text-muted">{% church_t 'don_no_records' %}</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -556,74 +697,82 @@
             {% if can_view_sadaka %}
             <div class="panel mt-4">
                 <div class="panel-header">
-                    <h3>Rekodi ya Sadaka na Michango (Mhasibu)</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Tarehe</th>
-                                    <th>Sadaka</th>
-                                    <th>Zaka</th>
-                                    <th>Malimbuko</th>
-                                    <th>Shukrani</th>
-                                    <th>Jumla</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in accountant_sheet_rows %}
-                                <tr>
-                                    <td>{{ row.contribution_date }}</td>
-                                    <td>{{ row.sadaka|default:0|floatformat:2 }}</td>
-                                    <td>{{ row.zaka|default:0|floatformat:2 }}</td>
-                                    <td>{{ row.malimbuko|default:0|floatformat:2 }}</td>
-                                    <td>{{ row.shukrani|default:0|floatformat:2 }}</td>
-                                    <td><strong>{{ row.jumla|default:0|floatformat:2 }}</strong></td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="6" class="text-muted">Hakuna rekodi za mhasibu bado.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="panel mt-4">
-                <div class="panel-header">
-                    <h3>Ahadi za Ujenzi na Salio la Deni</h3>
+                    <h3>{% church_t 'don_pledges_title' %}</h3>
                 </div>
                 <div class="panel-body">
                     <div style="margin-bottom: 10px;">
-                        <a href="{% url 'donations:report_preview' 'construction_pledges' %}" class="btn-back">Preview Report</a>
-                        <a href="{% url 'donations:export_construction_pledges_csv' %}" class="btn-back">Download Report (CSV)</a>
+                        <a href="{% url 'donations:report_preview' 'construction_pledges' %}" class="btn-back">{% church_t 'preview_report' %}</a>
+                        <a href="{% url 'donations:export_construction_pledges_csv' %}" class="btn-back">{% church_t 'download_report_csv' %}</a>
                     </div>
+                    {% if can_manage_construction_pledges %}
+                    <p class="pledge-actions-help">{% church_t 'don_pledge_actions_help' %}</p>
+                    {% endif %}
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Mwanachama</th>
-                                    <th>Ahadi Jumla</th>
-                                    <th>Kiasi Kilicholipwa</th>
-                                    <th>Deni Lililobaki</th>
-                                    <th>Hali</th>
+                                    <th>{% church_t 'don_col_member' %}</th>
+                                    <th>{% church_t 'don_pledge_negative' %}</th>
+                                    <th>{% church_t 'don_pledge_payments' %}</th>
+                                    <th>{% church_t 'don_debt_balance' %}</th>
+                                    <th>{% church_t 'don_status' %}</th>
+                                    {% if can_manage_construction_pledges %}<th>{% church_t 'don_col_action' %}</th>{% endif %}
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for pledge in construction_pledges %}
                                 <tr>
                                     <td>{{ pledge.donor.full_name }}</td>
-                                    <td>{{ pledge.total_amount|floatformat:2 }}</td>
-                                    <td>{{ pledge.amount_paid|floatformat:2 }}</td>
-                                    <td><strong>{{ pledge.remaining_amount|floatformat:2 }}</strong></td>
-                                    <td>{{ pledge.get_status_display }}</td>
+                                    <td class="debt-negative">-{{ pledge.total_amount|floatformat:0 }}</td>
+                                    <td class="debt-paid">+{{ pledge.amount_paid|floatformat:0 }}</td>
+                                    <td>
+                                        {% if pledge.debt_balance_display == 0 %}
+                                        <strong class="debt-clear">0</strong>
+                                        {% else %}
+                                        <strong class="debt-negative">{{ pledge.debt_balance_display }}</strong>
+                                        {% endif %}
+                                    </td>
+                                    <td>{% if pledge.debt_balance_display == 0 %}{% church_t 'don_paid_off' %}{% else %}{% church_pledge_status pledge.status %}{% endif %}</td>
+                                    {% if can_manage_construction_pledges %}
+                                    <td>
+                                        {% if pledge.has_outstanding_debt %}
+                                        <details class="pledge-action-panel">
+                                            <summary>{% church_t 'don_pledge_pay_btn' %}</summary>
+                                            <form method="post" class="pledge-action-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="pay_pledge">
+                                                <input type="hidden" name="pledge_id" value="{{ pledge.id }}">
+                                                <input type="number" name="amount" class="form-control sheet-amount-input pledge-input" min="1" step="1" inputmode="numeric" pattern="[0-9]*" max="{{ pledge.debt_balance_display }}" placeholder="0" required>
+                                                <select name="payment_method" class="form-select payment-method-select pledge-input" required>
+                                                    {% for value, label in pledge_payment_form.fields.payment_method.choices %}
+                                                    <option value="{{ value }}"{% if value == 'cash' %} selected{% endif %}>{{ label }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <input type="date" name="contribution_date" class="form-control pledge-input" value="{% now 'Y-m-d' %}" required>
+                                                <input type="text" name="notes" class="form-control pledge-input" placeholder="{% church_t 'don_notes_ph' %}">
+                                                <button type="submit" class="btn-pledge-pay">{% church_t 'don_pledge_pay_btn' %}</button>
+                                            </form>
+                                        </details>
+                                        <details class="pledge-action-panel">
+                                            <summary>{% church_t 'don_pledge_reduce_btn' %}</summary>
+                                            <form method="post" class="pledge-action-form">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="reduce_pledge">
+                                                <input type="hidden" name="pledge_id" value="{{ pledge.id }}">
+                                                <input type="number" name="reduce_amount" class="form-control sheet-amount-input pledge-input" min="1" step="1" inputmode="numeric" pattern="[0-9]*" max="{{ pledge.debt_balance_display }}" placeholder="0" required>
+                                                <input type="text" name="reason" class="form-control pledge-input" placeholder="{% church_t 'don_pledge_reduce_reason_ph' %}">
+                                                <button type="submit" class="btn-pledge-reduce">{% church_t 'don_pledge_reduce_btn' %}</button>
+                                            </form>
+                                        </details>
+                                        {% else %}
+                                        <span class="pledge-no-action">—</span>
+                                        {% endif %}
+                                    </td>
+                                    {% endif %}
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-muted">Hakuna ahadi ya ujenzi iliyorekodiwa bado.</td>
+                                    <td colspan="{% if can_manage_construction_pledges %}6{% else %}5{% endif %}" class="text-muted">{% church_t 'don_no_pledges' %}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -688,18 +837,18 @@ document.addEventListener('DOMContentLoaded', function () {
         ChurchHistogram.create(donationCtx, {
             labels: donationLabels,
             data: donationData,
-            datasetLabel: 'Michango (TZS)',
+            datasetLabel: '{% church_t "don_chart_donations_label" %}',
             colorScheme: 'teal',
             formatY: 'currency',
-            emptyText: 'Hakuna michango katika miezi 6 iliyopita.',
+            emptyText: '{% church_t "don_chart_no_donations" %}',
         });
         ChurchHistogram.create(registrationCtx, {
             labels: registrationLabels,
             data: registrationData,
-            datasetLabel: 'Wanachama wapya',
+            datasetLabel: '{% church_t "don_chart_registrations_label" %}',
             colorScheme: 'orange',
             formatY: 'integer',
-            emptyText: 'Hakuna usajili katika miezi 6 iliyopita.',
+            emptyText: '{% church_t "don_chart_no_registrations" %}',
         });
     });
 </script>

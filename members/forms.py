@@ -1,8 +1,25 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, SetPasswordForm, PasswordResetForm
 from django.core.exceptions import ValidationError
-from .birth_date_field import MobileBirthDateField
+from .birth_date_field import MobileBirthDateField, MobileBirthDateWidget
+from .language_utils import get_translation
 from .models import ChurchUser, ChurchGroup, GroupActivity, UniversityStudentRecord
+
+_GENDER_I18N = {"M": "gender_male", "F": "gender_female", "O": "gender_other"}
+_MARITAL_I18N = {
+    "single": "marital_single",
+    "married": "marital_married",
+    "divorced": "marital_divorced",
+    "widowed": "marital_widowed",
+}
+_UNI_LEVEL_I18N = {
+    "certificate": "uni_level_certificate",
+    "diploma": "uni_level_diploma",
+    "degree": "uni_level_degree",
+    "masters": "uni_level_masters",
+    "phd": "uni_level_phd",
+    "other": "uni_level_other",
+}
 
 class ChurchUserRegistrationForm(UserCreationForm):
     """Public registration: church members only."""
@@ -16,29 +33,24 @@ class ChurchUserRegistrationForm(UserCreationForm):
         })
     )
     email = forms.EmailField(
-        required=True,
+        required=False,
         widget=forms.EmailInput(attrs={
-            'class': 'form-control', 
-            'placeholder': 'Enter your email'
-        })
+            'class': 'form-control',
+            'placeholder': 'Email (optional)',
+        }),
     )
     phone_number = forms.CharField(
-        max_length=20, 
+        max_length=20,
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'form-control', 
-            'placeholder': 'Phone number'
-        })
+            'class': 'form-control',
+            'placeholder': 'Phone number (optional)',
+        }),
     )
-    date_of_birth = MobileBirthDateField(
-        required=True,
-        label='Tarehe ya kuzaliwa',
-    )
+    date_of_birth = MobileBirthDateField(required=True)
     gender = forms.ChoiceField(
         choices=ChurchUser.GENDER_CHOICES,
         required=True,
-        label='Jinsia',
-        error_messages={'required': 'Chagua jinsia.'},
         widget=forms.Select(attrs={'class': 'form-control', 'required': 'required'}),
     )
     address = forms.CharField(
@@ -117,7 +129,6 @@ class ChurchUserRegistrationForm(UserCreationForm):
 
     is_university_student = forms.BooleanField(
         required=False,
-        label='Mimi ni mwanafunzi wa chuo',
         widget=forms.CheckboxInput(attrs={
             'class': 'form-check-input',
             'id': 'id_is_university_student',
@@ -126,73 +137,60 @@ class ChurchUserRegistrationForm(UserCreationForm):
     uni_institution = forms.CharField(
         max_length=200,
         required=False,
-        label='Chuo / Chuo kikuu',
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Mfano: UDOM, DUCE, ARU',
             'data-uni-field': '1',
         }),
     )
     uni_course = forms.CharField(
         max_length=200,
         required=False,
-        label='Kozi / Programu',
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Mfano: Ualimu, Nursing, Law',
             'data-uni-field': '1',
         }),
     )
     uni_faculty = forms.CharField(
         max_length=200,
         required=False,
-        label='Ndaki (hiari)',
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Mfano: Elimu, Afya, Sayansi',
             'data-uni-field': '1',
         }),
     )
     uni_level = forms.ChoiceField(
         choices=UniversityStudentRecord.LEVEL_CHOICES,
         required=False,
-        label='Kiwango cha elimu',
         initial='degree',
         widget=forms.Select(attrs={'class': 'form-control', 'data-uni-field': '1'}),
     )
     uni_year_started = forms.IntegerField(
         required=False,
-        label='Mwaka ulipoanza masomo',
         min_value=1990,
         max_value=2100,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
             'min': '1990',
             'max': '2100',
-            'placeholder': 'Mfano: 2024',
             'data-uni-field': '1',
         }),
     )
     uni_expected_completion_year = forms.IntegerField(
         required=False,
-        label='Mwaka wa kutarajiwa kuhitimu (hiari)',
         min_value=1990,
         max_value=2100,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
             'min': '1990',
             'max': '2100',
-            'placeholder': 'Mfano: 2028',
             'data-uni-field': '1',
         }),
     )
     uni_notes = forms.CharField(
         required=False,
-        label='Maelezo ya ziada (hiari)',
         widget=forms.Textarea(attrs={
             'class': 'form-control',
             'rows': 2,
-            'placeholder': 'Hiari — maelezo kwa mchungaji',
             'data-uni-field': '1',
         }),
     )
@@ -205,16 +203,78 @@ class ChurchUserRegistrationForm(UserCreationForm):
             'postal_code', 'marital_status', 'occupation', 'password1', 'password2',
         )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, language=None, **kwargs):
+        self._language = language or 'en'
         super().__init__(*args, **kwargs)
-        self.fields['gender'].empty_label = 'Chagua jinsia'
-        self.fields['marital_status'].empty_label = 'Chagua hali ya ndoa'
+        self._apply_registration_i18n()
         if self.data.get('is_university_student') in ('on', 'true', '1', True):
             self._require_university_fields()
+
+    def _apply_registration_i18n(self):
+        lang = self._language
+        t = lambda key: get_translation(key, lang)
+
+        placeholder_keys = {
+            'username': 'ph_username',
+            'email': 'ph_email',
+            'phone_number': 'ph_phone',
+            'password1': 'ph_password',
+            'password2': 'ph_password_confirm',
+            'first_name': 'ph_first_name',
+            'last_name': 'ph_last_name',
+            'address': 'ph_address',
+            'city': 'ph_city',
+            'country': 'ph_country',
+            'postal_code': 'ph_postal_code',
+            'occupation': 'ph_occupation',
+            'uni_institution': 'ph_uni_institution',
+            'uni_course': 'ph_uni_course',
+            'uni_faculty': 'ph_uni_faculty',
+            'uni_year_started': 'ph_uni_year',
+            'uni_expected_completion_year': 'ph_uni_grad_year',
+            'uni_notes': 'ph_uni_notes',
+        }
+        for field_name, key in placeholder_keys.items():
+            if field_name in self.fields:
+                self.fields[field_name].widget.attrs['placeholder'] = t(key)
+
+        self.fields['gender'].choices = [
+            (code, t(_GENDER_I18N[code])) for code, _ in ChurchUser.GENDER_CHOICES
+        ]
+        self.fields['gender'].empty_label = t('select_gender')
+        self.fields['gender'].error_messages['required'] = t('err_gender_required')
+
+        self.fields['marital_status'].choices = [
+            (code, t(_MARITAL_I18N[code])) for code, _ in ChurchUser.MARITAL_STATUS_CHOICES
+        ]
+        self.fields['marital_status'].empty_label = t('select_marital')
+
+        dob_field = self.fields['date_of_birth']
+        dob_field._language = lang
+        dob_field.widget = MobileBirthDateWidget(language=lang)
+        dob_field.error_messages = {
+            'required': t('dob_required'),
+            'invalid': t('dob_invalid'),
+        }
+
+        self.fields['uni_level'].choices = [
+            (code, t(_UNI_LEVEL_I18N[code])) for code, _ in UniversityStudentRecord.LEVEL_CHOICES
+        ]
 
     def _require_university_fields(self):
         for name in ('uni_institution', 'uni_course', 'uni_level'):
             self.fields[name].required = True
+
+    def clean_email(self):
+        email = (self.cleaned_data.get('email') or '').strip()
+        if not email:
+            return ''
+        if ChurchUser.objects.filter(email__iexact=email).exists():
+            raise ValidationError(get_translation('err_email_exists', self._language))
+        return email
+
+    def clean_phone_number(self):
+        return (self.cleaned_data.get('phone_number') or '').strip()
 
     def clean(self):
         cleaned_data = super().clean()
@@ -227,17 +287,15 @@ class ChurchUserRegistrationForm(UserCreationForm):
                 missing.append('uni_course')
             if not cleaned_data.get('uni_level'):
                 missing.append('uni_level')
+            err_msg = get_translation('err_uni_required', self._language)
             for field_name in missing:
-                self.add_error(
-                    field_name,
-                    'Sehemu hii inahitajika kwa mwanafunzi wa chuo.',
-                )
+                self.add_error(field_name, err_msg)
         return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.email = self.cleaned_data['email']
-        user.phone_number = self.cleaned_data.get('phone_number', '')
+        user.email = self.cleaned_data.get('email') or ''
+        user.phone_number = self.cleaned_data.get('phone_number') or ''
         user.date_of_birth = self.cleaned_data['date_of_birth']
         user.gender = self.cleaned_data['gender']
         user.address = self.cleaned_data.get('address', '')

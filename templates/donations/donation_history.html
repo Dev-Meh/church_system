@@ -3,7 +3,7 @@
 
 {% block title %}{% church_t 'donation_history' %} - PHM-ARCC{% endblock %}
 {% block page_title %}
-  {% if can_view_all_donations %}Historia ya Michango ya Waumini{% else %}Historia ya Michango Yangu{% endif %}
+  {% if can_view_all_donations %}{% church_t 'don_records_all_members' %}{% else %}{% church_t 'my_donation_history' %}{% endif %}
 {% endblock %}
 {% block page_subtitle %}<p class="topnav-subtitle">PHM-ARCC Iyumbu Dodoma</p>{% endblock %}
 
@@ -62,21 +62,19 @@
 
 {% if donations %}
 <div class="stats-grid">
-  <div class="stat-card"><div class="stat-label">Jumla</div><div class="stat-value">{{ total_all|floatformat:2 }}</div></div>
-  <div class="stat-card gold"><div class="stat-label">Zaka</div><div class="stat-value">{{ total_tithe|floatformat:2 }}</div></div>
-  {% if can_view_sadaka %}
-  <div class="stat-card green"><div class="stat-label">Sadaka</div><div class="stat-value">{{ total_offering|floatformat:2 }}</div></div>
-  {% endif %}
+  <div class="stat-card"><div class="stat-label">{% church_t 'don_stat_total' %}</div><div class="stat-value">{{ total_all|floatformat:2 }}</div></div>
+  <div class="stat-card gold"><div class="stat-label">{% church_t 'don_col_tithe' %}</div><div class="stat-value">{{ total_tithe|floatformat:2 }}</div></div>
+  <div class="stat-card green"><div class="stat-label">{% if can_view_sadaka %}{% church_t 'don_church_offering_total' %}{% else %}{% church_t 'don_my_offering' %}{% endif %}</div><div class="stat-value">{{ total_offering|floatformat:2 }}</div></div>
 </div>
 <div class="stats-grid">
-  <div class="stat-card green"><div class="stat-label">Mchango Maalum</div><div class="stat-value">{{ total_special|floatformat:2 }}</div></div>
-  <div class="stat-card"><div class="stat-label">Michango Mengine</div><div class="stat-value">{{ total_other|floatformat:2 }}</div></div>
+  <div class="stat-card green"><div class="stat-label">{% church_t 'dtype_special' %}</div><div class="stat-value">{{ total_special|floatformat:2 }}</div></div>
+  <div class="stat-card"><div class="stat-label">{% church_t 'don_other_contributions' %}</div><div class="stat-value">{{ total_other|floatformat:2 }}</div></div>
 </div>
 
 <div class="panel">
   <div class="panel-header">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    <h3>{% if can_view_all_donations %}Rekodi za Michango ya Waumini{% else %}{% church_t 'your_donation_records' %}{% endif %}</h3>
+    <h3>{% if can_view_all_donations %}{% church_t 'don_records_all_members' %}{% else %}{% church_t 'your_donation_records' %}{% endif %}</h3>
   </div>
   <div class="panel-body">
     <div class="table-responsive">
@@ -84,8 +82,8 @@
         <thead>
           <tr>
             <th>{% church_t 'table_date' %}</th>
-            {% if can_view_all_donations %}<th>Muumini</th>{% endif %}
-            <th>Aina</th>
+            {% if can_view_all_donations %}<th>{% church_t 'don_believer' %}</th>{% endif %}
+            <th>{% church_t 'don_col_type' %}</th>
             <th>{% church_t 'table_amount' %}</th>
             <th>{% church_t 'table_payment_method' %}</th>
             <th>{% church_t 'table_campaign' %}</th>
@@ -100,9 +98,9 @@
             {% if can_view_all_donations %}
             <td>{% if donation.donor %}{{ donation.donor.full_name }}{% elif donation.donor_name %}{{ donation.donor_name }}{% else %}Anonymous{% endif %}</td>
             {% endif %}
-            <td>{{ donation.get_donation_type_display }}</td>
+            <td>{% church_dtype donation.donation_type %}</td>
             <td><strong>TZS {{ donation.amount|floatformat:2 }}</strong></td>
-            <td>{{ donation.get_payment_method_display }}</td>
+            <td>{% church_pmethod donation.payment_method %}</td>
             <td>{% if donation.campaign %}{{ donation.campaign.title }}{% else %}<span class="badge">{% church_t 'general' %}</span>{% endif %}</td>
             <td><span class="badge">{{ donation.get_status_display|default:"Pending" }}</span></td>
             <td>{% if donation.notes %}<small>{{ donation.notes|truncatewords:10 }}</small>{% else %}—{% endif %}</td>

@@ -1,5 +1,6 @@
 from decimal import Decimal
 from django import forms
+from django.utils import timezone
 from .models import (
     Donation,
     DonationCampaign,
@@ -8,6 +9,28 @@ from .models import (
     GROUP_PAYMENT_CHOICES,
 )
 from members.models import ChurchUser
+from members.language_utils import get_translation
+
+
+def _form_t(key, language='en'):
+    return get_translation(key, language or 'en')
+
+
+def _payment_method_choices(language='en'):
+    codes = ('cash', 'bank_transfer', 'mobile_money', 'check', 'online', 'card')
+    lang = language or 'en'
+    return [(code, _form_t(f'pmethod_{code}', lang)) for code in codes]
+
+
+def _amount_input_attrs():
+    return {
+        'class': 'form-control sheet-amount-input',
+        'step': '1',
+        'min': '0',
+        'inputmode': 'numeric',
+        'pattern': '[0-9]*',
+        'placeholder': '0',
+    }
 
 
 def _is_whole_amount(value):
@@ -85,13 +108,28 @@ class AccountantDonationEntryForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
-    def __init__(self, *args, allowed_donor_ids=None, **kwargs):
+    def __init__(self, *args, allowed_donor_ids=None, language='en', **kwargs):
+        lang = language or 'en'
         super().__init__(*args, **kwargs)
-        self.fields['donor'].required = False
+        self.fields['donor'].required = True
+        self.fields['donor'].label = _form_t('don_member_label', lang)
+        self.fields['donor'].empty_label = _form_t('don_select_member', lang)
+        self.fields['donation_type'].label = _form_t('don_col_type', lang)
+        self.fields['donation_type'].choices = [
+            ('tithe', _form_t('dtype_tithe', lang)),
+            ('offering', _form_t('dtype_offering', lang)),
+            ('special', _form_t('dtype_special', lang)),
+            ('other', _form_t('dtype_other', lang)),
+        ]
+        self.fields['amount'].label = _form_t('donation_amount', lang)
+        self.fields['payment_method'].label = _form_t('payment_method', lang)
+        self.fields['payment_method'].choices = _payment_method_choices(lang)
+        self.fields['contribution_date'].label = _form_t('don_col_date', lang)
         self.fields['campaign'].required = False
         self.fields['category'].required = False
         self.fields['notes'].required = False
-        self.fields['notes'].widget.attrs['placeholder'] = 'Maelezo mafupi (hiari): mfano zaka ya mwezi huu'
+        self.fields['notes'].label = _form_t('don_notes_optional', lang)
+        self.fields['notes'].widget.attrs['placeholder'] = _form_t('don_notes_ph', lang)
         qs = ChurchUser.objects.filter(
             is_active=True,
             role__in=['member', 'pastor', 'elder', 'deacon', 'accountant', 'admin', 'secretary']
@@ -102,11 +140,10 @@ class AccountantDonationEntryForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        donation_type = cleaned_data.get('donation_type')
         donor = cleaned_data.get('donor')
         amount = cleaned_data.get('amount')
-        if donation_type == 'tithe' and not donor:
-            raise forms.ValidationError('Kwa zaka, lazima uchague mwanachama.')
+        if not donor:
+            raise forms.ValidationError('Chagua mwanachama aliyetoa mchango.')
         if amount is not None and not _is_whole_amount(amount):
             raise forms.ValidationError('Kiasi cha fedha kiwekwe bila desimali.')
         return cleaned_data
@@ -179,13 +216,21 @@ class DonationNoticeForm(forms.ModelForm):
             'end_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, language='en', **kwargs):
         super().__init__(*args, **kwargs)
+        lang = language or 'en'
         self.fields['target_member'].required = False
-        self.fields['target_member'].empty_label = "Wote"
+        self.fields['target_member'].empty_label = _form_t('recipient_all', lang)
         self.fields['target_member'].queryset = ChurchUser.objects.filter(
             is_active=True
         ).order_by('first_name', 'last_name')
+        self.fields['title'].label = _form_t('don_notice_title', lang)
+        self.fields['message'].label = _form_t('don_notice_message', lang)
+        self.fields['target_member'].label = _form_t('don_notice_recipient', lang)
+        self.fields['start_date'].label = _form_t('don_notice_start', lang)
+        self.fields['end_date'].label = _form_t('don_notice_end', lang)
+        self.fields['title'].widget.attrs['placeholder'] = _form_t('don_notice_title_ph', lang)
+        self.fields['message'].widget.attrs['placeholder'] = _form_t('don_notice_message_ph', lang)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -205,8 +250,8 @@ class AccountantSheetEntryForm(forms.Form):
     donor = forms.ModelChoiceField(
         queryset=ChurchUser.objects.none(),
         widget=forms.Select(attrs={'class': 'form-select'}),
-        label='Mwanachama wa Zaka',
-        required=False
+        label='Mwanachama',
+        required=False,
     )
     construction_donor = forms.ModelChoiceField(
         queryset=ChurchUser.objects.none(),
@@ -216,11 +261,12 @@ class AccountantSheetEntryForm(forms.Form):
     )
     contribution_date = forms.DateField(
         widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-        label='Tarehe'
+        label='Tarehe',
+        initial=timezone.localdate,
     )
     payment_method = forms.ChoiceField(
         choices=Donation.PAYMENT_METHOD_CHOICES,
-        widget=forms.Select(attrs={'class': 'form-select'}),
+        widget=forms.Select(attrs={'class': 'form-select payment-method-select'}),
         label='Njia ya Malipo'
     )
     sadaka = forms.DecimalField(
@@ -228,14 +274,14 @@ class AccountantSheetEntryForm(forms.Form):
         min_value=0,
         decimal_places=2,
         max_digits=12,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '1', 'min': '0'})
+        widget=forms.NumberInput(attrs=_amount_input_attrs())
     )
     zaka = forms.DecimalField(
         required=False,
         min_value=0,
         decimal_places=2,
         max_digits=12,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '1', 'min': '0'})
+        widget=forms.NumberInput(attrs=_amount_input_attrs())
     )
     zaka_type = forms.ChoiceField(
         choices=ZAKA_TYPE_CHOICES,
@@ -253,21 +299,21 @@ class AccountantSheetEntryForm(forms.Form):
         min_value=0,
         decimal_places=2,
         max_digits=12,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '1', 'min': '0'})
+        widget=forms.NumberInput(attrs=_amount_input_attrs())
     )
     shukrani = forms.DecimalField(
         required=False,
         min_value=0,
         decimal_places=2,
         max_digits=12,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '1', 'min': '0'})
+        widget=forms.NumberInput(attrs=_amount_input_attrs())
     )
     construction_pledge_amount = forms.DecimalField(
         required=False,
         min_value=0,
         decimal_places=2,
         max_digits=12,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '1', 'min': '0'}),
+        widget=forms.NumberInput(attrs=_amount_input_attrs()),
         label='Ahadi Mpya ya Ujenzi'
     )
     construction_payment_amount = forms.DecimalField(
@@ -275,7 +321,7 @@ class AccountantSheetEntryForm(forms.Form):
         min_value=0,
         decimal_places=2,
         max_digits=12,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '1', 'min': '0'}),
+        widget=forms.NumberInput(attrs=_amount_input_attrs()),
         label='Malipo ya Deni la Ujenzi'
     )
     notes = forms.CharField(
@@ -283,16 +329,46 @@ class AccountantSheetEntryForm(forms.Form):
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Maelezo (hiari)'})
     )
 
-    def __init__(self, *args, allowed_donor_ids=None, **kwargs):
+    def __init__(self, *args, allowed_donor_ids=None, language='en', **kwargs):
         super().__init__(*args, **kwargs)
+        lang = language or 'en'
+        self._lang = lang
         member_qs = ChurchUser.objects.filter(
             is_active=True,
             role__in=['member', 'pastor', 'elder', 'deacon', 'accountant', 'admin', 'secretary']
         ).order_by('first_name', 'last_name')
         if allowed_donor_ids is not None:
             member_qs = member_qs.filter(id__in=allowed_donor_ids)
+        select_member = _form_t('don_select_member', lang)
         self.fields['donor'].queryset = member_qs
         self.fields['construction_donor'].queryset = member_qs
+        self.fields['donor'].empty_label = select_member
+        self.fields['construction_donor'].empty_label = select_member
+        self.fields['donor'].label = _form_t('don_member_label', lang)
+        self.fields['construction_donor'].label = _form_t('don_construction_member', lang)
+        self.fields['contribution_date'].label = _form_t('don_col_date', lang)
+        self.fields['payment_method'].label = _form_t('payment_method', lang)
+        self.fields['payment_method'].choices = _payment_method_choices(lang)
+        self.fields['payment_method'].widget.attrs['class'] = 'form-select payment-method-select'
+        for field_name in (
+            'sadaka', 'zaka', 'malimbuko', 'shukrani',
+            'construction_pledge_amount', 'construction_payment_amount',
+        ):
+            self.fields[field_name].widget.attrs.update(_amount_input_attrs())
+        self.fields['sadaka'].label = _form_t('don_col_offering', lang)
+        self.fields['zaka'].label = _form_t('don_col_tithe', lang)
+        self.fields['zaka_type'].label = _form_t('don_zaka_type', lang)
+        self.fields['zaka_type'].choices = [
+            ('money', _form_t('gift_money', lang)),
+            ('asset', _form_t('gift_asset', lang)),
+        ]
+        self.fields['aina_nyingine_ya_zaka'].label = _form_t('don_other_gift_type', lang)
+        self.fields['malimbuko'].label = _form_t('don_col_special_offering', lang)
+        self.fields['shukrani'].label = _form_t('don_col_thanksgiving', lang)
+        self.fields['construction_pledge_amount'].label = _form_t('don_new_pledge', lang)
+        self.fields['construction_payment_amount'].label = _form_t('don_col_debt_payment', lang)
+        self.fields['notes'].label = _form_t('don_notes_optional', lang)
+        self.fields['notes'].widget.attrs['placeholder'] = _form_t('don_notes_ph', lang)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -304,8 +380,14 @@ class AccountantSheetEntryForm(forms.Form):
         construction_pledge_amount = cleaned_data.get('construction_pledge_amount') or 0
         construction_payment_amount = cleaned_data.get('construction_payment_amount') or 0
 
-        if zaka_amount > 0 and zaka_type == 'money' and not donor:
-            raise forms.ValidationError('Chagua mwanachama aliyechanga zaka ya fedha.')
+        personal_amounts = [
+            cleaned_data.get('sadaka') or 0,
+            zaka_amount if zaka_type == 'money' else 0,
+            cleaned_data.get('malimbuko') or 0,
+            cleaned_data.get('shukrani') or 0,
+        ]
+        if any(amount > 0 for amount in personal_amounts) and not donor:
+            raise forms.ValidationError('Chagua mwanachama aliyetoa michango.')
         if zaka_type == 'asset':
             if not aina_nyingine_ya_zaka:
                 raise forms.ValidationError('Ukichagua zaka ya mali, andika aina ya mali (mfano mbuzi).')
@@ -339,6 +421,174 @@ class AccountantSheetEntryForm(forms.Form):
             raise forms.ValidationError('Weka angalau kiasi kimoja: Sadaka, Zaka, Malimbuko, Shukrani, Malipo ya Ujenzi au Ahadi ya Ujenzi.')
         cleaned_data['jumla'] = total
         return cleaned_data
+
+
+class TitheEntryForm(forms.Form):
+    donor = forms.ModelChoiceField(
+        queryset=ChurchUser.objects.none(),
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=True,
+    )
+    contribution_date = forms.DateField(
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        initial=timezone.localdate,
+    )
+    payment_method = forms.ChoiceField(
+        choices=Donation.PAYMENT_METHOD_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select payment-method-select'}),
+    )
+    zaka_type = forms.ChoiceField(
+        choices=AccountantSheetEntryForm.ZAKA_TYPE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        initial='money',
+    )
+    amount = forms.DecimalField(
+        required=False,
+        min_value=0,
+        decimal_places=2,
+        max_digits=12,
+        widget=forms.NumberInput(attrs=_amount_input_attrs()),
+    )
+    asset_description = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': ''}),
+    )
+    notes = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': ''}),
+    )
+
+    def __init__(self, *args, allowed_donor_ids=None, language='en', **kwargs):
+        super().__init__(*args, **kwargs)
+        self._lang = language or 'en'
+        lang = self._lang
+        member_qs = ChurchUser.objects.filter(
+            is_active=True,
+            role__in=['member', 'pastor', 'elder', 'deacon', 'accountant', 'admin', 'secretary'],
+        ).order_by('first_name', 'last_name')
+        if allowed_donor_ids is not None:
+            member_qs = member_qs.filter(id__in=allowed_donor_ids)
+        self.fields['donor'].queryset = member_qs
+        self.fields['donor'].empty_label = _form_t('don_select_member', lang)
+        self.fields['donor'].label = _form_t('don_member_label', lang)
+        self.fields['contribution_date'].label = _form_t('don_col_date', lang)
+        self.fields['payment_method'].label = _form_t('payment_method', lang)
+        self.fields['payment_method'].choices = _payment_method_choices(lang)
+        self.fields['zaka_type'].label = _form_t('don_zaka_type', lang)
+        self.fields['zaka_type'].choices = [
+            ('money', _form_t('gift_money', lang)),
+            ('asset', _form_t('gift_asset', lang)),
+        ]
+        self.fields['amount'].label = _form_t('tithe_col_zaka', lang)
+        self.fields['asset_description'].label = _form_t('don_other_gift_type', lang)
+        self.fields['asset_description'].widget.attrs['placeholder'] = _form_t('don_notes_ph', lang)
+        self.fields['notes'].label = _form_t('don_notes_optional', lang)
+        self.fields['notes'].widget.attrs['placeholder'] = _form_t('don_notes_ph', lang)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        zaka_type = cleaned_data.get('zaka_type') or 'money'
+        amount = cleaned_data.get('amount') or 0
+        asset_description = (cleaned_data.get('asset_description') or '').strip()
+        lang = getattr(self, '_lang', 'en')
+        if not cleaned_data.get('donor'):
+            raise forms.ValidationError(_form_t('tithe_err_member', lang))
+        if zaka_type == 'money':
+            if amount <= 0:
+                raise forms.ValidationError(_form_t('tithe_err_amount', lang))
+            if not _is_whole_amount(amount):
+                raise forms.ValidationError(_form_t('tithe_err_whole', lang))
+        else:
+            if not asset_description:
+                raise forms.ValidationError(_form_t('tithe_err_asset', lang))
+        return cleaned_data
+
+
+class PledgePaymentForm(forms.Form):
+    amount = forms.DecimalField(
+        required=True,
+        min_value=1,
+        decimal_places=2,
+        max_digits=12,
+        widget=forms.NumberInput(attrs={
+            **{k: v for k, v in _amount_input_attrs().items() if k != 'min'},
+            'class': 'form-control sheet-amount-input pledge-input',
+            'min': '1',
+        }),
+    )
+    payment_method = forms.ChoiceField(
+        choices=Donation.PAYMENT_METHOD_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select payment-method-select pledge-input'}),
+    )
+    contribution_date = forms.DateField(
+        widget=forms.DateInput(attrs={'class': 'form-control pledge-input', 'type': 'date'}),
+        initial=timezone.localdate,
+    )
+    notes = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control pledge-input', 'placeholder': ''}),
+    )
+
+    def __init__(self, *args, pledge=None, language='en', **kwargs):
+        super().__init__(*args, **kwargs)
+        lang = language or 'en'
+        self.pledge = pledge
+        self.fields['amount'].label = _form_t('don_col_amount', lang)
+        self.fields['payment_method'].label = _form_t('payment_method', lang)
+        self.fields['payment_method'].choices = _payment_method_choices(lang)
+        self.fields['contribution_date'].label = _form_t('don_col_date', lang)
+        self.fields['notes'].label = _form_t('don_notes_optional', lang)
+        self.fields['notes'].widget.attrs['placeholder'] = _form_t('don_notes_ph', lang)
+        if pledge and pledge.debt_balance_display > 0:
+            self.fields['amount'].widget.attrs['max'] = str(pledge.debt_balance_display)
+
+    def clean_amount(self):
+        amount = self.cleaned_data.get('amount')
+        if amount is not None and not _is_whole_amount(amount):
+            raise forms.ValidationError('Weka kiasi bila desimali.')
+        if self.pledge and amount and amount > self.pledge.debt_balance_display:
+            raise forms.ValidationError(
+                f'Kiasi hakiwezi kuzidi deni lililobaki (TZS {self.pledge.debt_balance_display:,}).'
+            )
+        return amount
+
+
+class PledgeReduceForm(forms.Form):
+    reduce_amount = forms.DecimalField(
+        required=True,
+        min_value=1,
+        decimal_places=2,
+        max_digits=12,
+        widget=forms.NumberInput(attrs={
+            **{k: v for k, v in _amount_input_attrs().items() if k != 'min'},
+            'class': 'form-control sheet-amount-input pledge-input',
+            'min': '1',
+        }),
+    )
+    reason = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control pledge-input', 'placeholder': ''}),
+    )
+
+    def __init__(self, *args, pledge=None, language='en', **kwargs):
+        super().__init__(*args, **kwargs)
+        lang = language or 'en'
+        self.pledge = pledge
+        self.fields['reduce_amount'].label = _form_t('don_pledge_reduce_amount', lang)
+        self.fields['reason'].label = _form_t('don_pledge_reduce_reason', lang)
+        self.fields['reason'].widget.attrs['placeholder'] = _form_t('don_pledge_reduce_reason_ph', lang)
+        if pledge and pledge.debt_balance_display > 0:
+            self.fields['reduce_amount'].widget.attrs['max'] = str(pledge.debt_balance_display)
+
+    def clean_reduce_amount(self):
+        amount = self.cleaned_data.get('reduce_amount')
+        if amount is not None and not _is_whole_amount(amount):
+            raise forms.ValidationError('Weka kiasi bila desimali.')
+        if self.pledge and amount and amount > self.pledge.debt_balance_display:
+            raise forms.ValidationError(
+                f'Huwezi kupunguza zaidi ya deni lililobaki (TZS {self.pledge.debt_balance_display:,}).'
+            )
+        return amount
 
 
 class CashBookEntryForm(forms.ModelForm):

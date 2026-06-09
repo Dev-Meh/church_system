@@ -42,20 +42,17 @@
 <a href="{% url 'donations:home' %}" class="btn-back">{% church_t 'back_to_donations' %}</a>
 
 <div class="stats-grid">
+  {% if can_view_sadaka %}
   <div class="stat-card">
     <div class="stat-label">{% church_t 'total_donations' %}</div>
     <div class="stat-value">TZS {{ total_donations|floatformat:2 }}</div>
     <div class="stat-desc">{% church_t 'all_time_contributions' %}</div>
   </div>
+  {% endif %}
   <div class="stat-card gold">
     <div class="stat-label">{% church_t 'active_donors' %}</div>
     <div class="stat-value">{{ recent_donations|length }}</div>
     <div class="stat-desc">{% church_t 'recent_contributors' %}</div>
-  </div>
-  <div class="stat-card green">
-    <div class="stat-label">{% church_t 'active_campaigns' %}</div>
-    <div class="stat-value">{{ campaign_stats|length }}</div>
-    <div class="stat-desc">{% church_t 'ongoing_campaigns' %}</div>
   </div>
   <div class="stat-card teal">
     <div class="stat-label">{% church_t 'avg_donation' %}</div>
@@ -64,39 +61,4 @@
   </div>
 </div>
 
-<div class="panel">
-  <div class="panel-header">
-    <h3>{% church_t 'campaign_performance' %}</h3>
-  </div>
-  <div class="panel-body">
-    {% if campaign_stats %}
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>{% church_t 'table_campaign' %}</th>
-            <th>{% church_t 'table_target' %}</th>
-            <th>{% church_t 'table_raised' %}</th>
-            <th>{% church_t 'table_donors' %}</th>
-            <th>{% church_t 'table_progress' %}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for stat in campaign_stats %}
-          <tr>
-            <td>{{ stat.campaign.title }}</td>
-            <td>TZS {{ stat.campaign.target_amount|floatformat:2 }}</td>
-            <td><strong>TZS {{ stat.total|floatformat:2 }}</strong></td>
-            <td>{{ stat.donors }}</td>
-            <td><div class="progress"><div class="progress-bar" style="width:{{ stat.progress_percentage|floatformat:0 }}%"></div></div></td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% else %}
-    <div class="alert-info">{% church_t 'no_active_campaigns' %}</div>
-    {% endif %}
-  </div>
-</div>
 {% endblock %}

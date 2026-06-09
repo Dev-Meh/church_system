@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load i18n_church %}
 
-{% block title %}List ya Waliotoa Zaka{% endblock %}
+{% block title %}{% church_t 'tithe_list_title' %}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -12,6 +13,7 @@
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    align-items: center;
   }
   .print-toolbar .btn {
     border: none;
@@ -111,28 +113,27 @@
 
 {% block content %}
 <div class="print-toolbar">
-  <button type="button" class="btn btn-print" onclick="window.print()">Download PDF</button>
-  <a class="btn btn-back" href="{% url 'donations:tithe_list' %}">Rudi List</a>
+  {% include 'members/language_selector.html' %}
+  <button type="button" class="btn btn-print" onclick="window.print()">{% church_t 'tithe_download_pdf' %}</button>
+  <a class="btn btn-back" href="{% url 'donations:tithe_list' %}">{% church_t 'tithe_back_list' %}</a>
 </div>
 <div class="print-page">
   {% include 'donations/includes/print_brand.html' %}
-  <h2 class="report-title">ORODHA YA WALIOTOA ZAKA</h2>
-  <p class="report-meta">Tarehe ya chapisho: {{ report_date|date:"d/m/Y" }}</p>
+  <h2 class="report-title">{% church_t 'tithe_print_title' %}</h2>
+  <p class="report-meta">{% church_t 'tithe_print_date' %}: {{ report_date|date:"d/m/Y" }}</p>
   <p class="summary-line">
-    <span><strong>Jumla ya rekodi:</strong> {{ total_count }}</span>
-    <span><strong>Jumla ya zaka (fedha):</strong> TZS {{ total_money|floatformat:0 }}</span>
+    <span><strong>{% church_t 'tithe_total_records' %}:</strong> {{ total_count }}</span>
+    <span><strong>{% church_t 'tithe_total_cash' %}:</strong> TZS {{ total_money|floatformat:0 }}</span>
   </p>
 
   <table class="tithe-table">
     <thead>
       <tr>
-        <th class="center">Na.</th>
-        <th>Tarehe</th>
-        <th>Jina Kamili</th>
-        <th>Aina ya Zaka</th>
-        <th class="right">Kiasi (TZS)</th>
-        <th>Aina Nyingine ya Zaka</th>
-        <th>Maelezo</th>
+        <th class="center">{% church_t 'tithe_col_no' %}</th>
+        <th>{% church_t 'table_date' %}</th>
+        <th>{% church_t 'tithe_col_full_name' %}</th>
+        <th class="right">{% church_t 'tithe_col_zaka' %}</th>
+        <th>{% church_t 'tithe_col_other_zaka' %}</th>
       </tr>
     </thead>
     <tbody>
@@ -149,7 +150,6 @@
             —
           {% endif %}
         </td>
-        <td>{% if d.tithe_gift_type == 'asset' %}Mali{% else %}Fedha{% endif %}</td>
         <td class="right">
           {% if d.tithe_gift_type == 'money' %}
             {{ d.amount|floatformat:0 }}
@@ -164,11 +164,10 @@
             —
           {% endif %}
         </td>
-        <td>{{ d.notes|default:"—" }}</td>
       </tr>
       {% empty %}
       <tr>
-        <td colspan="7" class="center">Hakuna rekodi za zaka.</td>
+        <td colspan="5" class="center">{% church_t 'tithe_no_records' %}</td>
       </tr>
       {% endfor %}
     </tbody>
