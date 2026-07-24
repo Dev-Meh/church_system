@@ -1,9 +1,9 @@
 {% extends 'church_layout/app_shell.html' %}
 {% load i18n_church %}
 
-{% block title %}Manage Members - PHM-ARCC{% endblock %}
-{% block page_title %}Manage Members{% endblock %}
-{% block page_subtitle %}<p class="topnav-subtitle">Tafuta, simamisha, na simamia akaunti za wanachama</p>{% endblock %}
+{% block title %}{% church_t 'ml_page_title' %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_t 'ml_page_title' %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{% church_t 'ml_page_subtitle' %}</p>{% endblock %}
 
 {% block page_extra_css %}
 <style>
@@ -94,7 +94,6 @@
 }
 .btn-xs:hover { border-color: #c8a84b; color: #c8a84b; }
 .btn-xs-primary { border-color: rgba(52,152,219,0.4); color: #5dade2; }
-.btn-xs-warn { border-color: rgba(243,156,18,0.4); color: #f39c12; }
 .btn-xs-danger { border-color: rgba(231,76,60,0.4); color: #e74c3c; }
 .btn-xs-success { border-color: rgba(39,174,96,0.4); color: #2ecc71; }
 .role-action-wrap {
@@ -113,14 +112,7 @@
   font-size: 11px;
   width: 100%;
 }
-.role-action-wrap .role-action-row {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-.role-action-wrap .role-action-row .btn-xs {
-  flex-shrink: 0;
-}
+.role-action-wrap .role-action-row { display: flex; gap: 4px; align-items: center; }
 .pagination-bar { padding: 1rem; display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; }
 .pagination-bar a, .pagination-bar span {
   padding: 6px 12px;
@@ -131,9 +123,7 @@
   border: 1px solid rgba(255,255,255,0.15);
 }
 .pagination-bar .current { background: #c8a84b; color: #0a1628; border-color: #c8a84b; }
-@media (max-width: 992px) {
-  .filter-row { grid-template-columns: 1fr; }
-}
+@media (max-width: 992px) { .filter-row { grid-template-columns: 1fr; } }
 </style>
 {% endblock %}
 
@@ -141,11 +131,11 @@
 <form method="get" class="filter-bar">
   <div class="filter-row">
     <div>
-      <label for="q">Tafuta (jina, simu, username, email)</label>
-      <input type="search" name="q" id="q" value="{{ search_q }}" placeholder="Andika kutafuta...">
+      <label for="q">{% church_t 'ml_search_label' %}</label>
+      <input type="search" name="q" id="q" value="{{ search_q }}" placeholder="{% church_t 'ml_search_placeholder' %}">
     </div>
     <div>
-      <label for="role">Role</label>
+      <label for="role">{% church_t 'ml_filter_role' %}</label>
       <select name="role" id="role">
         {% for val, label in role_choices %}
         <option value="{{ val }}" {% if filter_role == val %}selected{% endif %}>{{ label }}</option>
@@ -153,7 +143,7 @@
       </select>
     </div>
     <div>
-      <label for="status">Hali</label>
+      <label for="status">{% church_t 'ml_filter_status' %}</label>
       <select name="status" id="status">
         {% for val, label in status_choices %}
         <option value="{{ val }}" {% if filter_status == val %}selected{% endif %}>{{ label }}</option>
@@ -161,8 +151,8 @@
       </select>
     </div>
     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-      <button type="submit" class="btn-filter">Chuja</button>
-      <a href="{% url 'members:member_list' %}" class="btn-clear">Futa</a>
+      <button type="submit" class="btn-filter">{% church_t 'ml_filter_btn' %}</button>
+      <a href="{% url 'members:member_list' %}" class="btn-clear">{% church_t 'clear' %}</a>
     </div>
   </div>
 </form>
@@ -174,12 +164,12 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Jina</th>
-            <th>Username</th>
-            <th>Simu</th>
-            <th>Role</th>
-            <th>Hali</th>
-            <th>Vitendo</th>
+            <th>{% church_t 'ml_col_name' %}</th>
+            <th>{% church_t 'ml_col_username' %}</th>
+            <th>{% church_t 'ml_col_phone' %}</th>
+            <th>{% church_t 'ml_col_role' %}</th>
+            <th>{% church_t 'ml_col_status' %}</th>
+            <th>{% church_t 'ml_col_actions' %}</th>
           </tr>
         </thead>
         <tbody>
@@ -191,40 +181,40 @@
             <td>
               <div>{{ member.get_role_display }}</div>
               {% if member.role == 'pastor' %}
-                {% if member.is_verified_pastor %}<span class="badge-ok">Verified</span>{% else %}<span class="badge-off">Pending</span>{% endif %}
+                {% if member.is_verified_pastor %}<span class="badge-ok">{% church_t 'ml_verified' %}</span>{% else %}<span class="badge-off">{% church_t 'pending' %}</span>{% endif %}
               {% endif %}
               {% if has_leadership %}
               <div class="role-action-wrap" style="margin-top:6px;">
                 <form method="post" class="role-action-form" action="">
                   {% csrf_token %}
-                  <select class="role-action-select" aria-label="Chagua kitendo cha cheo">
-                    <option value="">— Chagua cheo / kitendo —</option>
+                  <select class="role-action-select" aria-label="{% church_t 'ml_select_role_action' %}">
+                    <option value="">— {% church_t 'ml_select_role_action' %} —</option>
                     {% if member.role == 'member' %}
                       {% if can_promote_pastor %}
-                      <option value="{% url 'members:promote_to_pastor' member.id %}" data-confirm="Teua {{ member.full_name }} kuwa Mchungaji?">Teua: Mchungaji</option>
+                      <option value="{% url 'members:promote_to_pastor' member.id %}" data-confirm="{% church_t 'ml_confirm_promote_pastor' name=member.full_name %}">{% church_t 'ml_promote_pastor' %}</option>
                       {% endif %}
                       {% if can_promote_admin %}
-                      <option value="{% url 'members:promote_to_admin' member.id %}" data-confirm="Teua {{ member.full_name }} kuwa Admin?">Teua: Admin</option>
+                      <option value="{% url 'members:promote_to_admin' member.id %}" data-confirm="{% church_t 'ml_confirm_promote_admin' name=member.full_name %}">{% church_t 'ml_promote_admin' %}</option>
                       {% endif %}
-                      <option value="{% url 'members:promote_to_secretary' member.id %}" data-confirm="Teua {{ member.full_name }} kuwa Katibu?">Teua: Katibu (Secretary)</option>
-                      <option value="{% url 'members:promote_to_accountant' member.id %}" data-confirm="Teua {{ member.full_name }} kuwa Accountant?">Teua: Accountant</option>
+                      <option value="{% url 'members:promote_to_secretary' member.id %}" data-confirm="{% church_t 'ml_confirm_promote_secretary' name=member.full_name %}">{% church_t 'ml_promote_secretary' %}</option>
+                      <option value="{% url 'members:promote_to_accountant' member.id %}" data-confirm="{% church_t 'ml_confirm_promote_accountant' name=member.full_name %}">{% church_t 'ml_promote_accountant' %}</option>
                     {% elif member.role == 'pastor' %}
                       {% if can_promote_pastor %}
                       {% if not member.is_verified_pastor %}
-                      <option value="{% url 'members:approve_pastor' member.id %}" data-confirm="Thibitisha {{ member.full_name }} kama mchungaji?">Thibitisha: Mchungaji</option>
+                      <option value="{% url 'members:approve_pastor' member.id %}" data-confirm="{% church_t 'ml_confirm_verify_pastor' name=member.full_name %}">{% church_t 'ml_verify_pastor' %}</option>
                       {% endif %}
-                      <option value="{% url 'members:demote_from_pastor' member.id %}" data-confirm="Ondoa cheo cha mchungaji kwa {{ member.full_name }}?">Ondoa: Mchungaji</option>
+                      <option value="{% url 'members:demote_from_pastor' member.id %}" data-confirm="{% church_t 'ml_confirm_demote_pastor' name=member.full_name %}">{% church_t 'ml_demote_pastor' %}</option>
                       {% endif %}
                     {% elif member.role == 'secretary' %}
-                      <option value="{% url 'members:demote_from_secretary' member.id %}" data-confirm="Ondoa cheo cha katibu kwa {{ member.full_name }}?">Ondoa: Katibu</option>
+                      <option value="{% url 'members:demote_from_secretary' member.id %}" data-confirm="{% church_t 'ml_confirm_demote_secretary' name=member.full_name %}">{% church_t 'ml_demote_secretary' %}</option>
                     {% elif member.role == 'accountant' %}
-                      <option value="{% url 'members:toggle_accountant_access' member.id %}" data-confirm="Badilisha ruhusa ya kuingiza michango?">
-                        {% if member.can_post_member_donations %}Ondoa ruhusa ya michango{% else %}Ruhusu kuingiza michango{% endif %}
+                      <option value="{% url 'members:toggle_accountant_access' member.id %}" data-confirm="{% church_t 'ml_confirm_toggle_donation' %}">
+                        {% if member.can_post_member_donations %}{% church_t 'ml_revoke_donation_access' %}{% else %}{% church_t 'ml_grant_donation_access' %}{% endif %}
                       </option>
                     {% endif %}
                   </select>
                   <div class="role-action-row">
-                    <button type="submit" class="btn-xs btn-xs-primary">Tekeleza</button>
+                    <button type="submit" class="btn-xs btn-xs-primary">{% church_t 'ml_execute' %}</button>
                   </div>
                 </form>
               </div>
@@ -232,31 +222,31 @@
             </td>
             <td>
               {% if member.is_active and member.is_active_member %}
-              <span class="badge-ok">Active</span>
+              <span class="badge-ok">{% church_t 'ml_status_active' %}</span>
               {% elif member.is_active and not member.is_active_member %}
-              <span class="badge-off">Inasubiri uidhinisho</span>
+              <span class="badge-off">{% church_t 'ml_status_pending' %}</span>
               {% else %}
-              <span class="badge-off">Imesimamishwa</span>
+              <span class="badge-off">{% church_t 'ml_status_suspended' %}</span>
               {% endif %}
             </td>
             <td>
               <div class="actions-cell">
-                <a href="{% url 'members:admin_reset_password' member.id %}" class="btn-xs">Weka nenosiri</a>
+                <a href="{% url 'members:admin_reset_password' member.id %}" class="btn-xs">{% church_t 'ml_reset_password' %}</a>
                 {% if member.role == 'member' and member.is_active and not member.is_active_member %}
                 <form method="post" action="{% url 'members:approve_member' member.id %}" style="display:inline;">{% csrf_token %}
-                  <button type="submit" class="btn-xs btn-xs-success">Idhinisha</button>
+                  <button type="submit" class="btn-xs btn-xs-success">{% church_t 'ml_approve' %}</button>
                 </form>
                 {% endif %}
                 <form method="post" action="{% url 'members:toggle_member_active' member.id %}" style="display:inline;">{% csrf_token %}
                   {% if member.is_active and member.is_active_member %}
-                  <button type="submit" class="btn-xs btn-xs-danger">Simamisha</button>
+                  <button type="submit" class="btn-xs btn-xs-danger">{% church_t 'ml_suspend' %}</button>
                   {% elif not member.is_active %}
-                  <button type="submit" class="btn-xs btn-xs-success">Washa</button>
+                  <button type="submit" class="btn-xs btn-xs-success">{% church_t 'ml_activate' %}</button>
                   {% endif %}
                 </form>
                 {% if member.role == 'member' %}
                 <form method="post" action="{% url 'members:delete_member' member.id %}" style="display:inline;" class="delete-member-form">{% csrf_token %}
-                  <button type="submit" class="btn-xs btn-xs-danger">Futa</button>
+                  <button type="submit" class="btn-xs btn-xs-danger">{% church_t 'ml_delete' %}</button>
                 </form>
                 {% endif %}
               </div>
@@ -269,31 +259,35 @@
     {% if page_obj.has_other_pages %}
     <div class="pagination-bar">
       {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}&q={{ search_q }}&role={{ filter_role }}&status={{ filter_status }}">« Iliyopita</a>
+      <a href="?page={{ page_obj.previous_page_number }}&q={{ search_q }}&role={{ filter_role }}&status={{ filter_status }}">« {% church_t 'previous' %}</a>
       {% endif %}
-      <span class="current">Ukurasa {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      <span class="current">{% church_t 'page_word' %} {{ page_obj.number }} {% church_t 'of_word' %} {{ page_obj.paginator.num_pages }}</span>
       {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}&q={{ search_q }}&role={{ filter_role }}&status={{ filter_status }}">Ifuatayo »</a>
+      <a href="?page={{ page_obj.next_page_number }}&q={{ search_q }}&role={{ filter_role }}&status={{ filter_status }}">{% church_t 'next_label' %} »</a>
       {% endif %}
     </div>
     {% endif %}
     {% else %}
-    <p style="padding:2rem;text-align:center;color:rgba(255,255,255,0.45);">Hakuna wanachama waliopatikana.</p>
+    <p style="padding:2rem;text-align:center;color:rgba(255,255,255,0.45);">{% church_t 'ml_no_members' %}</p>
     {% endif %}
   </div>
 </div>
 {% endblock %}
 
 {% block page_extra_js %}
+{% church_t 'ml_pick_action_first' as ml_pick_action_msg %}
+{% church_t 'ml_confirm_delete' as ml_confirm_delete_msg %}
 <script>
 (function () {
+  var pickActionMsg = "{{ ml_pick_action_msg|escapejs }}";
+  var deleteConfirmMsg = "{{ ml_confirm_delete_msg|escapejs }}";
   document.querySelectorAll('.role-action-form').forEach(function (form) {
     form.addEventListener('submit', function (e) {
       var sel = form.querySelector('.role-action-select');
       var url = sel && sel.value;
       if (!url) {
         e.preventDefault();
-        alert('Chagua kitendo kwanza.');
+        alert(pickActionMsg);
         return;
       }
       var opt = sel.options[sel.selectedIndex];
@@ -307,7 +301,7 @@
   });
   document.querySelectorAll('.delete-member-form').forEach(function (form) {
     form.addEventListener('submit', function (e) {
-      if (!window.confirm('Una uhakika unataka kumfuta mwanachama huyu kabisa? Hatua hii haiwezi kutenduliwa.')) {
+      if (!window.confirm(deleteConfirmMsg)) {
         e.preventDefault();
       }
     });

@@ -311,7 +311,9 @@ class MemberListView(LoginRequiredMixin, ListView):
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and not can_manage_members(request.user):
             from django.contrib import messages
-            messages.error(request, 'Ni mchungaji tu anaweza kusimamia wanachama.')
+            from .language_utils import LanguageManager, get_translation
+            lang = LanguageManager.get_current_language(request)
+            messages.error(request, get_translation('ml_pastors_only', lang))
             return redirect('dashboard')
         return super().dispatch(request, *args, **kwargs)
 
@@ -349,27 +351,30 @@ class MemberListView(LoginRequiredMixin, ListView):
         elif status == 'inactive':
             qs = qs.filter(is_active=False)
 
-        return qs.order_by('role', 'first_name', 'last_name')
+        return qs.order_by('last_name', 'first_name', 'username')
 
     def get_context_data(self, **kwargs):
+        from .language_utils import LanguageManager, get_translation
         context = super().get_context_data(**kwargs)
+        lang = LanguageManager.get_current_language(self.request)
+        t = lambda key: get_translation(key, lang)
         context['search_q'] = (self.request.GET.get('q') or '').strip()
         context['filter_role'] = (self.request.GET.get('role') or '').strip()
         context['filter_status'] = (self.request.GET.get('status') or '').strip()
         context['role_choices'] = [
-            ('', 'Roles zote'),
-            ('member', 'Member'),
-            ('pastor', 'Mchungaji'),
-            ('secretary', 'Katibu'),
-            ('accountant', 'Accountant'),
+            ('', t('ml_all_roles')),
+            ('member', t('church_member')),
+            ('pastor', t('ml_role_pastor')),
+            ('secretary', t('ml_role_secretary')),
+            ('accountant', t('ml_role_accountant')),
         ]
         context['can_promote_pastor'] = can_promote_to_pastor(self.request.user)
         context['can_promote_admin'] = can_promote_to_admin(self.request.user)
         context['has_leadership'] = has_church_leadership(self.request.user)
         context['status_choices'] = [
-            ('', 'Hali zote'),
-            ('active', 'Hai (active)'),
-            ('pending', 'Inasubiri uidhinisho'),
-            ('inactive', 'Imesimamishwa'),
+            ('', t('ml_all_statuses')),
+            ('active', t('ml_status_active_filter')),
+            ('pending', t('ml_status_pending_filter')),
+            ('inactive', t('ml_status_inactive_filter')),
         ]
         return context

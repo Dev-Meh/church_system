@@ -6,11 +6,17 @@ register = template.Library()
 
 
 @register.simple_tag(takes_context=True)
-def church_t(context, key):
+def church_t(context, key, **fmt):
     """Translate a key using session/cookie language (same catalog as language_utils)."""
     request = context.get("request")
     lang = LanguageManager.get_current_language(request) if request else "en"
-    return get_translation(key, lang)
+    text = get_translation(key, lang)
+    if fmt:
+        try:
+            return text.format(**fmt)
+        except (KeyError, ValueError):
+            return text
+    return text
 
 
 @register.simple_tag(takes_context=True)
