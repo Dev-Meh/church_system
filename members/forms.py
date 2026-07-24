@@ -4,6 +4,11 @@ from django.core.exceptions import ValidationError
 from .birth_date_field import MobileBirthDateField, MobileBirthDateWidget
 from .language_utils import get_translation
 from .models import ChurchUser, ChurchGroup, GroupActivity, UniversityStudentRecord
+from .registration_checks import (
+    member_with_email_exists,
+    member_with_identity_exists,
+    member_with_phone_exists,
+)
 
 _GENDER_I18N = {"M": "gender_male", "F": "gender_female", "O": "gender_other"}
 _MARITAL_I18N = {
@@ -269,12 +274,17 @@ class ChurchUserRegistrationForm(UserCreationForm):
         email = (self.cleaned_data.get('email') or '').strip()
         if not email:
             return ''
-        if ChurchUser.objects.filter(email__iexact=email).exists():
+        if member_with_email_exists(email):
             raise ValidationError(get_translation('err_email_exists', self._language))
         return email
 
     def clean_phone_number(self):
-        return (self.cleaned_data.get('phone_number') or '').strip()
+        phone = (self.cleaned_data.get('phone_number') or '').strip()
+        if not phone:
+            return ''
+        if member_with_phone_exists(phone):
+            raise ValidationError(get_translation('err_phone_exists', self._language))
+        return phone
 
     def clean(self):
         cleaned_data = super().clean()
@@ -290,6 +300,15 @@ class ChurchUserRegistrationForm(UserCreationForm):
             err_msg = get_translation('err_uni_required', self._language)
             for field_name in missing:
                 self.add_error(field_name, err_msg)
+
+        if not self.errors:
+            if member_with_identity_exists(
+                first_name=cleaned_data.get('first_name', ''),
+                last_name=cleaned_data.get('last_name', ''),
+                date_of_birth=cleaned_data.get('date_of_birth'),
+            ):
+                raise ValidationError(get_translation('err_duplicate_member', self._language))
+
         return cleaned_data
 
     def save(self, commit=True):

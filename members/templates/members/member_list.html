@@ -254,6 +254,11 @@
                   <button type="submit" class="btn-xs btn-xs-success">Washa</button>
                   {% endif %}
                 </form>
+                {% if member.role == 'member' %}
+                <form method="post" action="{% url 'members:delete_member' member.id %}" style="display:inline;" class="delete-member-form">{% csrf_token %}
+                  <button type="submit" class="btn-xs btn-xs-danger">Futa</button>
+                </form>
+                {% endif %}
               </div>
             </td>
           </tr>
@@ -298,6 +303,13 @@
         return;
       }
       form.action = url;
+    });
+  });
+  document.querySelectorAll('.delete-member-form').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      if (!window.confirm('Una uhakika unataka kumfuta mwanachama huyu kabisa? Hatua hii haiwezi kutenduliwa.')) {
+        e.preventDefault();
+      }
     });
   });
 })();

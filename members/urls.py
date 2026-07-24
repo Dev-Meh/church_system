@@ -78,6 +78,7 @@ urlpatterns = [
     path('secretaries/<int:user_id>/demote/', views.demote_from_secretary, name='demote_from_secretary'),
     path('members/<int:user_id>/approve/', views.approve_member, name='approve_member'),
     path('members/<int:user_id>/toggle-active/', views.toggle_member_active, name='toggle_member_active'),
+    path('members/<int:user_id>/delete/', views.delete_member, name='delete_member'),
     path('members/<int:user_id>/reset-password/', views.admin_reset_password, name='admin_reset_password'),
     path('password-reset/', views.public_password_reset_disabled, name='password_reset'),
     path('password-reset/done/', views.public_password_reset_disabled, name='password_reset_done'),

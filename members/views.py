@@ -14,6 +14,7 @@ from django.views.decorators.http import require_POST
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.db.models import Count, Q, Sum
+from django.db.models.deletion import ProtectedError
 from django.conf import settings
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import check_for_language
@@ -498,6 +499,33 @@ def toggle_member_active(request, user_id):
         target.is_active_member = True
         target.save(update_fields=['is_active', 'is_active_member'])
         messages.success(request, f'Akaunti ya {target.full_name} imewashwa tena.')
+
+    return _redirect_member_list(request)
+
+
+@login_required
+@require_POST
+def delete_member(request, user_id):
+    """Pastor/admin: permanently remove a duplicate or invalid member registration."""
+    if not can_manage_members(request.user):
+        messages.error(request, 'Huna ruhusa ya kufuta wanachama.')
+        return redirect('dashboard')
+
+    target = get_object_or_404(ChurchUser, id=user_id, role='member')
+    if target.pk == request.user.pk:
+        messages.error(request, 'Huwezi kufuta akaunti yako mwenyewe.')
+        return _redirect_member_list(request)
+
+    name = target.full_name
+    try:
+        target.delete()
+    except ProtectedError:
+        messages.error(
+            request,
+            f'Imeshindikana kumfuta {name}. Ana rekodi zinazohusiana na mfumo.',
+        )
+    else:
+        messages.success(request, f'{name} amefutwa kwenye mfumo.')
 
     return _redirect_member_list(request)
 
