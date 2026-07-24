@@ -12,52 +12,52 @@
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
   {% church_t 'back_to_dashboard' %}
 </a>
-{% include 'members/language_selector.html' %}
 {% endblock %}
 
 {% block page_extra_css %}
 <style>
 .btn-back-dashboard {
   display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
-  background: rgba(255,255,255,0.08); border: 1px solid rgba(200,168,75,0.35);
-  border-radius: 8px; color: #c8a84b; font-size: 12px; font-weight: 700;
+  background: var(--cm-gold-soft); border: 1px solid var(--cm-border-gold);
+  border-radius: 8px; color: var(--cm-gold); font-size: 12px; font-weight: 700;
   text-decoration: none; text-transform: uppercase; margin-right: 0.5rem;
 }
 .action-buttons { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-.btn-back, .btn-financial {
+.btn-back {
   display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
-  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 8px; color: #fff; font-size: 12px; font-weight: 700; text-decoration: none;
+  background: var(--cm-surface-deep); border: 1px solid var(--cm-border);
+  border-radius: 8px; color: var(--cm-text); font-size: 12px; font-weight: 700; text-decoration: none;
 }
-.panel { background: #152333; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
-.panel-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; }
-.panel-header svg { width: 18px; height: 18px; stroke: #c8a84b; fill: none; stroke-width: 2; }
-.panel-header h3 { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 600; color: #c8a84b; text-transform: uppercase; margin: 0; }
+.panel { background: var(--cm-surface); border: 1px solid var(--cm-border); border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+.panel-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--cm-border); display: flex; align-items: center; gap: 10px; }
+.panel-header svg { width: 18px; height: 18px; stroke: var(--cm-gold); fill: none; stroke-width: 2; }
+.panel-header h3 { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 600; color: var(--cm-gold); text-transform: uppercase; margin: 0; }
 .panel-body { padding: 1.5rem; }
-.table-responsive { background: #0f1e2e; border: 1px solid rgba(200,168,75,0.22); border-radius: 8px; overflow: hidden; }
-.table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.table th { background: linear-gradient(180deg, #1f3652, #1a2f49); color: #f2d98d; padding: 12px 15px; text-align: left; }
-.table td { color: #f4f7fb; padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.12); }
-.table tbody tr:nth-child(odd) td { background: rgba(255,255,255,0.03); }
-.table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.07); }
-.badge { background: rgba(200,168,75,0.24); color: #f5df9b; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 12px; }
+.table-responsive { background: var(--cm-surface-deep); border: 1px solid var(--cm-border-gold); border-radius: 8px; overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; font-size: 12px; color: var(--cm-text); }
+.table th { background: var(--cm-table-head-bg); color: var(--cm-gold); padding: 12px 15px; text-align: left; font-weight: 700; }
+.table td { color: var(--cm-text); padding: 12px 15px; border-bottom: 1px solid var(--cm-border); }
+.table tbody tr:nth-child(odd) td { background: var(--cm-table-row-odd); }
+.table tbody tr:nth-child(even) td { background: var(--cm-table-row-even); }
+.table td strong { color: var(--cm-text); }
+.badge { background: var(--cm-gold-bg); color: var(--cm-gold); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 12px; }
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
 .stat-card { background: linear-gradient(135deg, #1a3a5c, #215080); border-radius: 12px; padding: 1.2rem; text-align: center; }
 .stat-card.gold { background: linear-gradient(135deg, #7a5c1a, #a07820); }
 .stat-card.green { background: linear-gradient(135deg, #1a4a2e, #226038); }
-.stat-label { font-size: 10px; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+.stat-label { font-size: 10px; color: rgba(255,255,255,0.75); text-transform: uppercase; }
 .stat-value { font-size: 22px; font-weight: 700; color: #fff; font-family: 'Cinzel', serif; }
 .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; flex-wrap: wrap; }
-.page-link { padding: 6px 12px; border-radius: 6px; font-size: 12px; text-decoration: none; color: #fff; border: 1px solid rgba(255,255,255,0.15); }
-.page-link.active { background: #c8a84b; color: #0f1e2e; }
-.alert-info { background: rgba(52,152,219,0.1); border: 1px solid rgba(52,152,219,0.3); color: #87ceeb; border-radius: 8px; padding: 1rem; }
+.page-link { padding: 6px 12px; border-radius: 6px; font-size: 12px; text-decoration: none; color: var(--cm-text); border: 1px solid var(--cm-border); background: var(--cm-surface-deep); }
+.page-link.active { background: var(--cm-gold); color: #fff; border-color: var(--cm-gold); }
+.alert-info { background: rgba(52,152,219,0.1); border: 1px solid rgba(52,152,219,0.3); color: #0d4f7a; border-radius: 8px; padding: 1rem; }
+html[data-theme="dark"] .alert-info { color: #87ceeb; }
 </style>
 {% endblock %}
 
 {% block page_content %}
 <div class="action-buttons">
   <a href="{% url 'donations:home' %}" class="btn-back">{% church_t 'back_to_donations' %}</a>
-  <a href="{% url 'donations:financial_status' %}" class="btn-financial">{% church_t 'financial_status' %}</a>
 </div>
 
 {% if donations %}

@@ -10,24 +10,51 @@ from django.views.decorators.http import require_POST
 from donations.print_branding import church_print_context
 
 from .forms import UniversityStudentRecordForm
+from .language_utils import LanguageManager, get_translation
 from .models import UniversityStudentRecord
 from .permissions import can_manage_members
 from .university_student_services import sync_university_student_records
 
-TAB_LABELS = {
-    "studying": "Wanaosomea",
-    "completed": "Waliohitimu",
-    "paused": "Wamesimama",
-    "final_year": "Mwaka wa mwisho",
-    "all": "Wote",
+VALID_TABS = ("studying", "completed", "paused", "final_year", "all")
+
+_TAB_LABEL_KEYS = {
+    "studying": "uni_tab_studying",
+    "completed": "uni_tab_completed",
+    "paused": "uni_tab_paused",
+    "final_year": "uni_tab_final_year",
+    "all": "uni_tab_all",
 }
+
+_REPORT_TITLE_KEYS = {
+    "studying": "uni_report_studying",
+    "completed": "uni_report_completed",
+    "paused": "uni_report_paused",
+    "final_year": "uni_report_final_year",
+    "all": "uni_report_all",
+}
+
+
+def _tab_label(tab, lang, current_year=None):
+    label = get_translation(_TAB_LABEL_KEYS[tab], lang)
+    if tab == "final_year" and current_year:
+        return f"{label} ({current_year})"
+    return label
+
+
+def _tab_report_title(tab, current_year, lang):
+    key = _REPORT_TITLE_KEYS[tab]
+    text = get_translation(key, lang)
+    if tab == "final_year":
+        return text.format(year=current_year)
+    return text
 
 
 def _require_pastor(view_func):
     @login_required
     def wrapper(request, *args, **kwargs):
+        lang = LanguageManager.get_current_language(request)
         if not can_manage_members(request.user):
-            messages.error(request, "Ni mchungaji/admin tu anaweza kusimamia wanafunzi wa chuo.")
+            messages.error(request, get_translation("uni_err_pastor_only", lang))
             return redirect("dashboard")
         return view_func(request, *args, **kwargs)
 
@@ -82,41 +109,28 @@ def get_university_student_counts(current_year=None):
     }
 
 
-def _tab_report_title(tab, current_year):
-    if tab == "studying":
-        return "ORODHA YA WANAFUNZI WANAOSOMEA"
-    if tab == "completed":
-        return "ORODHA YA WANAFUNZI WALIOHITIMU"
-    if tab == "paused":
-        return "ORODHA YA WANAFUNZI WAMESIMAMA"
-    if tab == "final_year":
-        return f"ORODHA YA WANAFUNZI WA MWAKA WA MWISHO ({current_year})"
-    return "ORODHA YA WANAFUNZI WA CHUO (WOTE)"
-
-
 @_require_pastor
 def university_student_list(request):
+    lang = LanguageManager.get_current_language(request)
     sync = sync_university_student_records()
     if sync["backfilled"]:
         messages.success(
             request,
-            f"Mwaka wa kuhitimu umejazwa kiotomatiki kwa wanafunzi {sync['backfilled']}.",
+            get_translation("uni_msg_backfilled", lang).format(count=sync["backfilled"]),
         )
     if sync["reverted"]:
         messages.info(
             request,
-            f"Wanafunzi {sync['reverted']} wamerudishwa kwenye 'Wanaosomea' "
-            "(walikuwa wamewekwa waliohitimu mapema).",
+            get_translation("uni_msg_reverted", lang).format(count=sync["reverted"]),
         )
     if sync["promoted"]:
         messages.info(
             request,
-            f"Wanafunzi {sync['promoted']} wametambuliwa kama waliohitimu "
-            "(baada ya Novemba ya mwaka wa kuhitimu).",
+            get_translation("uni_msg_promoted", lang).format(count=sync["promoted"]),
         )
 
     tab = request.GET.get("tab", "studying")
-    if tab not in TAB_LABELS:
+    if tab not in VALID_TABS:
         tab = "studying"
     q = (request.GET.get("q") or "").strip()
     current_year = _current_year()
@@ -137,8 +151,9 @@ def university_student_list(request):
 
 @_require_pastor
 def university_student_print(request):
+    lang = LanguageManager.get_current_language(request)
     tab = request.GET.get("tab", "studying")
-    if tab not in TAB_LABELS:
+    if tab not in VALID_TABS:
         tab = "studying"
     q = (request.GET.get("q") or "").strip()
     current_year = _current_year()
@@ -150,11 +165,11 @@ def university_student_print(request):
         church_print_context(
             records=records,
             tab=tab,
-            tab_label=TAB_LABELS[tab],
+            tab_label=_tab_label(tab, lang, current_year),
             search_q=q,
             counts=get_university_student_counts(current_year),
             current_year=current_year,
-            report_title=_tab_report_title(tab, current_year),
+            report_title=_tab_report_title(tab, current_year, lang),
             report_date=timezone.now(),
         ),
     )
@@ -162,15 +177,18 @@ def university_student_print(request):
 
 @_require_pastor
 def university_student_create(request):
+    lang = LanguageManager.get_current_language(request)
     if request.method == "POST":
-        form = UniversityStudentRecordForm(request.POST)
+        form = UniversityStudentRecordForm(request.POST, language=lang)
         if form.is_valid():
             record = form.save(commit=False)
             record.recorded_by = request.user
             record.save()
             messages.success(
                 request,
-                f"Rekodi ya {record.member.full_name} imehifadhiwa.",
+                get_translation("uni_msg_record_saved", lang).format(
+                    name=record.member.full_name
+                ),
             )
             return redirect("members:university_student_detail", pk=record.pk)
     else:
@@ -181,7 +199,7 @@ def university_student_create(request):
                 initial["member"] = int(member_id)
             except (TypeError, ValueError):
                 pass
-        form = UniversityStudentRecordForm(initial=initial)
+        form = UniversityStudentRecordForm(initial=initial, language=lang)
 
     return render(
         request,
@@ -192,18 +210,19 @@ def university_student_create(request):
 
 @_require_pastor
 def university_student_edit(request, pk):
+    lang = LanguageManager.get_current_language(request)
     record = get_object_or_404(
         UniversityStudentRecord.objects.select_related("member"),
         pk=pk,
     )
     if request.method == "POST":
-        form = UniversityStudentRecordForm(request.POST, instance=record)
+        form = UniversityStudentRecordForm(request.POST, instance=record, language=lang)
         if form.is_valid():
             form.save()
-            messages.success(request, "Rekodi imesasishwa.")
+            messages.success(request, get_translation("uni_msg_record_updated", lang))
             return redirect("members:university_student_detail", pk=pk)
     else:
-        form = UniversityStudentRecordForm(instance=record)
+        form = UniversityStudentRecordForm(instance=record, language=lang)
 
     return render(
         request,
@@ -236,13 +255,14 @@ def university_student_detail(request, pk):
 @_require_pastor
 @require_POST
 def university_student_mark_completed(request, pk):
+    lang = LanguageManager.get_current_language(request)
     record = get_object_or_404(UniversityStudentRecord, pk=pk)
     year = request.POST.get("year_completed", "").strip()
     if year:
         try:
             record.year_completed = int(year)
         except ValueError:
-            messages.error(request, "Mwaka si sahihi.")
+            messages.error(request, get_translation("uni_err_invalid_year", lang))
             return redirect("members:university_student_detail", pk=pk)
     elif not record.year_completed:
         record.year_completed = timezone.now().year
@@ -251,6 +271,8 @@ def university_student_mark_completed(request, pk):
     record.save(update_fields=["status", "year_completed", "updated_at"])
     messages.success(
         request,
-        f"{record.member.full_name} amewekwa kama aliyehitimu — rekodi inabaki kwenye database.",
+        get_translation("uni_msg_marked_graduated", lang).format(
+            name=record.member.full_name
+        ),
     )
     return redirect("members:university_student_detail", pk=pk)

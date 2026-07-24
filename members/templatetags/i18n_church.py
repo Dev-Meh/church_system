@@ -35,3 +35,19 @@ def church_pledge_status(context, status_code):
     request = context.get("request")
     lang = LanguageManager.get_current_language(request) if request else "en"
     return get_translation(f"pledge_status_{status_code}", lang)
+
+
+@register.simple_tag(takes_context=True)
+def church_uni_status(context, status_code):
+    """Translate university student status code."""
+    request = context.get("request")
+    lang = LanguageManager.get_current_language(request) if request else "en"
+    return get_translation(f"uni_status_{status_code}", lang)
+
+
+@register.simple_tag(takes_context=True)
+def church_uni_level(context, level_code):
+    """Translate university education level code."""
+    request = context.get("request")
+    lang = LanguageManager.get_current_language(request) if request else "en"
+    return get_translation(f"uni_level_{level_code}", lang)

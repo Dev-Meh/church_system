@@ -21,9 +21,9 @@
       </div>
       <div class="topnav-end">
         <div class="topnav-actions">
-          {% block page_header_actions %}
+          {% include 'members/theme_selector.html' %}
           {% include 'members/language_selector.html' %}
-          {% endblock %}
+          {% block page_header_actions %}{% endblock %}
         </div>
         {% if user.is_authenticated %}
         {% include 'church_layout/_profile_dropdown.html' %}

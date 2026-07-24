@@ -1,0 +1,168 @@
+{% extends 'church_layout/app_shell.html' %}
+{% load i18n_church %}
+
+{% block title %}{% church_t 'pledge_list_title' %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_t 'pledge_list_title' %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{% church_t 'pledge_list_subtitle' %}</p>{% endblock %}
+
+{% block page_header_actions %}
+<a href="{% url 'donations:pledge_list_print' %}" class="btn-back" target="_blank">{% church_t 'pledge_preview_print' %}</a>
+<a href="{% url 'donations:export_construction_pledges_csv' %}" class="btn-back">{% church_t 'pledge_download_csv' %}</a>
+<a href="{% url 'donations:home' %}" class="btn-back">{% church_t 'back_to_donations' %}</a>
+{% endblock %}
+
+{% block page_extra_css %}
+<style>
+    .btn-back { display: inline-flex; align-items: center; text-decoration: none; color: #fff; font-size: 12px; padding: 7px 11px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.08); margin-right: 0.35rem; }
+    .panel { background: #152333; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+    .entry-panel { padding: 16px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(11, 25, 42, 0.35); }
+    .entry-panel h4 { margin: 0 0 6px; font-size: 13px; color: #f2d27a; text-transform: uppercase; letter-spacing: 0.6px; }
+    .entry-help { font-size: 12px; color: rgba(255,255,255,0.65); margin: 0 0 14px; }
+    .entry-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; align-items: end; }
+    .entry-field label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+    .entry-field .form-control, .entry-field .form-select { width: 100%; background: #0f1e2e; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 10px 12px; color: #fff; font-size: 15px; }
+    .entry-field .sheet-amount-input { text-align: right; font-variant-numeric: tabular-nums; }
+    .date-help { margin: 4px 0 0; font-size: 11px; color: rgba(255,255,255,0.55); line-height: 1.4; }
+    .btn-save { background: linear-gradient(135deg, #c8a84b, #a07820); border: none; border-radius: 8px; padding: 11px 18px; color: #fff; font-size: 12px; font-weight: 700; text-transform: uppercase; cursor: pointer; width: 100%; }
+    .entry-field-span2 { grid-column: span 2; }
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 720px; }
+    thead th { background: rgba(11, 25, 42, 0.75); color: #f2d27a; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; border-bottom: 1px solid rgba(200,168,75,0.5); padding: 10px 12px; text-align: left; }
+    tbody td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 13px; vertical-align: top; }
+    tbody tr:nth-child(odd) td { background: rgba(255,255,255,0.03); }
+    tbody tr:nth-child(even) td { background: rgba(255,255,255,0.06); }
+    .debt-negative { color: #ff8787; font-weight: 600; }
+    .debt-paid { color: #69db7c; font-weight: 600; }
+    .debt-clear { color: #69db7c; }
+    .pledge-actions-help { font-size: 12px; color: rgba(255,255,255,0.65); padding: 12px 18px 0; }
+    .pledge-action-panel { margin-bottom: 0.5rem; }
+    .pledge-action-panel summary { cursor: pointer; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #c8a84b; padding: 4px 0; list-style: none; }
+    .pledge-action-panel summary::-webkit-details-marker { display: none; }
+    .pledge-action-form { display: grid; gap: 6px; margin-top: 6px; padding: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; min-width: 180px; }
+    .pledge-input { padding: 6px 8px !important; font-size: 12px !important; background: #0f1e2e; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: #fff; }
+    .btn-pledge-pay { background: linear-gradient(135deg, #1a4a2e, #226038); border: none; border-radius: 6px; padding: 7px 10px; color: #fff; font-size: 11px; font-weight: 700; text-transform: uppercase; cursor: pointer; }
+    .btn-pledge-reduce { background: linear-gradient(135deg, #5b3a14, #7a4f18); border: none; border-radius: 6px; padding: 7px 10px; color: #fff; font-size: 11px; font-weight: 700; text-transform: uppercase; cursor: pointer; }
+    .pagination { display: flex; gap: 8px; justify-content: center; padding: 14px; }
+    .pagination a, .pagination span { min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; text-decoration: none; color: #dce8fb; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.07); font-size: 12px; }
+    .pagination .active { background: #c8a84b; color: #0f1e2e; border-color: #c8a84b; }
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="panel">
+    {% if can_manage_construction_pledges and pledge_entry_form %}
+    <div class="entry-panel">
+        <h4>{% church_t 'pledge_enter_section' %}</h4>
+        <p class="entry-help">{% church_t 'pledge_enter_help' %}</p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="pledge_entry">
+            <div class="entry-grid">
+                <div class="entry-field entry-field-span2">
+                    <label for="{{ pledge_entry_form.donor.id_for_label }}">{{ pledge_entry_form.donor.label }} *</label>
+                    {{ pledge_entry_form.donor }}
+                </div>
+                <div class="entry-field">
+                    <label for="{{ pledge_entry_form.total_amount.id_for_label }}">{{ pledge_entry_form.total_amount.label }}</label>
+                    {{ pledge_entry_form.total_amount }}
+                </div>
+                <div class="entry-field">
+                    <label for="{{ pledge_entry_form.start_date.id_for_label }}">{{ pledge_entry_form.start_date.label }}</label>
+                    {{ pledge_entry_form.start_date }}
+                    <p class="date-help">{% church_t 'contrib_date_past_ok' %}</p>
+                </div>
+                <div class="entry-field entry-field-span2">
+                    <label for="{{ pledge_entry_form.notes.id_for_label }}">{{ pledge_entry_form.notes.label }}</label>
+                    {{ pledge_entry_form.notes }}
+                </div>
+                <div class="entry-field">
+                    <button type="submit" class="btn-save">{% church_t 'pledge_save_btn' %}</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if can_manage_construction_pledges %}
+    <p class="pledge-actions-help">{% church_t 'don_pledge_actions_help' %}</p>
+    {% endif %}
+
+    <div class="tbl-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>{% church_t 'don_col_member' %}</th>
+                    <th>{% church_t 'don_pledge_negative' %}</th>
+                    <th>{% church_t 'don_pledge_payments' %}</th>
+                    <th>{% church_t 'don_debt_balance' %}</th>
+                    <th>{% church_t 'don_status' %}</th>
+                    {% if can_manage_construction_pledges %}<th>{% church_t 'don_col_action' %}</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for pledge in construction_pledges %}
+                <tr>
+                    <td>{{ pledge.donor.full_name }}</td>
+                    <td class="debt-negative">-{{ pledge.total_amount|floatformat:0 }}</td>
+                    <td class="debt-paid">+{{ pledge.amount_paid|floatformat:0 }}</td>
+                    <td>
+                        {% if pledge.debt_balance_display == 0 %}
+                        <strong class="debt-clear">0</strong>
+                        {% else %}
+                        <strong class="debt-negative">{{ pledge.debt_balance_display }}</strong>
+                        {% endif %}
+                    </td>
+                    <td>{% if pledge.debt_balance_display == 0 %}{% church_t 'don_paid_off' %}{% else %}{% church_pledge_status pledge.status %}{% endif %}</td>
+                    {% if can_manage_construction_pledges %}
+                    <td>
+                        {% if pledge.has_outstanding_debt %}
+                        <details class="pledge-action-panel">
+                            <summary>{% church_t 'don_pledge_pay_btn' %}</summary>
+                            <form method="post" class="pledge-action-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="pay_pledge">
+                                <input type="hidden" name="pledge_id" value="{{ pledge.id }}">
+                                <input type="number" name="amount" class="form-control sheet-amount-input pledge-input" min="1" step="1" max="{{ pledge.debt_balance_display }}" placeholder="0" required>
+                                <select name="payment_method" class="form-select payment-method-select pledge-input" required>
+                                    {% for value, label in pledge_payment_form.fields.payment_method.choices %}
+                                    <option value="{{ value }}"{% if value == 'cash' %} selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                <input type="date" name="contribution_date" class="form-control pledge-input" max="{% now 'Y-m-d' %}" value="{% now 'Y-m-d' %}" required>
+                                <input type="text" name="notes" class="form-control pledge-input" placeholder="{% church_t 'don_notes_ph' %}">
+                                <button type="submit" class="btn-pledge-pay">{% church_t 'don_pledge_pay_btn' %}</button>
+                            </form>
+                        </details>
+                        <details class="pledge-action-panel">
+                            <summary>{% church_t 'don_pledge_reduce_btn' %}</summary>
+                            <form method="post" class="pledge-action-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reduce_pledge">
+                                <input type="hidden" name="pledge_id" value="{{ pledge.id }}">
+                                <input type="number" name="reduce_amount" class="form-control sheet-amount-input pledge-input" min="1" step="1" max="{{ pledge.debt_balance_display }}" placeholder="0" required>
+                                <input type="text" name="reason" class="form-control pledge-input" placeholder="{% church_t 'don_pledge_reduce_reason_ph' %}">
+                                <button type="submit" class="btn-pledge-reduce">{% church_t 'don_pledge_reduce_btn' %}</button>
+                            </form>
+                        </details>
+                        {% else %}—{% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr><td colspan="{% if can_manage_construction_pledges %}6{% else %}5{% endif %}" style="color:rgba(255,255,255,0.6);">{% church_t 'don_no_pledges' %}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">←</a>{% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}<span class="active">{{ num }}</span>
+            {% else %}<a href="?page={{ num }}">{{ num }}</a>{% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">→</a>{% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

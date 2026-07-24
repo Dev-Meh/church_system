@@ -545,19 +545,42 @@ class UniversityStudentRecordForm(forms.ModelForm):
             "notes": "Maelezo",
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, language='en', **kwargs):
         super().__init__(*args, **kwargs)
+        lang = language or 'en'
+        self._lang = lang
+        from .language_utils import get_translation as t
+
         self.fields["member"].queryset = ChurchUser.objects.filter(
             is_active=True,
             role="member",
         ).order_by("first_name", "last_name")
+        self.fields["member"].label = t("uni_field_member", lang)
+        self.fields["institution"].label = t("uni_field_institution", lang)
+        self.fields["course"].label = t("uni_field_course", lang)
+        self.fields["faculty"].label = t("uni_field_faculty", lang)
+        self.fields["level"].label = t("uni_field_level", lang)
+        self.fields["year_started"].label = t("uni_field_year_started", lang)
+        self.fields["expected_completion_year"].label = t("uni_field_expected_completion", lang)
+        self.fields["year_completed"].label = t("uni_field_year_completed", lang)
+        self.fields["status"].label = t("uni_field_status", lang)
+        self.fields["notes"].label = t("uni_field_notes", lang)
+        self.fields["level"].choices = [
+            (code, t(f"uni_level_{code}", lang))
+            for code, _ in UniversityStudentRecord.LEVEL_CHOICES
+        ]
+        self.fields["status"].choices = [
+            (code, t(f"uni_status_{code}", lang))
+            for code, _ in UniversityStudentRecord.STATUS_CHOICES
+        ]
 
     def clean(self):
         cleaned = super().clean()
+        lang = getattr(self, "_lang", "en")
+        from .language_utils import get_translation as t
+
         status = cleaned.get("status")
         year_completed = cleaned.get("year_completed")
         if status == "completed" and not year_completed:
-            raise ValidationError(
-                "Mwanafunzi aliyehitimu lazima uweke mwaka wa kuhitimu."
-            )
+            raise ValidationError(t("uni_err_grad_year_required", lang))
         return cleaned

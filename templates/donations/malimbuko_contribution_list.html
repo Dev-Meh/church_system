@@ -1,13 +1,13 @@
 {% extends 'church_layout/app_shell.html' %}
 {% load i18n_church %}
 
-{% block title %}{% church_t 'tithe_list_title' %} - PHM-ARCC{% endblock %}
-{% block page_title %}{% church_t 'tithe_list_title' %}{% endblock %}
-{% block page_subtitle %}<p class="topnav-subtitle">PHM-ARCC Iyumbu Dodoma</p>{% endblock %}
+{% block title %}{% church_t 'malimbuko_list_title' %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_t 'malimbuko_list_title' %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{% church_t 'malimbuko_list_subtitle' %}</p>{% endblock %}
 
 {% block page_header_actions %}
-<a href="{% url 'donations:tithe_list_print' %}" class="btn-back" target="_blank">{% church_t 'tithe_preview_print' %}</a>
-<a href="{% url 'donations:export_tithe_csv' %}" class="btn-back">{% church_t 'tithe_download_csv' %}</a>
+<a href="{% url 'donations:malimbuko_list_print' %}" class="btn-back" target="_blank">{% church_t 'malimbuko_preview_print' %}</a>
+<a href="{% url 'donations:export_malimbuko_csv' %}" class="btn-back">{% church_t 'malimbuko_download_csv' %}</a>
 <a href="{% url 'donations:home' %}" class="btn-back">{% church_t 'back_to_donations' %}</a>
 {% endblock %}
 
@@ -32,7 +32,7 @@
         overflow: hidden;
     }
     .tbl-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 640px; }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
     thead th {
         background: rgba(11, 25, 42, 0.75);
         color: #f2d27a;
@@ -114,7 +114,7 @@
         text-align: right;
         font-variant-numeric: tabular-nums;
     }
-    .btn-tithe-save {
+    .btn-malimbuko-save {
         background: linear-gradient(135deg, #c8a84b, #a07820);
         border: none;
         border-radius: 8px;
@@ -149,55 +149,55 @@
 
 {% block page_content %}
 <div class="panel">
-    {% if can_enter_tithe and tithe_entry_form %}
+    {% if can_enter_malimbuko and malimbuko_entry_form %}
     <div class="entry-panel">
-        <h4>{% church_t 'tithe_enter_section' %}</h4>
+        <h4>{% church_t 'malimbuko_enter_section' %}</h4>
         <p class="entry-help">
-            {% church_t 'tithe_enter_help' %}
-            <a href="{% url 'donations:home' %}">{% church_t 'tithe_enter_or_donations' %}</a>
+            {% church_t 'malimbuko_enter_help' %}
+            <a href="{% url 'donations:home' %}">{% church_t 'malimbuko_enter_or_donations' %}</a>
         </p>
         <form method="post">
             {% csrf_token %}
-            <input type="hidden" name="action" value="tithe_entry">
-            {% if tithe_entry_form.errors %}
+            <input type="hidden" name="action" value="malimbuko_entry">
+            {% if malimbuko_entry_form.errors %}
             <div class="entry-errors">
-                {% for error in tithe_entry_form.non_field_errors %}
+                {% for error in malimbuko_entry_form.non_field_errors %}
                     <div>{{ error }}</div>
                 {% endfor %}
             </div>
             {% endif %}
             <div class="entry-grid">
-                <div class="entry-field entry-field-span2">
-                    <label for="{{ tithe_entry_form.donor.id_for_label }}">{{ tithe_entry_form.donor.label }} *</label>
-                    {{ tithe_entry_form.donor }}
-                </div>
                 <div class="entry-field">
-                    <label for="{{ tithe_entry_form.contribution_date.id_for_label }}">{{ tithe_entry_form.contribution_date.label }}</label>
-                    {{ tithe_entry_form.contribution_date }}
+                    <label for="{{ malimbuko_entry_form.contribution_date.id_for_label }}">{{ malimbuko_entry_form.contribution_date.label }}</label>
+                    {{ malimbuko_entry_form.contribution_date }}
                     <p class="date-help">{% church_t 'contrib_date_past_ok' %}</p>
                 </div>
                 <div class="entry-field">
-                    <label for="{{ tithe_entry_form.payment_method.id_for_label }}">{{ tithe_entry_form.payment_method.label }}</label>
-                    {{ tithe_entry_form.payment_method }}
+                    <label for="{{ malimbuko_entry_form.payment_method.id_for_label }}">{{ malimbuko_entry_form.payment_method.label }}</label>
+                    {{ malimbuko_entry_form.payment_method }}
                 </div>
                 <div class="entry-field">
-                    <label for="{{ tithe_entry_form.zaka_type.id_for_label }}">{{ tithe_entry_form.zaka_type.label }}</label>
-                    {{ tithe_entry_form.zaka_type }}
-                </div>
-                <div class="entry-field" id="tithe-money-wrap">
-                    <label for="{{ tithe_entry_form.amount.id_for_label }}">{{ tithe_entry_form.amount.label }}</label>
-                    {{ tithe_entry_form.amount }}
-                </div>
-                <div class="entry-field entry-field-span2" id="tithe-asset-wrap" style="display:none;">
-                    <label for="{{ tithe_entry_form.asset_description.id_for_label }}">{{ tithe_entry_form.asset_description.label }}</label>
-                    {{ tithe_entry_form.asset_description }}
+                    <label for="{{ malimbuko_entry_form.gift_type.id_for_label }}">{{ malimbuko_entry_form.gift_type.label }}</label>
+                    {{ malimbuko_entry_form.gift_type }}
                 </div>
                 <div class="entry-field entry-field-span2">
-                    <label for="{{ tithe_entry_form.notes.id_for_label }}">{{ tithe_entry_form.notes.label }}</label>
-                    {{ tithe_entry_form.notes }}
+                    <label for="{{ malimbuko_entry_form.miladi_source.id_for_label }}">{{ malimbuko_entry_form.miladi_source.label }}</label>
+                    {{ malimbuko_entry_form.miladi_source }}
+                </div>
+                <div class="entry-field" id="malimbuko-money-wrap">
+                    <label for="{{ malimbuko_entry_form.amount.id_for_label }}">{{ malimbuko_entry_form.amount.label }}</label>
+                    {{ malimbuko_entry_form.amount }}
+                </div>
+                <div class="entry-field entry-field-span2" id="malimbuko-asset-wrap" style="display:none;">
+                    <label for="{{ malimbuko_entry_form.asset_description.id_for_label }}">{{ malimbuko_entry_form.asset_description.label }}</label>
+                    {{ malimbuko_entry_form.asset_description }}
+                </div>
+                <div class="entry-field entry-field-span2">
+                    <label for="{{ malimbuko_entry_form.notes.id_for_label }}">{{ malimbuko_entry_form.notes.label }}</label>
+                    {{ malimbuko_entry_form.notes }}
                 </div>
                 <div class="entry-field">
-                    <button type="submit" class="btn-tithe-save">{% church_t 'tithe_save_btn' %}</button>
+                    <button type="submit" class="btn-malimbuko-save">{% church_t 'malimbuko_save_btn' %}</button>
                 </div>
             </div>
         </form>
@@ -210,21 +210,21 @@
                 <tr>
                     <th>{% church_t 'tithe_col_no' %}</th>
                     <th>{% church_t 'table_date' %}</th>
-                    <th>{% church_t 'tithe_col_full_name' %}</th>
-                    <th>{% church_t 'tithe_col_zaka' %}</th>
-                    <th>{% church_t 'tithe_col_other_zaka' %}</th>
+                    <th>{% church_t 'malimbuko_col_miladi' %}</th>
+                    <th>{% church_t 'malimbuko_col_amount' %}</th>
+                    <th>{% church_t 'malimbuko_col_harvest' %}</th>
                 </tr>
             </thead>
             <tbody>
-                {% for d in tithe_donations %}
+                {% for d in malimbuko_donations %}
                 <tr>
                     <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
                     <td>{{ d.contribution_date }}</td>
                     <td>
-                        {% if d.donor %}
-                            {{ d.donor.full_name|default:d.donor.username }}
+                        {% if d.malimbuko_miladi_source %}
+                            {{ d.malimbuko_miladi_source }}
                         {% else %}
-                            <span class="muted">{% church_t 'tithe_not_specified' %}</span>
+                            <span class="muted">—</span>
                         {% endif %}
                     </td>
                     <td class="amount-cell">
@@ -244,7 +244,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="muted">{% church_t 'tithe_no_records' %}</td>
+                    <td colspan="5" class="muted">{% church_t 'malimbuko_no_records' %}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -271,20 +271,20 @@
 {% endblock %}
 
 {% block page_extra_js %}
-{% if can_enter_tithe and tithe_entry_form %}
+{% if can_enter_malimbuko and malimbuko_entry_form %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const zakaType = document.getElementById('{{ tithe_entry_form.zaka_type.id_for_label }}');
-    const moneyWrap = document.getElementById('tithe-money-wrap');
-    const assetWrap = document.getElementById('tithe-asset-wrap');
-    function toggleTitheFields() {
-        const isAsset = zakaType && zakaType.value === 'asset';
+    const giftType = document.getElementById('{{ malimbuko_entry_form.gift_type.id_for_label }}');
+    const moneyWrap = document.getElementById('malimbuko-money-wrap');
+    const assetWrap = document.getElementById('malimbuko-asset-wrap');
+    function toggleMalimbukoFields() {
+        const isAsset = giftType && giftType.value === 'asset';
         if (moneyWrap) moneyWrap.style.display = isAsset ? 'none' : 'block';
         if (assetWrap) assetWrap.style.display = isAsset ? 'block' : 'none';
     }
-    if (zakaType) {
-        zakaType.addEventListener('change', toggleTitheFields);
-        toggleTitheFields();
+    if (giftType) {
+        giftType.addEventListener('change', toggleMalimbukoFields);
+        toggleMalimbukoFields();
     }
 });
 </script>

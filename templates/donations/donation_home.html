@@ -391,6 +391,43 @@
         color: rgba(255, 255, 255, 0.45);
     }
 
+    .contrib-quick-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .contrib-quick-links a {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        color: #fff;
+        font-size: 12px;
+        padding: 8px 12px;
+        border-radius: 7px;
+        border: 1px solid rgba(200, 168, 75, 0.35);
+        background: rgba(200, 168, 75, 0.12);
+    }
+
+    .contrib-quick-links a:hover {
+        background: rgba(200, 168, 75, 0.22);
+        border-color: rgba(200, 168, 75, 0.55);
+    }
+
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        color: #fff;
+        font-size: 12px;
+        padding: 7px 11px;
+        border-radius: 7px;
+        border: 1px solid rgba(255,255,255,0.22);
+        background: rgba(255,255,255,0.08);
+        margin-right: 0.35rem;
+    }
+
 
     @media (max-width: 992px) {
         .info-cards { grid-template-columns: 1fr; }
@@ -439,21 +476,34 @@
                         {% endif %}
 
                         {% if is_accountant %}
-                            <h4 class="sheet-title">{% church_t 'don_accountant_sheet' %}</h4>
+                            <h4 class="sheet-title">{% church_t 'don_quick_contribution_links' %}</h4>
+                            <div class="contrib-quick-links">
+                                <a href="{% url 'donations:offering_list' %}">{% church_t 'offering_list_nav' %}</a>
+                                <a href="{% url 'donations:tithe_list' %}">{% church_t 'tithe_list_nav' %}</a>
+                                <a href="{% url 'donations:malimbuko_list' %}">{% church_t 'malimbuko_list_nav' %}</a>
+                                <a href="{% url 'donations:shukrani_list' %}">{% church_t 'shukrani_list_nav' %}</a>
+                                <a href="{% url 'donations:pledge_list' %}">{% church_t 'pledge_list_nav' %}</a>
+                            </div>
+
+                            {% if can_manage_construction_pledges and construction_entry_form %}
+                            <h4 class="sheet-title">{% church_t 'don_construction_section' %}</h4>
+                            <p class="text-muted" style="font-size:12px;margin-bottom:0.75rem;">
+                                {% church_t 'don_home_construction_help' %}
+                            </p>
                             <div style="margin-bottom: 10px;">
-                                <a href="{% url 'donations:report_preview' 'accountant_sheet' %}" class="btn-back">{% church_t 'preview_report' %}</a>
-                                <a href="{% url 'donations:export_accountant_sheet_csv' %}" class="btn-back">{% church_t 'download_report_csv' %}</a>
+                                <a href="{% url 'donations:pledge_list_print' %}" class="btn-back" target="_blank">{% church_t 'pledge_preview_print' %}</a>
+                                <a href="{% url 'donations:export_construction_pledges_csv' %}" class="btn-back">{% church_t 'pledge_download_csv' %}</a>
                             </div>
                             <form method="post">
                                 {% csrf_token %}
-                                <input type="hidden" name="action" value="sheet_entry">
+                                <input type="hidden" name="action" value="construction_entry">
 
-                                {% if sheet_form.errors %}
+                                {% if construction_entry_form.errors %}
                                 <div class="alert alert-danger">
-                                    {% for error in sheet_form.non_field_errors %}
+                                    {% for error in construction_entry_form.non_field_errors %}
                                         <div>{{ error }}</div>
                                     {% endfor %}
-                                    {% for field in sheet_form %}
+                                    {% for field in construction_entry_form %}
                                         {% for error in field.errors %}
                                             <div><strong>{{ field.label }}:</strong> {{ error }}</div>
                                         {% endfor %}
@@ -461,85 +511,44 @@
                                 </div>
                                 {% endif %}
 
-                                <h4 class="sheet-title">{% church_t 'don_enter_member_contrib' %}</h4>
-                                <p class="text-muted" style="font-size:12px;margin-bottom:0.75rem;">
-                                    {% church_t 'don_enter_member_help' %}
-                                </p>
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ construction_entry_form.construction_donor.id_for_label }}">{% church_t 'don_construction_member' %}</label>
+                                    {{ construction_entry_form.construction_donor }}
+                                    <small class="text-muted">{% church_t 'don_construction_member_help' %}</small>
+                                </div>
+
                                 <div class="sheet-top-fields">
                                     <div class="form-group mb-0">
-                                        <label class="form-label" for="{{ sheet_form.donor.id_for_label }}">{% church_t 'don_member_label' %} *</label>
-                                        {{ sheet_form.donor }}
+                                        <label class="form-label" for="{{ construction_entry_form.payment_method.id_for_label }}">{% church_t 'payment_method' %}</label>
+                                        {{ construction_entry_form.payment_method }}
                                     </div>
                                     <div class="form-group mb-0">
-                                        <label class="form-label" for="{{ sheet_form.payment_method.id_for_label }}">{% church_t 'payment_method' %}</label>
-                                        {{ sheet_form.payment_method }}
+                                        <label class="form-label" for="{{ construction_entry_form.contribution_date.id_for_label }}">{% church_t 'don_col_date' %}</label>
+                                        {{ construction_entry_form.contribution_date }}
+                                        <p class="date-help" style="font-size:11px;color:rgba(255,255,255,0.55);margin:4px 0 0;">{% church_t 'contrib_date_past_ok' %}</p>
                                     </div>
                                 </div>
 
                                 <div class="sheet-amounts-grid">
-                                    <div class="sheet-amount-field sheet-amount-date">
-                                        <label class="form-label" for="{{ sheet_form.contribution_date.id_for_label }}">{% church_t 'don_col_date' %}</label>
-                                        {{ sheet_form.contribution_date }}
+                                    <div class="sheet-amount-field">
+                                        <label class="form-label" for="{{ construction_entry_form.construction_pledge_amount.id_for_label }}">{% church_t 'don_new_pledge' %}</label>
+                                        {{ construction_entry_form.construction_pledge_amount }}
+                                        <small class="text-muted">{% church_t 'don_new_pledge_help' %}</small>
                                     </div>
                                     <div class="sheet-amount-field">
-                                        <label class="form-label" for="{{ sheet_form.sadaka.id_for_label }}">{% church_t 'don_col_offering' %}</label>
-                                        {{ sheet_form.sadaka }}
-                                    </div>
-                                    <div class="sheet-amount-field">
-                                        <label class="form-label" for="{{ sheet_form.zaka.id_for_label }}">{% church_t 'don_col_tithe' %}</label>
-                                        {{ sheet_form.zaka }}
-                                    </div>
-                                    <div class="sheet-amount-field">
-                                        <label class="form-label" for="{{ sheet_form.malimbuko.id_for_label }}">{% church_t 'don_col_special_offering' %}</label>
-                                        {{ sheet_form.malimbuko }}
-                                    </div>
-                                    <div class="sheet-amount-field">
-                                        <label class="form-label" for="{{ sheet_form.shukrani.id_for_label }}">{% church_t 'don_col_thanksgiving' %}</label>
-                                        {{ sheet_form.shukrani }}
-                                    </div>
-                                    <div class="sheet-amount-field">
-                                        <label class="form-label" for="{{ sheet_form.construction_payment_amount.id_for_label }}">{% church_t 'don_col_debt_payment' %}</label>
-                                        {{ sheet_form.construction_payment_amount }}
-                                    </div>
-                                    <div class="sheet-amount-field sheet-amount-total">
-                                        <label class="form-label">{% church_t 'don_col_total' %}</label>
-                                        <div class="sheet-total-box"><span id="sheet-jumla">0</span></div>
+                                        <label class="form-label" for="{{ construction_entry_form.construction_payment_amount.id_for_label }}">{% church_t 'don_col_debt_payment' %}</label>
+                                        {{ construction_entry_form.construction_payment_amount }}
                                     </div>
                                 </div>
 
-                                <h4 class="sheet-title" style="margin-top:1rem;">{% church_t 'don_zaka_type' %}</h4>
                                 <div class="form-group">
-                                    <label class="form-label" for="{{ sheet_form.zaka_type.id_for_label }}">{% church_t 'don_zaka_type' %}</label>
-                                    {{ sheet_form.zaka_type }}
-                                </div>
-                                <div class="form-group" id="asset-zaka-wrap" style="display:none;">
-                                    <label class="form-label" for="{{ sheet_form.aina_nyingine_ya_zaka.id_for_label }}">{% church_t 'don_other_gift_type' %}</label>
-                                    {{ sheet_form.aina_nyingine_ya_zaka }}
-                                </div>
-
-                                <h4 class="sheet-title" style="margin-top:1rem;">{% church_t 'don_construction_section' %}</h4>
-                                <div class="form-group">
-                                    <label class="form-label" for="{{ sheet_form.construction_donor.id_for_label }}">{% church_t 'don_construction_member' %}</label>
-                                    {{ sheet_form.construction_donor }}
-                                    <small class="text-muted">{% church_t 'don_construction_member_help' %}</small>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label" for="{{ sheet_form.construction_pledge_amount.id_for_label }}">{% church_t 'don_new_pledge' %}</label>
-                                    {{ sheet_form.construction_pledge_amount }}
-                                    <small class="text-muted">{% church_t 'don_new_pledge_help' %}</small>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label" for="{{ sheet_form.notes.id_for_label }}">{% church_t 'don_notes_optional' %}</label>
-                                    {{ sheet_form.notes }}
-                                </div>
-
-                                <div class="sheet-total-preview">
-                                    {% church_t 'don_total_preview' %} <strong>TZS <span id="sheet-jumla-bottom">0</span></strong>
+                                    <label class="form-label" for="{{ construction_entry_form.notes.id_for_label }}">{% church_t 'don_notes_optional' %}</label>
+                                    {{ construction_entry_form.notes }}
                                 </div>
 
                                 <button type="submit" class="btn-donate">{% church_t 'don_save_contribution' %}</button>
                             </form>
+                            {% endif %}
                         {% elif is_accountant_role and not has_accountant_access %}
                             <div class="alert alert-danger mb-0">
                                 {% church_t 'don_no_accountant_access' %}
@@ -678,7 +687,15 @@
                                 <tr>
                                     <td>{{ donation.contribution_date }}</td>
                                     {% if can_view_all_donations %}
-                                    <td>{{ donation.donor.full_name }}</td>
+                                    <td>
+                                        {% if donation.donation_type == 'tithe' and donation.donor %}
+                                            {{ donation.donor.full_name }}
+                                        {% elif donation.is_anonymous or not donation.donor %}
+                                            <span class="text-muted">{% church_t 'don_anonymous_label' %}</span>
+                                        {% else %}
+                                            {{ donation.donor.full_name }}
+                                        {% endif %}
+                                    </td>
                                     {% endif %}
                                     <td>{% church_dtype donation.donation_type %}</td>
                                     <td>{{ donation.amount|floatformat:2 }}</td>
@@ -701,7 +718,7 @@
                 </div>
                 <div class="panel-body">
                     <div style="margin-bottom: 10px;">
-                        <a href="{% url 'donations:report_preview' 'construction_pledges' %}" class="btn-back">{% church_t 'preview_report' %}</a>
+                        <a href="{% url 'donations:pledge_list_print' %}" class="btn-back" target="_blank">{% church_t 'pledge_preview_print' %}</a>
                         <a href="{% url 'donations:export_construction_pledges_csv' %}" class="btn-back">{% church_t 'download_report_csv' %}</a>
                     </div>
                     {% if can_manage_construction_pledges %}
@@ -748,7 +765,7 @@
                                                     <option value="{{ value }}"{% if value == 'cash' %} selected{% endif %}>{{ label }}</option>
                                                     {% endfor %}
                                                 </select>
-                                                <input type="date" name="contribution_date" class="form-control pledge-input" value="{% now 'Y-m-d' %}" required>
+                                                <input type="date" name="contribution_date" class="form-control pledge-input" max="{% now 'Y-m-d' %}" value="{% now 'Y-m-d' %}" required>
                                                 <input type="text" name="notes" class="form-control pledge-input" placeholder="{% church_t 'don_notes_ph' %}">
                                                 <button type="submit" class="btn-pledge-pay">{% church_t 'don_pledge_pay_btn' %}</button>
                                             </form>
@@ -787,46 +804,6 @@
 {% include 'church_layout/chart_histogram_assets.html' %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-        const sadakaInput = document.getElementById('id_sadaka');
-        const zakaInput = document.getElementById('id_zaka');
-        const malimbukoInput = document.getElementById('id_malimbuko');
-        const shukraniInput = document.getElementById('id_shukrani');
-        const constructionPaymentInput = document.getElementById('id_construction_payment_amount');
-        const zakaTypeInput = document.getElementById('id_zaka_type');
-        const assetWrap = document.getElementById('asset-zaka-wrap');
-        const jumlaTop = document.getElementById('sheet-jumla');
-        const jumlaBottom = document.getElementById('sheet-jumla-bottom');
-
-        function updateSheetTotal() {
-            const sadaka = parseFloat(sadakaInput?.value || 0) || 0;
-            const zaka = parseFloat(zakaInput?.value || 0) || 0;
-            const malimbuko = parseFloat(malimbukoInput?.value || 0) || 0;
-            const shukrani = parseFloat(shukraniInput?.value || 0) || 0;
-            const constructionPayment = parseFloat(constructionPaymentInput?.value || 0) || 0;
-            const isAssetZaka = zakaTypeInput?.value === 'asset';
-            const total = sadaka + (isAssetZaka ? 0 : zaka) + malimbuko + shukrani + constructionPayment;
-            if (jumlaTop) jumlaTop.textContent = total.toFixed(0);
-            if (jumlaBottom) jumlaBottom.textContent = total.toFixed(0);
-        }
-
-        [sadakaInput, zakaInput, malimbukoInput, shukraniInput, constructionPaymentInput].forEach((input) => {
-            if (input) {
-                input.addEventListener('input', updateSheetTotal);
-            }
-        });
-        if (zakaTypeInput) {
-            zakaTypeInput.addEventListener('change', function () {
-                if (assetWrap) {
-                    assetWrap.style.display = zakaTypeInput.value === 'asset' ? 'block' : 'none';
-                }
-                updateSheetTotal();
-            });
-            if (assetWrap) {
-                assetWrap.style.display = zakaTypeInput.value === 'asset' ? 'block' : 'none';
-            }
-        }
-        updateSheetTotal();
-
         const donationCtx = document.getElementById('donationTrendChart');
         const registrationCtx = document.getElementById('registrationTrendChart');
         const donationLabels = JSON.parse('{{ donation_chart_labels|escapejs }}');

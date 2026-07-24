@@ -102,7 +102,7 @@ class CustomLoginView(LoginView):
         blocked, retry = is_rate_limited('login', self.request, username)
         pending_approval = any(
             getattr(error, 'code', None) == 'pending_approval'
-            for error in form.non_field_errors.as_data()
+            for error in form.non_field_errors().as_data()
         )
 
         if not pending_approval:

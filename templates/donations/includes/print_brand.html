@@ -18,6 +18,14 @@
     letter-spacing: 0.4px;
     color: #000;
   }
+  .print-church-subtitle {
+    margin: 4px 0 0;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.35px;
+    color: #333;
+    text-transform: uppercase;
+  }
   @media print {
     .print-church-logo {
       height: 64px;
@@ -36,5 +44,8 @@
   >
   {% if church_name %}
   <p class="print-church-name">{{ church_name }}</p>
+  {% endif %}
+  {% if church_subtitle %}
+  <p class="print-church-subtitle">{{ church_subtitle }}</p>
   {% endif %}
 </header>

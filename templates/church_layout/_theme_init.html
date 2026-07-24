@@ -1,0 +1,10 @@
+<script>
+(function () {
+  try {
+    var theme = localStorage.getItem('phm_theme');
+    document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
+  } catch (e) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>

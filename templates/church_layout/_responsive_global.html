@@ -18,9 +18,9 @@ body.nav-open {
   height: 52px;
   border-radius: 50%;
   border: 2px solid rgba(200, 168, 75, 0.55);
-  background: linear-gradient(145deg, #0d2340, #152333);
-  color: #c8a84b;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  background: var(--cm-fab-bg);
+  color: var(--cm-gold);
+  box-shadow: 0 8px 24px var(--cm-shadow);
   align-items: center;
   justify-content: center;
   cursor: pointer;
@@ -64,17 +64,17 @@ body.nav-open {
   gap: 1.25rem;
 }
 .chart-panel {
-  background: #152333;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--cm-surface);
+  border: 1px solid var(--cm-border);
   border-radius: 12px;
   overflow: hidden;
 }
 .chart-panel .panel-hd {
   padding: 0.85rem 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--cm-border-subtle);
   font-family: 'Cinzel', serif;
   font-size: 14px;
-  color: #c8a84b;
+  color: var(--cm-gold);
 }
 
 @media (max-width: 992px) {

@@ -6,9 +6,9 @@
   height: 300px;
   min-height: 220px;
   padding: 0.5rem 0.25rem 0;
-  background: linear-gradient(165deg, rgba(15, 30, 46, 0.55) 0%, rgba(21, 35, 51, 0.2) 100%);
+  background: linear-gradient(165deg, var(--cm-chart-bg-top, rgba(15, 30, 46, 0.55)) 0%, var(--cm-chart-bg-bottom, rgba(21, 35, 51, 0.2)) 100%);
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--cm-border-subtle, rgba(255, 255, 255, 0.05));
 }
 .chart-wrap canvas { display: block; width: 100% !important; height: 100% !important; }
 .chart-empty-note {
@@ -16,7 +16,7 @@
   padding: 2.5rem 1rem;
   text-align: center;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--cm-text-muted, rgba(255, 255, 255, 0.45));
 }
 @media (max-width: 576px) {
   .chart-wrap { height: 240px; min-height: 200px; }

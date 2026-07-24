@@ -1,0 +1,97 @@
+{% load i18n_church %}
+<style>
+.theme-pill-container {
+  display: inline-flex;
+  align-items: center;
+  background: var(--cm-pill-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--cm-pill-border, rgba(255, 255, 255, 0.12));
+  padding: 1px;
+  border-radius: 999px;
+  position: relative;
+  user-select: none;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.theme-pill-option {
+  position: relative;
+  z-index: 2;
+  padding: 2px 7px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--cm-text-nav, rgba(255, 255, 255, 0.65));
+  background: transparent;
+  border: none;
+  transition: color 0.2s ease;
+  letter-spacing: 0.2px;
+}
+
+.theme-pill-option:hover {
+  color: var(--cm-text, #fff);
+}
+
+.theme-pill-option.active {
+  color: var(--cm-gold, #c8a84b);
+}
+
+.theme-pill-slider {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  height: calc(100% - 2px);
+  width: calc(50% - 1px);
+  background: var(--cm-pill-active-bg, rgba(200, 168, 75, 0.18));
+  border: 1px solid var(--cm-pill-active-border, rgba(200, 168, 75, 0.28));
+  border-radius: 999px;
+  z-index: 1;
+  transition: transform 0.25s ease;
+}
+
+.theme-pill-container[data-theme-state="light"] .theme-pill-slider {
+  transform: translateX(100%);
+}
+
+.topnav-actions .theme-pill-container {
+  margin: 0;
+}
+</style>
+
+<div class="theme-pill-container" id="themePillContainer" data-theme-state="dark" aria-label="{% church_t 'theme_label' %}" title="{% church_t 'theme_label' %}">
+  <button type="button" class="theme-pill-option active" data-theme-value="dark" title="{% church_t 'theme_dark' %}">{% church_t 'theme_dark_short' %}</button>
+  <button type="button" class="theme-pill-option" data-theme-value="light" title="{% church_t 'theme_light' %}">{% church_t 'theme_light_short' %}</button>
+  <div class="theme-pill-slider"></div>
+</div>
+
+<script>
+(function () {
+  function applyTheme(theme, save) {
+    var isLight = theme === 'light';
+    document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+    if (save !== false) {
+      try { localStorage.setItem('phm_theme', isLight ? 'light' : 'dark'); } catch (e) {}
+    }
+    var container = document.getElementById('themePillContainer');
+    if (!container) return;
+    container.setAttribute('data-theme-state', isLight ? 'light' : 'dark');
+    container.querySelectorAll('.theme-pill-option').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-theme-value') === (isLight ? 'light' : 'dark'));
+    });
+    document.dispatchEvent(new CustomEvent('phm-theme-change', { detail: { theme: isLight ? 'light' : 'dark' } }));
+  }
+
+  var saved = 'dark';
+  try { saved = localStorage.getItem('phm_theme') || 'dark'; } catch (e) {}
+  applyTheme(saved, false);
+
+  document.querySelectorAll('.theme-pill-option').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      applyTheme(this.getAttribute('data-theme-value'), true);
+    });
+  });
+
+  window.phmSetTheme = applyTheme;
+})();
+</script>

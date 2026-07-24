@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n_church %}
 
 {% block title %}{{ report_title }}{% endblock %}
 
@@ -12,6 +13,7 @@
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    align-items: center;
   }
   .print-toolbar .btn {
     border: none;
@@ -102,20 +104,21 @@
 
 {% block content %}
 <div class="print-toolbar">
-  <button type="button" class="btn btn-print" onclick="window.print()">Chapisha / PDF</button>
-  <a class="btn btn-back" href="{% url 'members:university_student_list' %}?tab={{ tab }}{% if search_q %}&amp;q={{ search_q|urlencode }}{% endif %}">Rudi Orodha</a>
+  {% include 'members/language_selector.html' %}
+  <button type="button" class="btn btn-print" onclick="window.print()">{% church_t 'uni_print_pdf' %}</button>
+  <a class="btn btn-back" href="{% url 'members:university_student_list' %}?tab={{ tab }}{% if search_q %}&amp;q={{ search_q|urlencode }}{% endif %}">{% church_t 'uni_back_list' %}</a>
 </div>
 <div class="print-page">
   {% include 'donations/includes/print_brand.html' %}
   <h2 class="report-title">{{ report_title }}</h2>
-  <p class="report-meta">Tarehe ya chapisho: {{ report_date|date:"d/m/Y" }}</p>
+  <p class="report-meta">{% church_t 'uni_print_date' %}: {{ report_date|date:"d/m/Y" }}</p>
   <div class="summary-line">
-    <span><strong>Orodha:</strong> {{ tab_label }}</span>
-    <span><strong>Jumla:</strong> {{ records|length }}</span>
-    {% if search_q %}<span><strong>Tafuta:</strong> {{ search_q }}</span>{% endif %}
-    <span><strong>Wanaosomea:</strong> {{ counts.studying }}</span>
-    <span><strong>Waliohitimu:</strong> {{ counts.completed }}</span>
-    <span><strong>Mwaka wa mwisho ({{ current_year }}):</strong> {{ counts.final_year }}</span>
+    <span><strong>{% church_t 'uni_print_list_label' %}:</strong> {{ tab_label }}</span>
+    <span><strong>{% church_t 'uni_print_total' %}:</strong> {{ records|length }}</span>
+    {% if search_q %}<span><strong>{% church_t 'uni_print_search' %}:</strong> {{ search_q }}</span>{% endif %}
+    <span><strong>{% church_t 'uni_tab_studying' %}:</strong> {{ counts.studying }}</span>
+    <span><strong>{% church_t 'uni_completed_label' %}:</strong> {{ counts.completed }}</span>
+    <span><strong>{% church_t 'uni_final_year' %} ({{ current_year }}):</strong> {{ counts.final_year }}</span>
   </div>
 
   {% if records %}
@@ -123,16 +126,16 @@
     <thead>
       <tr>
         <th class="center">#</th>
-        <th>Mwanachama</th>
-        <th>Simu</th>
-        <th>Chuo</th>
-        <th>Kozi</th>
-        <th>Ndaki</th>
-        <th>Kiwango</th>
-        <th class="center">Alianza</th>
-        <th class="center">Kutarajiwa</th>
-        <th class="center">Alihitimu</th>
-        <th>Hali</th>
+        <th>{% church_t 'uni_col_member' %}</th>
+        <th>{% church_t 'uni_col_phone' %}</th>
+        <th>{% church_t 'uni_col_institution' %}</th>
+        <th>{% church_t 'uni_col_course' %}</th>
+        <th>{% church_t 'uni_col_faculty' %}</th>
+        <th>{% church_t 'uni_col_level' %}</th>
+        <th class="center">{% church_t 'uni_col_started' %}</th>
+        <th class="center">{% church_t 'uni_col_expected' %}</th>
+        <th class="center">{% church_t 'uni_col_graduated' %}</th>
+        <th>{% church_t 'uni_col_status' %}</th>
       </tr>
     </thead>
     <tbody>
@@ -144,17 +147,17 @@
         <td>{{ r.institution }}</td>
         <td>{{ r.course }}</td>
         <td>{{ r.faculty|default:"—" }}</td>
-        <td>{{ r.get_level_display }}</td>
+        <td>{% church_uni_level r.level %}</td>
         <td class="center">{% if r.year_started %}{{ r.year_started }}{% else %}—{% endif %}</td>
         <td class="center">{% if r.expected_completion_year %}{{ r.expected_completion_year }}{% else %}—{% endif %}</td>
         <td class="center">{% if r.year_completed %}{{ r.year_completed }}{% else %}—{% endif %}</td>
-        <td>{{ r.get_status_display }}</td>
+        <td>{% church_uni_status r.status %}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
   {% else %}
-  <p style="text-align:center;font-size:12px;">Hakuna rekodi kwa chaguo hili.</p>
+  <p style="text-align:center;font-size:12px;">{% church_t 'uni_no_records_filter' %}</p>
   {% endif %}
 </div>
 {% endblock %}

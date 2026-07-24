@@ -1,0 +1,330 @@
+{% extends 'church_layout/app_shell.html' %}
+{% load i18n_church %}
+
+{% block title %}{% church_t 'sunday_list_title' %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_t 'sunday_list_title' %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{% church_t 'sunday_list_subtitle' %}</p>{% endblock %}
+
+{% block page_header_actions %}
+<a href="{% url 'donations:offering_list_print' %}" class="btn-back" target="_blank">{% church_t 'sunday_preview_print' %}</a>
+<a href="{% url 'donations:export_offering_csv' %}" class="btn-back">{% church_t 'sunday_download_csv' %}</a>
+<a href="{% url 'donations:home' %}" class="btn-back">{% church_t 'back_to_donations' %}</a>
+{% endblock %}
+
+{% block page_extra_css %}
+<style>
+    .btn-back {
+        display: inline-flex; align-items: center; text-decoration: none; color: #fff;
+        font-size: 12px; padding: 7px 11px; border-radius: 7px;
+        border: 1px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.08); margin-right: 0.35rem;
+    }
+
+    .sunday-layout { display: flex; flex-direction: column; gap: 1.25rem; }
+
+    .sunday-hero {
+        background: linear-gradient(135deg, #1a3a5c 0%, #0f2840 45%, #1a4a2e 100%);
+        border: 1px solid rgba(200, 168, 75, 0.35);
+        border-radius: 14px;
+        padding: 1.35rem 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem 1.5rem;
+        box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+    }
+    .sunday-hero-icon {
+        width: 52px; height: 52px; border-radius: 12px;
+        background: rgba(200, 168, 75, 0.18);
+        border: 1px solid rgba(200, 168, 75, 0.45);
+        display: flex; align-items: center; justify-content: center;
+        color: #f2d27a; flex-shrink: 0;
+    }
+    .sunday-hero-icon svg { width: 28px; height: 28px; stroke-width: 1.8; }
+    .sunday-hero-text { flex: 1; min-width: 200px; }
+    .sunday-hero-text h3 {
+        margin: 0 0 4px; font-size: 1.05rem; color: #fff; font-weight: 700;
+    }
+    .sunday-hero-text p {
+        margin: 0; font-size: 13px; color: rgba(255,255,255,0.72); line-height: 1.45;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0.85rem;
+    }
+    .stat-card {
+        background: #152333;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 14px 16px;
+    }
+    .stat-card.highlight {
+        border-color: rgba(200, 168, 75, 0.45);
+        background: linear-gradient(145deg, rgba(200,168,75,0.12), rgba(21,35,51,0.95));
+    }
+    .stat-label {
+        font-size: 10px; font-weight: 700; letter-spacing: 0.65px;
+        text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 6px;
+    }
+    .stat-value {
+        font-size: 1.35rem; font-weight: 700; color: #f2d27a;
+        font-variant-numeric: tabular-nums; line-height: 1.2;
+    }
+    .stat-meta { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+    .entry-card {
+        background: #152333;
+        border: 1px solid rgba(200, 168, 75, 0.28);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+    }
+    .entry-card-header {
+        padding: 14px 18px;
+        background: rgba(11, 25, 42, 0.6);
+        border-bottom: 1px solid rgba(200, 168, 75, 0.2);
+    }
+    .entry-card-header h4 {
+        margin: 0; font-size: 13px; color: #f2d27a;
+        text-transform: uppercase; letter-spacing: 0.7px;
+    }
+    .entry-card-header p {
+        margin: 6px 0 0; font-size: 12px; color: rgba(255,255,255,0.62);
+    }
+    .entry-card-body { padding: 18px; }
+
+    .entry-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        align-items: end;
+    }
+    .entry-form-grid .amount-block {
+        grid-column: 1 / -1;
+        background: rgba(11, 25, 42, 0.55);
+        border: 1px solid rgba(200, 168, 75, 0.25);
+        border-radius: 12px;
+        padding: 16px 18px;
+    }
+    .amount-block label {
+        display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.7px;
+        text-transform: uppercase; color: #f2d27a; margin-bottom: 8px;
+    }
+    .sunday-amount-input {
+        width: 100%;
+        font-size: 2rem !important;
+        font-weight: 700 !important;
+        text-align: center !important;
+        padding: 16px !important;
+        background: #0a1624 !important;
+        border: 2px solid rgba(200, 168, 75, 0.4) !important;
+        border-radius: 10px !important;
+        color: #fff !important;
+        font-variant-numeric: tabular-nums;
+    }
+    .sunday-amount-input:focus {
+        border-color: #c8a84b !important;
+        box-shadow: 0 0 0 3px rgba(200, 168, 75, 0.2);
+        outline: none;
+    }
+    .field label {
+        display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.6px;
+        text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 4px;
+    }
+    .field .form-control, .field .form-select {
+        width: 100%; background: #0f1e2e; border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 8px; padding: 10px 12px; color: #fff; font-size: 15px;
+    }
+    .field-span2 { grid-column: span 2; }
+    .date-help {
+        margin: 6px 0 0;
+        font-size: 11px;
+        color: rgba(255,255,255,0.55);
+        line-height: 1.4;
+    }
+    .entry-errors { color: #ff8787; font-size: 12px; margin-bottom: 12px; }
+    .btn-save-sunday {
+        grid-column: 1 / -1;
+        background: linear-gradient(135deg, #c8a84b, #8a6520);
+        border: none; border-radius: 10px;
+        padding: 14px 20px; color: #fff;
+        font-size: 13px; font-weight: 700; letter-spacing: 0.8px;
+        text-transform: uppercase; cursor: pointer;
+        box-shadow: 0 4px 14px rgba(200, 168, 75, 0.35);
+        transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-save-sunday:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(200, 168, 75, 0.45);
+    }
+
+    .records-panel {
+        background: #152333;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .records-header {
+        padding: 12px 18px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        font-size: 12px; font-weight: 700; color: #f2d27a;
+        text-transform: uppercase; letter-spacing: 0.6px;
+    }
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 560px; }
+    thead th {
+        background: rgba(11, 25, 42, 0.75); color: #f2d27a; font-size: 11px;
+        text-transform: uppercase; letter-spacing: 0.6px;
+        border-bottom: 1px solid rgba(200,168,75,0.5); padding: 10px 12px; text-align: left;
+    }
+    tbody td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 13px; }
+    tbody tr:nth-child(odd) td { background: rgba(255,255,255,0.03); }
+    tbody tr:nth-child(even) td { background: rgba(255,255,255,0.06); }
+    .amount-cell { font-variant-numeric: tabular-nums; font-weight: 600; color: #e8f4ea; }
+    .muted { color: rgba(255,255,255,0.55); }
+    .pagination { display: flex; gap: 8px; justify-content: center; padding: 14px; }
+    .pagination a, .pagination span {
+        min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 6px; text-decoration: none; color: #dce8fb; border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.07); font-size: 12px;
+    }
+    .pagination .active { background: #c8a84b; color: #0f1e2e; border-color: #c8a84b; }
+
+    @media (max-width: 576px) {
+        .entry-form-grid { grid-template-columns: 1fr; }
+        .field-span2, .btn-save-sunday { grid-column: span 1; }
+        .sunday-amount-input { font-size: 1.6rem !important; }
+    }
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="sunday-layout">
+
+    <div class="sunday-hero">
+        <div class="sunday-hero-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </div>
+        <div class="sunday-hero-text">
+            <h3>{% church_t 'sunday_hero_title' %}</h3>
+            <p>{% church_t 'sunday_hero_desc' %}</p>
+        </div>
+    </div>
+
+    <div class="stat-grid">
+        <div class="stat-card highlight">
+            <div class="stat-label">{% church_t 'sunday_stat_this_week' %}</div>
+            <div class="stat-value">TZS {{ this_sunday_total|floatformat:0 }}</div>
+            <div class="stat-meta">{{ this_sunday_date|date:"d/m/Y" }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">{% church_t 'sunday_stat_month' %}</div>
+            <div class="stat-value">TZS {{ month_total|floatformat:0 }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">{% church_t 'sunday_stat_all' %}</div>
+            <div class="stat-value">TZS {{ all_total|floatformat:0 }}</div>
+            <div class="stat-meta">{% church_t 'sunday_stat_records' %}: {{ record_count }}</div>
+        </div>
+    </div>
+
+    {% if can_enter and entry_form %}
+    <div class="entry-card">
+        <div class="entry-card-header">
+            <h4>{% church_t 'sunday_enter_section' %}</h4>
+            <p>{% church_t 'sunday_enter_help' %}</p>
+        </div>
+        <div class="entry-card-body">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="sunday_offering_entry">
+                {% if entry_form.errors %}
+                <div class="entry-errors">
+                    {% for error in entry_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                </div>
+                {% endif %}
+                <div class="entry-form-grid">
+                    <div class="amount-block">
+                        <label for="{{ entry_form.amount.id_for_label }}">{{ entry_form.amount.label }}</label>
+                        {{ entry_form.amount }}
+                    </div>
+                    <div class="field">
+                        <label for="{{ entry_form.contribution_date.id_for_label }}">{{ entry_form.contribution_date.label }}</label>
+                        {{ entry_form.contribution_date }}
+                        <p class="date-help">{% church_t 'contrib_date_past_ok' %}</p>
+                    </div>
+                    <div class="field">
+                        <label for="{{ entry_form.service_session.id_for_label }}">{{ entry_form.service_session.label }}</label>
+                        {{ entry_form.service_session }}
+                    </div>
+                    <div class="field">
+                        <label for="{{ entry_form.payment_method.id_for_label }}">{{ entry_form.payment_method.label }}</label>
+                        {{ entry_form.payment_method }}
+                    </div>
+                    <div class="field field-span2">
+                        <label for="{{ entry_form.notes.id_for_label }}">{{ entry_form.notes.label }}</label>
+                        {{ entry_form.notes }}
+                    </div>
+                    <button type="submit" class="btn-save-sunday">{% church_t 'sunday_save_btn' %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="records-panel">
+        <div class="records-header">{% church_t 'sunday_records_title' %}</div>
+        <div class="tbl-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{% church_t 'tithe_col_no' %}</th>
+                        <th>{% church_t 'table_date' %}</th>
+                        <th>{% church_t 'don_col_amount' %}</th>
+                        <th>{% church_t 'payment_method' %}</th>
+                        <th>{% church_t 'don_col_details' %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in contributions %}
+                    <tr>
+                        <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                        <td>{{ d.contribution_date|date:"d/m/Y" }}</td>
+                        <td class="amount-cell">TZS {{ d.amount|floatformat:0 }}</td>
+                        <td>{% church_pmethod d.payment_method %}</td>
+                        <td>{% if d.notes %}{{ d.notes|truncatewords:10 }}{% else %}<span class="muted">—</span>{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="muted" style="padding:16px;">{% church_t 'sunday_no_records' %}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if is_paginated %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">←</a>{% endif %}
+            {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}<span class="active">{{ num }}</span>
+                {% else %}<a href="?page={{ num }}">{{ num }}</a>{% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">→</a>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block page_extra_js %}
+{% if can_enter and entry_form %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const amountInput = document.querySelector('.sunday-amount-input');
+    if (amountInput) {
+        amountInput.focus();
+        amountInput.select();
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

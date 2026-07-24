@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load i18n_church %}
+
+{% block title %}{% church_t page_keys.title %}{% endblock %}
+
+{% block extra_css %}
+<style>
+  body { background: #e8e8e8; }
+  .print-toolbar { max-width: 900px; margin: 16px auto 0; padding: 0 12px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .print-toolbar .btn { border: none; border-radius: 6px; padding: 9px 16px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 13px; }
+  .btn-print { background: #1a3a5c; color: #fff; }
+  .btn-back { background: #fff; color: #333; border: 1px solid #ccc; }
+  .print-page { max-width: 900px; margin: 12px auto 24px; padding: 20px 24px; background: #fff; box-shadow: 0 2px 16px rgba(0,0,0,0.12); color: #000; font-family: Arial, Helvetica, sans-serif; }
+  .report-title { text-align: center; font-weight: 700; font-size: 14px; margin: 0 0 4px; }
+  .report-meta { text-align: center; font-size: 12px; margin: 0 0 14px; color: #333; }
+  .summary-line { font-size: 11px; margin: 0 0 12px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  .data-table th, .data-table td { border: 1px solid #000; padding: 6px 8px; vertical-align: top; }
+  .data-table th { background: #f5f5f5; font-weight: 700; text-transform: uppercase; font-size: 9px; }
+  .right { text-align: right; }
+  .center { text-align: center; }
+  @media print {
+    body { background: #fff !important; margin: 0; }
+    .print-toolbar, .navbar, .alert, .container.mt-3 { display: none !important; }
+    .print-page { max-width: none; margin: 0; padding: 10mm 12mm; box-shadow: none; }
+    @page { margin: 8mm; size: landscape; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="print-toolbar">
+  {% include 'members/language_selector.html' %}
+  <button type="button" class="btn btn-print" onclick="window.print()">{% church_t page_keys.download_pdf %}</button>
+  <a class="btn btn-back" href="{% url list_url_name %}">{% church_t page_keys.back_list %}</a>
+</div>
+<div class="print-page">
+  {% include 'donations/includes/print_brand.html' %}
+  <h2 class="report-title">{% church_t page_keys.print_title %}</h2>
+  <p class="report-meta">{% church_t page_keys.print_date %}: {{ report_date|date:"d/m/Y" }}</p>
+  <p class="summary-line">
+    <span><strong>{% church_t page_keys.total_records %}:</strong> {{ total_count }}</span>
+    <span><strong>{% church_t page_keys.total_cash %}:</strong> TZS {{ total_money|floatformat:0 }}</span>
+  </p>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th class="center">{% church_t 'tithe_col_no' %}</th>
+        <th>{% church_t 'table_date' %}</th>
+        <th class="right">{% church_t 'don_col_amount' %}</th>
+        <th>{% church_t 'payment_method' %}</th>
+        <th>{% church_t 'don_col_details' %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in contributions %}
+      <tr>
+        <td class="center">{{ forloop.counter }}</td>
+        <td>{{ d.contribution_date|date:"d/m/Y" }}</td>
+        <td class="right">{{ d.amount|floatformat:0 }}</td>
+        <td>{% church_pmethod d.payment_method %}</td>
+        <td>{{ d.notes|default:"—" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="center">{% church_t page_keys.no_records %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

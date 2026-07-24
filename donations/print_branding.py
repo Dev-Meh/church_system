@@ -24,8 +24,14 @@ def church_print_context(**extra):
         'CHURCH_PRINT_NAME',
         'PENTECOSTAL HOLINESS MISSION',
     )
+    church_subtitle = getattr(
+        settings,
+        'CHURCH_PRINT_SUBTITLE',
+        'Iyumbu PHM-ARCC',
+    )
     return {
         'church_name': church_name,
+        'church_subtitle': church_subtitle,
         'church_logo_url': get_church_logo_url(),
         **extra,
     }

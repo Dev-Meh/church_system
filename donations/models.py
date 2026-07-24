@@ -180,6 +180,16 @@ class Donation(models.Model):
             return ""
         return f"{int(self.amount)} TZS"
 
+    @property
+    def malimbuko_miladi_source(self):
+        """Miladi ya kanisa kutoka maelezo ya malimbuko."""
+        if not self.notes or 'Miladi:' not in self.notes:
+            return ''
+        for part in self.notes.split('.'):
+            if 'Miladi:' in part:
+                return part.split('Miladi:', 1)[-1].strip()
+        return ''
+
 
 class DonationNotice(models.Model):
     """Time-bound donation notice shown to members."""

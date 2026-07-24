@@ -1,0 +1,152 @@
+{% extends 'church_layout/app_shell.html' %}
+{% load i18n_church %}
+
+{% block title %}{% church_t page_keys.title %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_t page_keys.title %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{% church_t page_keys.subtitle %}</p>{% endblock %}
+
+{% block page_header_actions %}
+<a href="{% url print_url %}" class="btn-back" target="_blank">{% church_t page_keys.preview_print %}</a>
+<a href="{% url export_url %}" class="btn-back">{% church_t page_keys.download_csv %}</a>
+<a href="{% url 'donations:home' %}" class="btn-back">{% church_t 'back_to_donations' %}</a>
+{% endblock %}
+
+{% block page_extra_css %}
+<style>
+    .btn-back {
+        display: inline-flex; align-items: center; text-decoration: none; color: #fff;
+        font-size: 12px; padding: 7px 11px; border-radius: 7px;
+        border: 1px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.08); margin-right: 0.35rem;
+    }
+    .panel { background: #152333; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 560px; }
+    thead th {
+        background: rgba(11, 25, 42, 0.75); color: #f2d27a; font-size: 11px;
+        text-transform: uppercase; letter-spacing: 0.6px;
+        border-bottom: 1px solid rgba(200,168,75,0.5); padding: 10px 12px; text-align: left;
+    }
+    tbody td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 13px; }
+    tbody tr:nth-child(odd) td { background: rgba(255,255,255,0.03); }
+    tbody tr:nth-child(even) td { background: rgba(255,255,255,0.06); }
+    .muted { color: rgba(255,255,255,0.6); }
+    .amount-cell { font-variant-numeric: tabular-nums; font-weight: 600; }
+    .pagination { display: flex; gap: 8px; justify-content: center; padding: 14px; }
+    .pagination a, .pagination span {
+        min-width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 6px; text-decoration: none; color: #dce8fb; border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.07); font-size: 12px;
+    }
+    .pagination .active { background: #c8a84b; color: #0f1e2e; border-color: #c8a84b; }
+    .entry-panel { padding: 16px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(11, 25, 42, 0.35); }
+    .entry-panel h4 { margin: 0 0 6px; font-size: 13px; color: #f2d27a; text-transform: uppercase; letter-spacing: 0.6px; }
+    .entry-help { font-size: 12px; color: rgba(255,255,255,0.65); margin: 0 0 14px; }
+    .entry-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; align-items: end; }
+    .entry-field label {
+        display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.6px;
+        text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 4px;
+    }
+    .entry-field .form-control, .entry-field .form-select {
+        width: 100%; background: #0f1e2e; border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 8px; padding: 10px 12px; color: #fff; font-size: 15px;
+    }
+    .entry-field .sheet-amount-input { text-align: right; font-variant-numeric: tabular-nums; }
+    .btn-save {
+        background: linear-gradient(135deg, #c8a84b, #a07820); border: none; border-radius: 8px;
+        padding: 11px 18px; color: #fff; font-size: 12px; font-weight: 700;
+        text-transform: uppercase; cursor: pointer; width: 100%;
+    }
+    .entry-field-span2 { grid-column: span 2; }
+    .date-help { margin: 4px 0 0; font-size: 11px; color: rgba(255,255,255,0.55); line-height: 1.4; }
+    .entry-errors { color: #ff8787; font-size: 12px; margin-bottom: 10px; }
+    .summary-bar {
+        padding: 12px 18px; font-size: 12px; color: rgba(255,255,255,0.75);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        display: flex; gap: 20px; flex-wrap: wrap;
+    }
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="panel">
+    {% if can_enter and entry_form %}
+    <div class="entry-panel">
+        <h4>{% church_t page_keys.enter_section %}</h4>
+        <p class="entry-help">{% church_t page_keys.enter_help %}</p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="{{ entry_action }}">
+            {% if entry_form.errors %}
+            <div class="entry-errors">
+                {% for error in entry_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+            </div>
+            {% endif %}
+            <div class="entry-grid">
+                <div class="entry-field">
+                    <label for="{{ entry_form.contribution_date.id_for_label }}">{{ entry_form.contribution_date.label }}</label>
+                    {{ entry_form.contribution_date }}
+                    <p class="date-help">{% church_t 'contrib_date_past_ok' %}</p>
+                </div>
+                <div class="entry-field">
+                    <label for="{{ entry_form.payment_method.id_for_label }}">{{ entry_form.payment_method.label }}</label>
+                    {{ entry_form.payment_method }}
+                </div>
+                <div class="entry-field">
+                    <label for="{{ entry_form.amount.id_for_label }}">{{ entry_form.amount.label }}</label>
+                    {{ entry_form.amount }}
+                </div>
+                <div class="entry-field entry-field-span2">
+                    <label for="{{ entry_form.notes.id_for_label }}">{{ entry_form.notes.label }}</label>
+                    {{ entry_form.notes }}
+                </div>
+                <div class="entry-field">
+                    <button type="submit" class="btn-save">{% church_t page_keys.save_btn %}</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="summary-bar">
+        <span><strong>{% church_t page_keys.total_records %}:</strong> {{ total_count }}</span>
+        <span><strong>{% church_t page_keys.total_cash %}:</strong> TZS {{ total_money|floatformat:0 }}</span>
+    </div>
+
+    <div class="tbl-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>{% church_t 'tithe_col_no' %}</th>
+                    <th>{% church_t 'table_date' %}</th>
+                    <th>{% church_t 'don_col_amount' %}</th>
+                    <th>{% church_t 'payment_method' %}</th>
+                    <th>{% church_t 'don_col_details' %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in contributions %}
+                <tr>
+                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                    <td>{{ d.contribution_date }}</td>
+                    <td class="amount-cell">TZS {{ d.amount|floatformat:0 }}</td>
+                    <td>{% church_pmethod d.payment_method %}</td>
+                    <td>{% if d.notes %}{{ d.notes|truncatewords:12 }}{% else %}<span class="muted">—</span>{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="muted">{% church_t page_keys.no_records %}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">←</a>{% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}<span class="active">{{ num }}</span>
+            {% else %}<a href="?page={{ num }}">{{ num }}</a>{% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">→</a>{% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
