@@ -28,10 +28,7 @@ class PlayerDashboardView(LoginRequiredMixin, ListView):
         content_items = []
         
         # Get upcoming events
-        upcoming_events = Event.objects.filter(
-            is_published=True,
-            start_date__gt=timezone.now()
-        ).order_by('start_date')[:5]
+        upcoming_events = Event.objects.active().order_by('start_date')[:5]
         
         for event in upcoming_events:
             # Check if user is registered
@@ -142,10 +139,7 @@ class PlayerDashboardView(LoginRequiredMixin, ListView):
         context['user_media_count'] = 0  # Placeholder
         context['favorite_media'] = []  # Placeholder
         
-        context['upcoming_events_count'] = Event.objects.filter(
-            is_published=True,
-            start_date__gt=timezone.now()
-        ).count()
+        context['upcoming_events_count'] = Event.objects.active().count()
         
         context['sermons_count'] = Sermon.objects.filter(is_published=True).count()
         
@@ -164,10 +158,7 @@ class PlayerDashboardView(LoginRequiredMixin, ListView):
             is_published=True, is_featured=True
         ).first()
         
-        context['featured_event'] = Event.objects.filter(
-            is_published=True,
-            start_date__gt=timezone.now()
-        ).order_by('start_date').first()
+        context['featured_event'] = Event.objects.active().order_by('start_date').first()
         
         return context
 

@@ -92,7 +92,7 @@ def app_shell_context(request):
     return {
         'active_nav': resolve_active_nav(app_name, url_name),
         'show_content_player_nav': show_content_player_nav,
-        'nav_events_count': Event.objects.filter(is_published=True).count(),
+        'nav_events_count': Event.objects.active().count(),
         'nav_sermons_count': Sermon.objects.filter(is_published=True).count(),
         'nav_prayers_count': PrayerRequest.objects.filter(
             visibility__in=['public', 'leadership'],

@@ -475,29 +475,39 @@ class ChurchUserUpdateForm(forms.ModelForm):
 
 
 class ChurchGroupForm(forms.ModelForm):
+    def __init__(self, *args, language="en", **kwargs):
+        super().__init__(*args, **kwargs)
+        from .language_utils import get_translation as t
+
+        lang = language or "en"
+
+        self.fields["name"].label = t("grp_form_name", lang)
+        self.fields["group_type"].label = t("grp_form_type", lang)
+        self.fields["description"].label = t("grp_description", lang)
+        self.fields["leader"].label = t("grp_form_leader", lang)
+        self.fields["is_active"].label = t("grp_form_is_active", lang)
+
+        self.fields["name"].widget.attrs.update({
+            "class": "form-control",
+            "placeholder": t("grp_form_name_ph", lang),
+        })
+        self.fields["description"].widget.attrs.update({
+            "rows": 3,
+            "class": "form-control",
+            "placeholder": t("grp_form_desc_ph", lang),
+        })
+        self.fields["group_type"].widget.attrs["class"] = "form-control"
+        self.fields["leader"].widget.attrs["class"] = "form-control"
+        self.fields["group_type"].choices = [
+            (code, t(f"grp_type_{code}", lang))
+            for code, _ in ChurchGroup.GROUP_TYPE_CHOICES
+        ]
+
     class Meta:
         model = ChurchGroup
         fields = ["name", "group_type", "description", "leader", "is_active"]
         widgets = {
-            "description": forms.Textarea(attrs={
-                "rows": 3,
-                "class": "form-control",
-                "placeholder": "Maelezo mafupi: shughuli, siku za mkutano, n.k.",
-            }),
-            "name": forms.TextInput(attrs={
-                "class": "form-control",
-                "placeholder": "Mfano: Kwaya ya PHM-ARCC",
-            }),
-            "group_type": forms.Select(attrs={"class": "form-control"}),
-            "leader": forms.Select(attrs={"class": "form-control"}),
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-        }
-        labels = {
-            "name": "Jina la kundi",
-            "group_type": "Aina ya kundi",
-            "description": "Maelezo",
-            "leader": "Mwenyekiti wa kundi",
-            "is_active": "Kundi linaendelea (hai)",
         }
 
 

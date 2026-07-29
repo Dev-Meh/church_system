@@ -411,4 +411,39 @@ html:not([data-theme="light"]) .topnav-actions .btn-save {
   background: rgba(200, 168, 75, 0.15) !important;
   border: 1px solid rgba(200, 168, 75, 0.35) !important;
 }
+
+/* Dark theme — selects, inputs & dropdown options readable everywhere */
+html:not([data-theme="light"]) .page-body select,
+html:not([data-theme="light"]) .page-body .form-control,
+html:not([data-theme="light"]) .page-body .form-select,
+html:not([data-theme="light"]) .page-body input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+html:not([data-theme="light"]) .page-body textarea {
+  background-color: var(--cm-input-bg) !important;
+  color: #ffffff !important;
+  border-color: var(--cm-input-border) !important;
+}
+
+html:not([data-theme="light"]) .page-body select option,
+html:not([data-theme="light"]) .page-body select optgroup,
+html:not([data-theme="light"]) .form-control option,
+html:not([data-theme="light"]) .form-select option {
+  background-color: #0f1e2e !important;
+  color: #ffffff !important;
+}
+
+html:not([data-theme="light"]) .page-body select option:checked,
+html:not([data-theme="light"]) .page-body select option:hover,
+html:not([data-theme="light"]) .page-body select option:focus,
+html:not([data-theme="light"]) .form-control option:checked,
+html:not([data-theme="light"]) .form-select option:checked {
+  background-color: #1a4a7a !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="light"] .page-body select option,
+html[data-theme="light"] .form-control option,
+html[data-theme="light"] .form-select option {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+}
 </style>

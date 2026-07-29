@@ -19,9 +19,9 @@
       <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
       <div class="user-role">
         {% if user.role == 'pastor' %}{% church_t 'pastor' %}
-        {% elif user.is_app_admin %}Administrator
-        {% elif user.role == 'secretary' %}Katibu
-        {% elif user.role == 'accountant' %}Accountant
+        {% elif user.is_app_admin %}{% church_t 'role_administrator' %}
+        {% elif user.role == 'secretary' %}{% church_t 'role_secretary' %}
+        {% elif user.role == 'accountant' %}{% church_t 'role_accountant' %}
         {% else %}{% church_t 'church_member' %}{% endif %}
       </div>
     </div>
@@ -81,11 +81,11 @@
     </a>
     <a class="nav-item{% if active_nav == 'cash_book' %} active{% endif %}" href="{% url 'donations:cash_book' %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8"/></svg>
-      <span>Cash Book</span>
+      <span>{% church_t 'cash_book_nav' %}</span>
     </a>
     <a class="nav-item{% if active_nav == 'income_allocation' %} active{% endif %}" href="{% url 'donations:income_allocation_report' %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19h16M6 17V8m6 9V5m6 12v-7"/></svg>
-      <span>Report ya Mgawanyo</span>
+      <span>{% church_t 'income_allocation_nav' %}</span>
     </a>
     {% endif %}
 
@@ -124,10 +124,10 @@
     {% endif %}
 
     {% if user.is_app_admin or user.role == 'pastor' and user.is_verified_pastor %}
-    <div class="nav-section-label">Usimamizi</div>
+    <div class="nav-section-label">{% church_t 'administration_section' %}</div>
     <a class="nav-item{% if active_nav == 'member_list' %} active{% endif %}" href="{% url 'members:member_list' %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      <span>Manage Members</span>
+      <span>{% church_t 'ml_page_title' %}</span>
     </a>
     <a class="nav-item{% if active_nav == 'university_students' %} active{% endif %}" href="{% url 'members:university_student_list' %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 10v6M2 10l10-6 10 6-10 6z"/><path d="M6 12v5c0 1 2 3 6 3s6-2 6-3v-5"/></svg>

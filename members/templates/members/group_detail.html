@@ -1,22 +1,11 @@
 {% extends 'church_layout/app_shell.html' %}
+{% load i18n_church %}
 
-{% block title %}{{ group.display_title }} - PHM-ARCC{% endblock %}
-{% block page_title %}{{ group.display_title }}{% endblock %}
+{% block title %}{% church_group_title group %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_group_title group %}{% endblock %}
 {% block page_subtitle %}<p class="topnav-subtitle">{{ group.name }}</p>{% endblock %}
 
-{% block page_header_actions %}
-{% if can_manage_donations %}
-<a href="{% url 'members:group_donations' group.pk %}" class="btn-save" style="text-decoration:none;padding:8px 14px;border-radius:6px;">Simamia Michango</a>
-{% endif %}
-{% if can_send_messages %}
-<a href="{% url 'members:group_broadcast' group.pk %}" class="btn-save" style="text-decoration:none;padding:8px 14px;border-radius:6px;margin-left:0.35rem;">Matangazo</a>
-{% endif %}
-{% if is_plain_member %}
-<a href="{% url 'members:group_my_donations' group.pk %}" class="btn-save" style="text-decoration:none;padding:8px 14px;border-radius:6px;">Michango Yangu</a>
-<a href="{% url 'members:member_messages' %}?group={{ group.pk }}" class="btn-save" style="text-decoration:none;padding:8px 14px;border-radius:6px;margin-left:0.35rem;">Matangazo</a>
-{% endif %}
-<a href="{% url 'members:group_list' %}" class="btn-cancel" style="text-decoration:none;padding:8px 14px;border-radius:6px;margin-left:0.5rem;">← Rudi</a>
-{% endblock %}
+{% block page_header_actions %}{% endblock %}
 
 {% block page_extra_css %}
 <style>
@@ -31,7 +20,6 @@
 .member-meta{font-size:12px;color:rgba(255,255,255,0.5);margin-top:0.2rem;line-height:1.4;}
 .role-pill{font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);flex-shrink:0;}
 .panel-members-highlight{border-color:rgba(200,168,75,0.45);box-shadow:0 0 0 1px rgba(200,168,75,0.12);}
-.members-full{grid-column:1/-1;}
 .officer-grid{display:grid;grid-template-columns:1fr;gap:0.75rem;}
 .officer-row label{font-size:11px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,0.5);display:block;margin-bottom:0.35rem;}
 .officer-row select{width:100%;background:#0f1e2e;border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:8px;padding:8px 12px;}
@@ -42,44 +30,68 @@
 .panel-bd input,.panel-bd textarea,.panel-bd select{width:100%;background:#0f1e2e;border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:8px;padding:8px 12px;margin-bottom:0.5rem;}
 .btn-act{padding:8px 16px;background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.35);color:#2ecc71;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;}
 .btn-gold{padding:8px 16px;background:rgba(200,168,75,0.15);border:1px solid rgba(200,168,75,0.35);color:#c8a84b;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;}
+.act-label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:0.35rem;}
 </style>
 {% endblock %}
 
 {% block page_content %}
 
+<nav class="page-toolbar" aria-label="Group actions">
+  <a href="{% url 'members:group_list' %}" class="page-toolbar-back">← {% church_t 'back' %}</a>
+  <div class="page-toolbar-actions">
+    {% if can_manage_donations %}
+    <a href="{% url 'members:group_donations' group.pk %}" class="page-toolbar-btn">{% church_t 'grp_manage_donations' %}</a>
+    {% endif %}
+    {% if can_send_messages %}
+    <a href="{% url 'members:group_broadcast' group.pk %}" class="page-toolbar-btn">{% church_t 'grp_announcements' %}</a>
+    {% endif %}
+    {% if is_plain_member %}
+    <a href="{% url 'members:group_my_donations' group.pk %}" class="page-toolbar-btn">{% church_t 'grp_my_donations' %}</a>
+    <a href="{% url 'members:member_messages' %}?group={{ group.pk }}" class="page-toolbar-btn">{% church_t 'grp_announcements' %}</a>
+    {% endif %}
+    {% if can_edit_group %}
+    <a href="{% url 'members:group_edit' group.pk %}" class="page-toolbar-btn">{% church_t 'grp_edit_group' %}</a>
+    <form method="post" action="{% url 'members:group_delete' group.pk %}" class="page-toolbar-form" data-confirm-msg="{% church_t 'grp_delete_confirm' %}" onsubmit="return confirm(this.dataset.confirmMsg);">
+      {% csrf_token %}
+      <button type="submit" class="page-toolbar-btn page-toolbar-btn--danger">{% church_t 'grp_delete_group' %}</button>
+    </form>
+    {% endif %}
+  </div>
+</nav>
+
 {% if is_plain_member %}
 <div class="panel" style="margin-bottom:1.25rem;">
   <div class="panel-bd" style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5;">
-    Unaweza kuona <strong>shughuli za kundi</strong>, <strong>michango yako</strong> (ukishaandikwa na mhasibu), na <strong>matangazo</strong> ya {{ group.display_title }}.
+    {% church_t 'grp_plain_member_hint' name=group.name %}
   </div>
 </div>
 {% elif not can_view_members %}
 <div class="panel" style="margin-bottom:1.25rem;">
   <div class="panel-bd" style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5;">
-    Unaweza kuona uongozi na shughuli za {{ group.display_title }}. Orodha ya wanachama wengine inapatikana kwa mwenyekiti, katibu, na mhasibu pekee.
+    {% church_t 'grp_limited_view_hint' name=group.name %}
   </div>
 </div>
 {% endif %}
 
 {% if can_view_members and is_mwenyekiti %}
 <div class="panel panel-members-highlight" style="margin-bottom:1.25rem;">
-  <div class="panel-hd">Wanachama wa {{ group.display_title }} ({{ memberships|length }})</div>
+  <div class="panel-hd">{% church_t 'grp_members_of' name=group.name count=memberships|length %}</div>
   <div class="panel-bd">
-    <p style="font-size:13px;color:rgba(255,255,255,0.55);margin:0 0 0.75rem;">Orodha ya wanachama wako wa idara hii.</p>
+    <p style="font-size:13px;color:rgba(255,255,255,0.55);margin:0 0 0.75rem;">{% church_t 'grp_members_list_hint' %}</p>
     {% for membership in memberships %}
     <div class="member-row">
       <div>
         <div class="member-name">{{ membership.member.full_name }}</div>
         <div class="member-meta">
-          {% if membership.member.phone_number %}{{ membership.member.phone_number }}{% else %}Simu haijawekwa{% endif %}
+          {% if membership.member.phone_number %}{{ membership.member.phone_number }}{% else %}{% church_t 'grp_phone_not_set' %}{% endif %}
           {% if membership.member.gender %} · {{ membership.member.get_gender_display }}{% endif %}
-          {% if membership.member.age %} · miaka {{ membership.member.age }}{% endif %}
+          {% if membership.member.age %} · {% church_t 'grp_years_old' age=membership.member.age %}{% endif %}
         </div>
       </div>
-      <span class="role-pill">{{ membership.get_role_display }}</span>
+      <span class="role-pill">{% church_grole membership.role %}</span>
     </div>
     {% empty %}
-    <p style="color:rgba(255,255,255,0.45);font-size:13px;">Hakuna wanachama bado. Ongeza wanachama hapa chini au wasiliana na mchungaji.</p>
+    <p style="color:rgba(255,255,255,0.45);font-size:13px;">{% church_t 'grp_no_members_yet' %}</p>
     {% endfor %}
   </div>
 </div>
@@ -88,22 +100,22 @@
 <div class="detail-grid">
   <div>
     <div class="panel">
-      <div class="panel-hd">Uongozi wa Kundi</div>
+      <div class="panel-hd">{% church_t 'grp_leadership' %}</div>
       <div class="panel-bd">
-        <p><strong style="color:rgba(255,255,255,0.5);">Mwenyekiti:</strong>
-          {% if group.leader %}{{ group.leader.full_name }}{% else %}Hajapangwa{% endif %}</p>
-        <p><strong style="color:rgba(255,255,255,0.5);">Katibu:</strong>
-          {% if group.secretary %}{{ group.secretary.full_name }}{% else %}Hajapangwa{% endif %}</p>
-        <p><strong style="color:rgba(255,255,255,0.5);">Mhasibu:</strong>
-          {% if group.accountant %}{{ group.accountant.full_name }}{% else %}Hajapangwa{% endif %}</p>
-        <p style="margin:0.75rem 0 0;"><strong style="color:rgba(255,255,255,0.5);">Maelezo:</strong><br>
+        <p><strong style="color:rgba(255,255,255,0.5);">{% church_t 'grp_chairperson' %}:</strong>
+          {% if group.leader %}{{ group.leader.full_name }}{% else %}{% church_t 'grp_not_assigned' %}{% endif %}</p>
+        <p><strong style="color:rgba(255,255,255,0.5);">{% church_t 'grp_secretary' %}:</strong>
+          {% if group.secretary %}{{ group.secretary.full_name }}{% else %}{% church_t 'grp_not_assigned' %}{% endif %}</p>
+        <p><strong style="color:rgba(255,255,255,0.5);">{% church_t 'grp_accountant' %}:</strong>
+          {% if group.accountant %}{{ group.accountant.full_name }}{% else %}{% church_t 'grp_not_assigned' %}{% endif %}</p>
+        <p style="margin:0.75rem 0 0;"><strong style="color:rgba(255,255,255,0.5);">{% church_t 'grp_description' %}:</strong><br>
           {{ group.description|default:"—" }}</p>
       </div>
     </div>
 
     {% if can_view_members and not is_mwenyekiti %}
     <div class="panel">
-      <div class="panel-hd">Wanachama ({{ memberships|length }})</div>
+      <div class="panel-hd">{% church_t 'grp_members' %} ({{ memberships|length }})</div>
       <div class="panel-bd">
         {% for membership in memberships %}
         <div class="member-row">
@@ -114,10 +126,10 @@
               {% if membership.member.gender %} · {{ membership.member.get_gender_display }}{% endif %}
             </div>
           </div>
-          <span class="role-pill">{{ membership.get_role_display }}</span>
+          <span class="role-pill">{% church_grole membership.role %}</span>
         </div>
         {% empty %}
-        <p style="color:rgba(255,255,255,0.45);font-size:13px;">Hakuna wanachama bado.</p>
+        <p style="color:rgba(255,255,255,0.45);font-size:13px;">{% church_t 'grp_no_members_short' %}</p>
         {% endfor %}
       </div>
     </div>
@@ -125,40 +137,40 @@
 
     {% if can_assign_officers %}
     <div class="panel">
-      <div class="panel-hd">Teua Mwenyekiti, Katibu na Mhasibu (Mchungaji)</div>
+      <div class="panel-hd">{% church_t 'grp_assign_officers' %}</div>
       <div class="panel-bd">
         <form method="post" action="{% url 'members:group_assign_officers' group.pk %}">
           {% csrf_token %}
           <div class="officer-grid">
             <div class="officer-row">
-              <label>Mwenyekiti</label>
+              <label>{% church_t 'grp_chairperson' %}</label>
               <select name="leader_id">
-                <option value="">— Ondoa —</option>
+                <option value="">— {% church_t 'grp_remove' %} —</option>
                 {% for p in officer_candidates %}
                 <option value="{{ p.id }}" {% if group.leader_id == p.id %}selected{% endif %}>{{ p.full_name }}</option>
                 {% endfor %}
               </select>
             </div>
             <div class="officer-row">
-              <label>Katibu wa kundi</label>
+              <label>{% church_t 'grp_group_secretary' %}</label>
               <select name="secretary_id">
-                <option value="">— Ondoa —</option>
+                <option value="">— {% church_t 'grp_remove' %} —</option>
                 {% for p in officer_candidates %}
                 <option value="{{ p.id }}" {% if group.secretary_id == p.id %}selected{% endif %}>{{ p.full_name }}</option>
                 {% endfor %}
               </select>
             </div>
             <div class="officer-row">
-              <label>Mhasibu wa kundi</label>
+              <label>{% church_t 'grp_group_accountant' %}</label>
               <select name="accountant_id">
-                <option value="">— Ondoa —</option>
+                <option value="">— {% church_t 'grp_remove' %} —</option>
                 {% for p in officer_candidates %}
                 <option value="{{ p.id }}" {% if group.accountant_id == p.id %}selected{% endif %}>{{ p.full_name }}</option>
                 {% endfor %}
               </select>
             </div>
           </div>
-          <button type="submit" class="btn-gold" style="margin-top:0.75rem;">Hifadhi</button>
+          <button type="submit" class="btn-gold" style="margin-top:0.75rem;">{% church_t 'save' %}</button>
         </form>
       </div>
     </div>
@@ -168,25 +180,25 @@
   <div>
     {% if can_manage %}
     <div class="panel">
-      <div class="panel-hd">Ongeza Mwanachama</div>
+      <div class="panel-hd">{% church_t 'grp_add_member' %}</div>
       <div class="panel-bd">
         <form method="post" action="{% url 'members:group_add_member' group.pk %}">
           {% csrf_token %}
           <div class="add-row">
             <select name="member_id" required>
-              <option value="">Chagua mwanachama</option>
+              <option value="">{% church_t 'grp_select_member' %}</option>
               {% for person in available_members %}
               <option value="{{ person.id }}">{{ person.full_name }} ({{ person.username }})</option>
               {% endfor %}
             </select>
             <select name="role">
-              <option value="member">Mwanachama</option>
-              <option value="assistant">Msaidizi</option>
-              <option value="leader">Mwenyekiti</option>
-              <option value="secretary">Katibu</option>
-              <option value="accountant">Mhasibu</option>
+              <option value="member">{% church_grole 'member' %}</option>
+              <option value="assistant">{% church_grole 'assistant' %}</option>
+              <option value="leader">{% church_grole 'leader' %}</option>
+              <option value="secretary">{% church_grole 'secretary' %}</option>
+              <option value="accountant">{% church_grole 'accountant' %}</option>
             </select>
-            <button type="submit">Ongeza</button>
+            <button type="submit">{% church_t 'grp_add' %}</button>
           </div>
         </form>
       </div>
@@ -195,23 +207,28 @@
 
     {% if can_manage_activities %}
     <div class="panel">
-      <div class="panel-hd">Weka Shughuli</div>
+      <div class="panel-hd">{% church_t 'grp_post_activity' %}</div>
       <div class="panel-bd">
         <form method="post" action="{% url 'members:group_add_activity' group.pk %}">
           {% csrf_token %}
-          {{ activity_form.as_p }}
-          <button type="submit" class="btn-act">Hifadhi Shughuli</button>
+          <label class="act-label" for="{{ activity_form.title.id_for_label }}">{% church_t 'grp_activity_title' %}</label>
+          {{ activity_form.title }}
+          <label class="act-label" for="{{ activity_form.description.id_for_label }}">{% church_t 'grp_activity_description' %}</label>
+          {{ activity_form.description }}
+          <label class="act-label" for="{{ activity_form.activity_date.id_for_label }}">{% church_t 'grp_activity_date' %}</label>
+          {{ activity_form.activity_date }}
+          <button type="submit" class="btn-act">{% church_t 'grp_save_activity' %}</button>
         </form>
       </div>
     </div>
     {% endif %}
 
     <div class="panel">
-      <div class="panel-hd">Matangazo — {{ group.display_title }}</div>
+      <div class="panel-hd">{% church_t 'grp_announcements_panel' name=group.name %}</div>
       <div class="panel-bd">
         {% if can_send_messages %}
         <p style="font-size:12px;color:rgba(255,255,255,0.5);margin:0 0 0.75rem;">
-          <a href="{% url 'members:group_broadcast' group.pk %}" style="color:#c8a84b;">Tuma tangazo jipya →</a>
+          <a href="{% url 'members:group_broadcast' group.pk %}" style="color:#c8a84b;">{% church_t 'grp_send_new_announcement' %}</a>
         </p>
         {% endif %}
         {% for msg in group_matangazo %}
@@ -221,23 +238,23 @@
             <span style="font-size:12px;color:rgba(255,255,255,0.45);">{{ msg.created_at|date:"d M Y" }}</span>
           </div>
           <p style="font-size:12px;color:rgba(255,255,255,0.5);margin:0.25rem 0;">
-            Kutoka: {{ msg.sender.full_name }}
+            {% church_t 'grp_from' %}: {{ msg.sender.full_name }}
           </p>
           <p style="font-size:13px;color:rgba(255,255,255,0.75);margin:0;">{{ msg.content|linebreaksbr }}</p>
         </div>
         {% empty %}
-        <p style="color:rgba(255,255,255,0.45);font-size:13px;">Hakuna matangazo bado{% if can_send_messages %}. Tumia kiungo hapo juu kutuma{% endif %}.</p>
+        <p style="color:rgba(255,255,255,0.45);font-size:13px;">{% church_t 'grp_no_announcements' %}{% if can_send_messages %} {% church_t 'grp_use_link_above' %}{% endif %}</p>
         {% endfor %}
         {% if group_matangazo %}
         <p style="margin-top:0.75rem;font-size:12px;">
-          <a href="{% url 'members:member_messages' %}?group={{ group.pk }}" style="color:#c8a84b;">Fungua orodha kamili ya matangazo →</a>
+          <a href="{% url 'members:member_messages' %}?group={{ group.pk }}" style="color:#c8a84b;">{% church_t 'grp_open_full_announcements' %}</a>
         </p>
         {% endif %}
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-hd">Shughuli za Kundi</div>
+      <div class="panel-hd">{% church_t 'grp_group_activities' %}</div>
       <div class="panel-bd">
         {% for activity in activities %}
         <div class="activity-item">
@@ -248,7 +265,7 @@
           <p style="font-size:13px;color:rgba(255,255,255,0.7);margin:0.35rem 0;">{{ activity.description }}</p>
         </div>
         {% empty %}
-        <p style="color:rgba(255,255,255,0.45);font-size:13px;">Hakuna shughuli bado.</p>
+        <p style="color:rgba(255,255,255,0.45);font-size:13px;">{% church_t 'grp_no_activities' %}</p>
         {% endfor %}
       </div>
     </div>

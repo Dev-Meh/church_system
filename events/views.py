@@ -17,13 +17,16 @@ class EventListView(ListView):
     context_object_name = 'events'
     
     def get_queryset(self):
-        return Event.objects.filter(is_published=True).order_by('-start_date')
+        return Event.objects.active().order_by('start_date')
 
 class EventDetailView(DetailView):
     """View event details"""
     model = Event
     template_name = 'events/event_detail.html'
     context_object_name = 'event'
+
+    def get_queryset(self):
+        return Event.objects.active()
 
 class EventCreateView(LoginRequiredMixin, CreateView):
     """Create new event - pastor, secretary (katibu) or accountant (muhasibu)."""
@@ -78,14 +81,14 @@ class EventResourceCreateView(LoginRequiredMixin, CreateView):
 @login_required
 def register_for_event(request, event_id):
     """Register user for an event"""
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(Event.objects.active(), id=event_id)
     # Add registration logic here
     return render(request, 'events/registration_success.html', {'event': event})
 
 @login_required
 def cancel_registration(request, event_id):
     """Cancel event registration"""
-    event = get_object_or_404(Event, id=event_id)
+    event = get_object_or_404(Event.objects.active(), id=event_id)
     # Add cancellation logic here
     return render(request, 'events/cancellation_success.html', {'event': event})
 
@@ -101,11 +104,7 @@ def public_events_api(request):
     No authentication required (public marketing data). The Lovable website
     fetches this to display events & services with their posters.
     """
-    now = timezone.now()
-    events = (
-        Event.objects.filter(is_published=True, end_date__gte=now)
-        .order_by('start_date')[:24]
-    )
+    events = Event.objects.active().order_by('start_date')[:24]
 
     def poster_url(ev):
         if ev.image and hasattr(ev.image, 'url'):

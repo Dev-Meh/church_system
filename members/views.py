@@ -698,6 +698,7 @@ def group_detail(request, pk):
         "can_manage_donations": can_manage_group_donations(request.user, group),
         "can_send_messages": can_send_group_messages(request.user, group),
         "is_plain_member": is_group_plain_member(request.user, group),
+        "can_edit_group": can_manage_church_groups(request.user),
         "group_matangazo": group_matangazo,
         "activity_form": GroupActivityForm(),
     }
@@ -710,8 +711,9 @@ def group_create(request):
         messages.error(request, "Ni mchungaji, admin, au katibu tu anaweza kuunda kundi.")
         return redirect("members:group_list")
 
+    lang = LanguageManager.get_current_language(request)
     if request.method == "POST":
-        form = ChurchGroupForm(request.POST)
+        form = ChurchGroupForm(request.POST, language=lang)
         if form.is_valid():
             group = form.save()
             if group.leader:
@@ -723,9 +725,61 @@ def group_create(request):
             messages.success(request, "Kundi limeundwa kikamilifu.")
             return redirect("members:group_detail", pk=group.pk)
     else:
-        form = ChurchGroupForm()
+        form = ChurchGroupForm(language=lang)
 
     return render(request, "members/group_form.html", {"form": form})
+
+
+@login_required
+def group_edit(request, pk):
+    group = get_object_or_404(ChurchGroup, pk=pk, is_active=True)
+    if not can_manage_church_groups(request.user):
+        messages.error(request, "Ni mchungaji, admin, au katibu tu anaweza kuhariri kundi.")
+        return redirect("members:group_detail", pk=pk)
+
+    lang = LanguageManager.get_current_language(request)
+    if request.method == "POST":
+        form = ChurchGroupForm(request.POST, instance=group, language=lang)
+        if form.is_valid():
+            group = form.save()
+            if group.leader:
+                GroupMembership.objects.update_or_create(
+                    group=group,
+                    member=group.leader,
+                    defaults={"role": "leader", "is_active": True},
+                )
+            messages.success(request, "Kundi limehaririwa kikamilifu.")
+            return redirect("members:group_detail", pk=group.pk)
+    else:
+        form = ChurchGroupForm(instance=group, language=lang)
+
+    return render(
+        request,
+        "members/group_form.html",
+        {"form": form, "group": group, "is_edit": True},
+    )
+
+
+@login_required
+@require_POST
+def group_delete(request, pk):
+    group = get_object_or_404(ChurchGroup, pk=pk)
+    if not can_manage_church_groups(request.user):
+        messages.error(request, "Ni mchungaji, admin, au katibu tu anaweza kufuta kundi.")
+        return redirect("members:group_detail", pk=pk)
+
+    name = group.name
+    try:
+        group.delete()
+    except ProtectedError:
+        messages.error(
+            request,
+            f"Imeshindikana kufuta {name}. Kuna rekodi zinazohusiana na kundi hili.",
+        )
+        return redirect("members:group_detail", pk=pk)
+
+    messages.success(request, f"Kundi \"{name}\" limefutwa kabisa.")
+    return redirect("members:group_list")
 
 
 @login_required

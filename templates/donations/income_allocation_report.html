@@ -23,6 +23,8 @@
     th { background: rgba(11,25,42,.75); color:#f2d27a; text-transform:uppercase; letter-spacing:.5px; font-size:11px; }
     .right { text-align:right; }
     .muted { color:rgba(255,255,255,.65); }
+    .sub-row td:first-child { padding-left: 28px; color: rgba(255,255,255,.75); font-size: 12px; }
+    .emph-row td { background: rgba(200,168,75,.08); }
     .action a { color:#dce8fa; text-decoration:none; font-size:12px; border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:7px 10px; background:rgba(255,255,255,.06); }
     @media (max-width: 992px) {
         .grid { grid-template-columns: 1fr 1fr; }
@@ -98,15 +100,18 @@
                 </thead>
                 <tbody>
                     {% for row in report.allocation_rows %}
-                    <tr>
+                    <tr{% if row.indent %} class="sub-row"{% endif %}{% if row.emphasis %} class="emph-row"{% endif %}>
                         <td>{{ row.name }}</td>
-                        <td class="right">{{ row.percent }}%</td>
+                        <td class="right">{{ row.percent|floatformat:1 }}%</td>
                         <td class="right"><strong>{{ row.amount|floatformat:2 }}</strong></td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-            <p class="muted" style="margin-top:10px;">Makundi: Posho ya Mchungaji 65%, Ofisi Kuu 10%, Elimu ya Vyuo 5%, Akiba Mafao 5%, Matumizi ya Kanisa 15%.</p>
+            <p class="muted" style="margin-top:10px;">
+                Kutoka Posho ya Mchungaji (65%), 10% inachukuliwa na kugawanywa: Jimbo 60%, Sehem 40%.
+                Posho halisi kanisani = 58.5%. Makundi mengine: Ofisi Kuu 10%, Elimu ya Vyuo 5%, Akiba Mafao 5%, Matumizi ya Kanisa 15%.
+            </p>
         </div>
     </div>
     {% endif %}

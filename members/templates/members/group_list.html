@@ -7,7 +7,7 @@
 
 {% block page_header_actions %}
 {% if can_create_groups %}
-<a href="{% url 'members:group_create' %}" class="btn-save" style="text-decoration:none;padding:8px 16px;border-radius:6px;">+ Unda Kundi</a>
+<a href="{% url 'members:group_create' %}" class="btn-save" style="text-decoration:none;padding:8px 16px;border-radius:6px;">+ {% church_t 'grp_create_group' %}</a>
 {% endif %}
 {% endblock %}
 
@@ -28,32 +28,26 @@
 <div class="groups-grid">
   {% for group in groups %}
   <article class="group-card">
-    <h3>{{ group.display_title }}</h3>
+    <h3>{% church_group_title group %}</h3>
     <p class="group-meta" style="margin-top:0;font-size:12px;opacity:0.65;">{{ group.name }}</p>
     <p class="group-meta">
-      Mwenyekiti: {% if group.leader %}{{ group.leader.full_name }}{% else %}—{% endif %}
-      · Katibu: {% if group.secretary %}{{ group.secretary.first_name }}{% else %}—{% endif %}
-      · Mhasibu: {% if group.accountant %}{{ group.accountant.first_name }}{% else %}—{% endif %}
-      · Wanachama: {{ group.member_count }}
+      {% church_t 'grp_chairperson_label' %}: {% if group.leader %}{{ group.leader.full_name }}{% else %}—{% endif %}
+      · {% church_t 'grp_secretary_label' %}: {% if group.secretary %}{{ group.secretary.first_name }}{% else %}—{% endif %}
+      · {% church_t 'grp_accountant_label' %}: {% if group.accountant %}{{ group.accountant.first_name }}{% else %}—{% endif %}
+      · {% church_t 'grp_members_label' %}: {{ group.member_count }}
     </p>
-    <p class="group-desc">{{ group.description|default:"Hakuna maelezo."|truncatewords:18 }}</p>
-    <a href="{% url 'members:group_detail' group.pk %}" class="btn-open">Fungua {{ group.display_title }} →</a>
+    <p class="group-desc">{% if group.description %}{{ group.description|truncatewords:18 }}{% else %}{% church_t 'grp_no_description' %}{% endif %}</p>
+    <a href="{% url 'members:group_detail' group.pk %}" class="btn-open">{% church_t 'grp_open_group' name=group.name %}</a>
   </article>
   {% empty %}
   <div class="empty-box" style="grid-column:1/-1;">
     {% if can_create_groups %}
-    <p><strong>Hakuna kundi bado.</strong></p>
-    <p style="margin-top:0.75rem;"><a href="{% url 'members:group_create' %}" style="color:#c8a84b;">Unda kundi la kwanza</a>
-    au kwenye server: <code style="color:#c8a84b;">python manage.py setup_church_groups</code>
-    kisha <code style="color:#c8a84b;">python manage.py sync_group_memberships</code></p>
+    <p><strong>{% church_t 'grp_no_groups_yet' %}</strong></p>
+    <p style="margin-top:0.75rem;"><a href="{% url 'members:group_create' %}" style="color:#c8a84b;">{% church_t 'grp_create_first_link' %}</a>
+    — {% church_t 'grp_setup_cmd_hint' %}</p>
     {% else %}
-    <p><strong>Hakuna kundi linaloonekana kwako.</strong></p>
-    <p style="margin-top:0.75rem;font-size:13px;line-height:1.5;">
-      Mwanachama anaona kundi <strong>tu</strong> ikiwa ameongezwa kwenye kundi hilo.<br>
-      <strong>Idara ya Vijana (CFD'S):</strong> tarehe ya kuzaliwa lazima iwe kwenye wasifu na umri chini ya miaka 40.<br>
-      <strong>Idara ya Wanawake (WWM):</strong> jinsia “Female” kwenye wasifu.<br>
-      Wasiliana na mchungaji au mwenyekiti wa idara akuongeze kwenye kundi, au ahakikishe wasifu wako una taarifa hizo.
-    </p>
+    <p><strong>{% church_t 'grp_no_groups_visible' %}</strong></p>
+    <p style="margin-top:0.75rem;font-size:13px;line-height:1.5;">{% church_t 'grp_member_visibility_help' %}</p>
     {% endif %}
   </div>
   {% endfor %}

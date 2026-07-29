@@ -57,3 +57,24 @@ def church_uni_level(context, level_code):
     request = context.get("request")
     lang = LanguageManager.get_current_language(request) if request else "en"
     return get_translation(f"uni_level_{level_code}", lang)
+
+
+@register.simple_tag(takes_context=True)
+def church_group_title(context, group):
+    """Translate church group type display title."""
+    request = context.get("request")
+    lang = LanguageManager.get_current_language(request) if request else "en"
+    code = getattr(group, "group_type", None)
+    if code:
+        label = get_translation(f"grp_type_{code}", lang)
+        if label and not label.startswith("Grp type"):
+            return label
+    return getattr(group, "name", str(group))
+
+
+@register.simple_tag(takes_context=True)
+def church_grole(context, role_code):
+    """Translate group membership role code."""
+    request = context.get("request")
+    lang = LanguageManager.get_current_language(request) if request else "en"
+    return get_translation(f"grp_role_{role_code}", lang)

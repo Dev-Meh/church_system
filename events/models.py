@@ -2,6 +2,16 @@ from django.db import models
 from django.utils import timezone
 from members.models import ChurchUser
 
+
+class EventQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(is_published=True)
+
+    def active(self):
+        """Published events that have not ended yet."""
+        return self.published().filter(end_date__gte=timezone.now())
+
+
 class Event(models.Model):
     EVENT_TYPE_CHOICES = [
         ('service', 'Church Service'),
@@ -38,6 +48,8 @@ class Event(models.Model):
     is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = EventQuerySet.as_manager()
     
     class Meta:
         verbose_name = "Event"

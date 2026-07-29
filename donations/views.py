@@ -1572,6 +1572,8 @@ def cash_book_view(request):
 
 
 def _build_income_allocation_report(start_date, end_date, include_sadaka=True):
+    from .income_allocation import build_allocation_rows
+
     period_qs = Donation.objects.filter(
         contribution_date__range=(start_date, end_date),
         status='completed',
@@ -1588,21 +1590,6 @@ def _build_income_allocation_report(start_date, end_date, include_sadaka=True):
     ).aggregate(total=models.Sum('amount'))['total'] or 0
     total_mapato = total_zaka + total_sadaka + total_mapato_mengineyo
 
-    allocations = [
-        ('Posho ya Mchungaji', 65),
-        ('Zaka ya Ofisi Kuu', 10),
-        ('Elimu ya Vyuo', 5),
-        ('Akiba Mafao ya Mchungaji', 5),
-        ('Matumizi ya Kanisa', 15),
-    ]
-    allocation_rows = []
-    for name, percent in allocations:
-        allocation_rows.append({
-            'name': name,
-            'percent': percent,
-            'amount': (total_mapato * percent) / 100 if total_mapato else 0,
-        })
-
     return {
         'start_date': start_date,
         'end_date': end_date,
@@ -1610,7 +1597,7 @@ def _build_income_allocation_report(start_date, end_date, include_sadaka=True):
         'total_sadaka': total_sadaka,
         'total_mapato_mengineyo': total_mapato_mengineyo,
         'total_mapato': total_mapato,
-        'allocation_rows': allocation_rows,
+        'allocation_rows': build_allocation_rows(total_mapato),
     }
 
 

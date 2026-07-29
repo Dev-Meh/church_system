@@ -1,12 +1,11 @@
 {% extends 'church_layout/app_shell.html' %}
+{% load i18n_church %}
 
-{% block title %}Michango — {{ group.display_title }}{% endblock %}
-{% block page_title %}Michango — {{ group.display_title }}{% endblock %}
-{% block page_subtitle %}<p class="topnav-subtitle">Andika michango ya wanachama {{ member_count }}</p>{% endblock %}
+{% block title %}{% church_t 'grp_donations_title' name=group.name %}{% endblock %}
+{% block page_title %}{% church_t 'grp_donations_title' name=group.name %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{% church_t 'grp_donations_subtitle' count=member_count %}</p>{% endblock %}
 
-{% block page_header_actions %}
-<a href="{% url 'members:group_detail' group.pk %}" class="btn-cancel" style="text-decoration:none;padding:8px 14px;border-radius:6px;">← {{ group.display_title }}</a>
-{% endblock %}
+{% block page_header_actions %}{% endblock %}
 
 {% block page_extra_css %}
 <style>
@@ -23,12 +22,14 @@
 {% endblock %}
 
 {% block page_content %}
-<p class="hint">
-  <strong>Mhasibu / Mwenyekiti:</strong> Andika mchango wa mwanachama (si zaka ya kanisa). Mwanachama ataona rekodi yake pekee baada ya kuhifadhi.
-</p>
+<nav class="page-toolbar" aria-label="Group actions">
+  <a href="{% url 'members:group_detail' group.pk %}" class="page-toolbar-back">← {% church_group_title group %}</a>
+</nav>
+
+<p class="hint">{% church_t 'grp_donations_hint' %}</p>
 
 <div class="panel">
-  <h3>Ingiza Mchango Mpya</h3>
+  <h3>{% church_t 'grp_enter_donation' %}</h3>
   <form method="post">
     {% csrf_token %}
     {% for field in form %}
@@ -38,20 +39,20 @@
       {% if field.errors %}<p style="color:#e74c3c;font-size:12px;">{{ field.errors.0 }}</p>{% endif %}
     </div>
     {% endfor %}
-    <button type="submit" class="btn-save">Hifadhi Mchango</button>
+    <button type="submit" class="btn-save">{% church_t 'grp_save_donation' %}</button>
   </form>
 </div>
 
 <div class="panel">
-  <h3>Michango Yaliyoandikwa</h3>
+  <h3>{% church_t 'grp_recorded_donations' %}</h3>
   {% if donations %}
   <table class="mchango-table">
     <thead>
       <tr>
-        <th>Jina</th>
-        <th>Mchango</th>
-        <th>Aina ya fedha</th>
-        <th>Tarehe</th>
+        <th>{% church_t 'grp_col_name' %}</th>
+        <th>{% church_t 'grp_col_amount' %}</th>
+        <th>{% church_t 'grp_col_payment_type' %}</th>
+        <th>{% church_t 'grp_col_date' %}</th>
       </tr>
     </thead>
     <tbody>
@@ -66,10 +67,10 @@
     </tbody>
   </table>
   <p style="margin-top:1rem;font-size:12px;color:rgba(255,255,255,0.45);">
-    Jumla: {{ total_michango|floatformat:0 }} TZS
+    {% church_t 'grp_total' %}: {{ total_michango|floatformat:0 }} TZS
   </p>
   {% else %}
-  <p style="color:rgba(255,255,255,0.45);font-size:13px;">Hakuna michango yaliyoandikwa bado.</p>
+  <p style="color:rgba(255,255,255,0.45);font-size:13px;">{% church_t 'grp_no_donations' %}</p>
   {% endif %}
 </div>
 {% endblock %}

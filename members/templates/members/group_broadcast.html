@@ -1,12 +1,11 @@
 {% extends 'church_layout/app_shell.html' %}
+{% load i18n_church %}
 
-{% block title %}Matangazo — {{ group.display_title }}{% endblock %}
-{% block page_title %}Matangazo — {{ group.display_title }}{% endblock %}
-{% block page_subtitle %}<p class="topnav-subtitle">Tuma kwa wanachama {{ recipient_count }} wa idara</p>{% endblock %}
+{% block title %}{% church_t 'grp_broadcast_title' name=group.name %}{% endblock %}
+{% block page_title %}{% church_t 'grp_broadcast_title' name=group.name %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{% church_t 'grp_broadcast_subtitle' count=recipient_count %}</p>{% endblock %}
 
-{% block page_header_actions %}
-<a href="{% url 'members:group_detail' group.pk %}" class="btn-cancel" style="text-decoration:none;padding:8px 14px;border-radius:6px;">← {{ group.display_title }}</a>
-{% endblock %}
+{% block page_header_actions %}{% endblock %}
 
 {% block page_extra_css %}
 <style>
@@ -20,22 +19,24 @@
 {% endblock %}
 
 {% block page_content %}
-<p class="hint">
-  <strong>Katibu / Mwenyekiti:</strong> Tangazo litafika kwa wanachama wote wa {{ group.display_title }} (na SMS ikiwa namba ipo).
-</p>
+<nav class="page-toolbar" aria-label="Group actions">
+  <a href="{% url 'members:group_detail' group.pk %}" class="page-toolbar-back">← {% church_group_title group %}</a>
+</nav>
+
+<p class="hint">{% church_t 'grp_broadcast_hint' name=group.name %}</p>
 
 <div class="panel">
-  <h3>Tuma Tangazo Jipya</h3>
+  <h3>{% church_t 'grp_send_new' %}</h3>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit" class="btn-save">Tuma kwa Wanachama</button>
+    <button type="submit" class="btn-save">{% church_t 'grp_send_to_members' %}</button>
   </form>
 </div>
 
 {% if sent_messages %}
 <div class="panel">
-  <h3>Matangazo Uliyotuma</h3>
+  <h3>{% church_t 'grp_sent_announcements' %}</h3>
   {% for msg in sent_messages %}
   <div class="sent-row">
     <strong>{{ msg.title }}</strong>

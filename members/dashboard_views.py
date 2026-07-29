@@ -251,7 +251,7 @@ def member_dashboard(request):
     member_messages = member_inbox_queryset(user, group=None)[:5]
 
     # Left navigation counters
-    nav_events_count = Event.objects.filter(is_published=True).count()
+    nav_events_count = Event.objects.active().count()
     nav_sermons_count = Sermon.objects.filter(is_published=True).count()
     nav_prayers_count = PrayerRequest.objects.filter(
         visibility__in=['public', 'leadership']

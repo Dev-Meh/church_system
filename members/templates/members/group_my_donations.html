@@ -1,12 +1,11 @@
 {% extends 'church_layout/app_shell.html' %}
+{% load i18n_church %}
 
-{% block title %}Michango Yangu — {{ group.display_title }}{% endblock %}
-{% block page_title %}Michango Yangu{% endblock %}
-{% block page_subtitle %}<p class="topnav-subtitle">{{ group.display_title }}</p>{% endblock %}
+{% block title %}{% church_t 'grp_my_donations_title' %} — {% church_group_title group %}{% endblock %}
+{% block page_title %}{% church_t 'grp_my_donations_title' %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{% church_group_title group %}</p>{% endblock %}
 
-{% block page_header_actions %}
-<a href="{% url 'members:group_detail' group.pk %}" class="btn-cancel" style="text-decoration:none;padding:8px 14px;border-radius:6px;">← {{ group.display_title }}</a>
-{% endblock %}
+{% block page_header_actions %}{% endblock %}
 
 {% block page_extra_css %}
 <style>
@@ -19,15 +18,19 @@
 {% endblock %}
 
 {% block page_content %}
+<nav class="page-toolbar" aria-label="Group actions">
+  <a href="{% url 'members:group_detail' group.pk %}" class="page-toolbar-back">← {% church_group_title group %}</a>
+</nav>
+
 {% if has_michango %}
 <div class="panel">
   <table class="mchango-table">
     <thead>
       <tr>
-        <th>Jina</th>
-        <th>Mchango</th>
-        <th>Aina ya fedha</th>
-        <th>Tarehe</th>
+        <th>{% church_t 'grp_col_name' %}</th>
+        <th>{% church_t 'grp_col_amount' %}</th>
+        <th>{% church_t 'grp_col_payment_type' %}</th>
+        <th>{% church_t 'grp_col_date' %}</th>
       </tr>
     </thead>
     <tbody>
@@ -45,8 +48,7 @@
 {% else %}
 <div class="panel">
   <div class="empty-box">
-    Hakuna mchango uliorekodiwa kwako kwenye {{ group.display_title }} bado.<br>
-    Mhasibu atakuandikia baada ya kupokea mchango wako — utaona jina, kiasi, na aina ya fedha hapa.
+    {% church_t 'grp_no_my_donations' name=group.name %}
   </div>
 </div>
 {% endif %}

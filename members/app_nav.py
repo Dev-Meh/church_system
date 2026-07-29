@@ -24,6 +24,7 @@ ACTIVE_NAV_MAP = {
     ('', 'university_student_mark_completed'): 'university_students',
     ('members', 'group_list'): 'groups',
     ('members', 'group_create'): 'groups',
+    ('members', 'group_edit'): 'groups',
     ('members', 'group_detail'): 'groups',
     ('members', 'group_add_member'): 'groups',
     ('members', 'group_add_activity'): 'groups',
