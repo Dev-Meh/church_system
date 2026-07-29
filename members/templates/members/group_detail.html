@@ -1,9 +1,13 @@
 {% extends 'church_layout/app_shell.html' %}
 {% load i18n_church %}
 
-{% block title %}{% church_group_title group %} - PHM-ARCC{% endblock %}
-{% block page_title %}{% church_group_title group %}{% endblock %}
-{% block page_subtitle %}<p class="topnav-subtitle">{{ group.name }}</p>{% endblock %}
+{% block title %}{{ group.name }} - PHM-ARCC{% endblock %}
+{% block page_title %}{{ group.name }}{% endblock %}
+{% block page_subtitle %}
+{% if group.group_type != 'other' %}
+<p class="topnav-subtitle">{% church_group_title group %}</p>
+{% endif %}
+{% endblock %}
 
 {% block page_header_actions %}{% endblock %}
 

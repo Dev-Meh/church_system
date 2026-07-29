@@ -28,8 +28,10 @@
 <div class="groups-grid">
   {% for group in groups %}
   <article class="group-card">
-    <h3>{% church_group_title group %}</h3>
-    <p class="group-meta" style="margin-top:0;font-size:12px;opacity:0.65;">{{ group.name }}</p>
+    <h3>{{ group.name }}</h3>
+    {% if group.group_type != 'other' %}
+    <p class="group-meta" style="margin-top:0;font-size:12px;opacity:0.65;">{% church_group_title group %}</p>
+    {% endif %}
     <p class="group-meta">
       {% church_t 'grp_chairperson_label' %}: {% if group.leader %}{{ group.leader.full_name }}{% else %}—{% endif %}
       · {% church_t 'grp_secretary_label' %}: {% if group.secretary %}{{ group.secretary.first_name }}{% else %}—{% endif %}
