@@ -1,8 +1,8 @@
 {% extends 'church_layout/app_shell.html' %}
 {% load i18n_church member_extras %}
 
-{% block title %}My Profile - PHM-ARCC CMS{% endblock %}
-{% block page_title %}My Profile{% endblock %}
+{% block title %}{% church_t 'my_profile' %} - PHM-ARCC CMS{% endblock %}
+{% block page_title %}{% church_t 'my_profile' %}{% endblock %}
 
 {% block page_header_actions %}
 {% endblock %}
@@ -35,20 +35,20 @@
     {% user_avatar member 80 %}
     <div class="profile-info">
       <h1>{{ member.first_name }} {{ member.last_name }}</h1>
-      <p>Member since {{ member.date_joined|date:"F Y" }}</p>
+      <p>{% church_t 'prof_member_since_prefix' %} {{ member.date_joined|date:"F Y" }}</p>
       {% if not member.profile_picture %}
-      <p style="margin-top:0.35rem;font-size:13px;"><a href="{% url 'profile_edit' %}" style="color:#c8a84b;">Ongeza picha ya wasifu</a></p>
+      <p style="margin-top:0.35rem;font-size:13px;"><a href="{% url 'profile_edit' %}" style="color:#c8a84b;">{% church_t 'prof_add_photo' %}</a></p>
       {% endif %}
     </div>
-    <a href="{% url 'profile_edit' %}" class="btn-edit">Edit Profile</a>
+    <a href="{% url 'profile_edit' %}" class="btn-edit">{% church_t 'edit_profile' %}</a>
   </div>
   <div class="info-grid">
-    <div class="info-item"><div class="info-label">Email Address</div><div class="info-value">{{ member.email }}</div></div>
-    <div class="info-item"><div class="info-label">Phone Number</div><div class="info-value">{{ member.phone_number|default:"Not provided" }}</div></div>
-    <div class="info-item"><div class="info-label">Date of Birth</div><div class="info-value">{{ member.date_of_birth|date:"F d, Y"|default:"Not provided" }}</div></div>
-    <div class="info-item"><div class="info-label">Gender</div><div class="info-value">{{ member.get_gender_display|default:"Not provided" }}</div></div>
-    <div class="info-item"><div class="info-label">Address</div><div class="info-value">{{ member.address|default:"Not provided" }}</div></div>
-    <div class="info-item"><div class="info-label">Membership Status</div><div class="info-value">Active</div></div>
+    <div class="info-item"><div class="info-label">{% church_t 'email_address' %}</div><div class="info-value">{{ member.email }}</div></div>
+    <div class="info-item"><div class="info-label">{% church_t 'phone_number' %}</div><div class="info-value">{% if member.phone_number %}{{ member.phone_number }}{% else %}{% church_t 'prof_not_provided' %}{% endif %}</div></div>
+    <div class="info-item"><div class="info-label">{% church_t 'prof_date_of_birth' %}</div><div class="info-value">{% if member.date_of_birth %}{{ member.date_of_birth|date:"F d, Y" }}{% else %}{% church_t 'prof_not_provided' %}{% endif %}</div></div>
+    <div class="info-item"><div class="info-label">{% church_t 'gender' %}</div><div class="info-value">{% if member.get_gender_display %}{{ member.get_gender_display }}{% else %}{% church_t 'prof_not_provided' %}{% endif %}</div></div>
+    <div class="info-item"><div class="info-label">{% church_t 'address' %}</div><div class="info-value">{% if member.address %}{{ member.address }}{% else %}{% church_t 'prof_not_provided' %}{% endif %}</div></div>
+    <div class="info-item"><div class="info-label">{% church_t 'prof_membership_status' %}</div><div class="info-value">{% church_t 'prof_active' %}</div></div>
   </div>
 </div>
 {% endblock %}

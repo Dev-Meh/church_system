@@ -144,6 +144,10 @@
         .entry-grid { grid-template-columns: 1fr; }
         .entry-field-span2 { grid-column: span 1; }
     }
+    .contrib-edit-link {
+        color: #c8a84b; font-size: 12px; font-weight: 700; text-decoration: none;
+    }
+    .contrib-edit-link:hover { text-decoration: underline; color: #f2d27a; }
 </style>
 {% endblock %}
 
@@ -213,6 +217,7 @@
                     <th>{% church_t 'tithe_col_full_name' %}</th>
                     <th>{% church_t 'tithe_col_zaka' %}</th>
                     <th>{% church_t 'tithe_col_other_zaka' %}</th>
+                    {% if can_enter_tithe %}<th>{% church_t 'don_col_actions' %}</th>{% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -241,10 +246,11 @@
                             <span class="muted">—</span>
                         {% endif %}
                     </td>
+                    {% if can_enter_tithe %}{% include 'donations/includes/contribution_edit_cell.html' with donation=d show_edit=True %}{% endif %}
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="muted">{% church_t 'tithe_no_records' %}</td>
+                    <td colspan="{% if can_enter_tithe %}6{% else %}5{% endif %}" class="muted">{% church_t 'tithe_no_records' %}</td>
                 </tr>
                 {% endfor %}
             </tbody>

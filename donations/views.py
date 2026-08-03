@@ -1849,3 +1849,70 @@ def donation_report_preview(request, report_type):
         return redirect('donations:home')
 
     return render(request, 'donations/report_preview.html', context)
+
+
+@login_required
+def donation_edit(request, pk):
+    """Allow accountant to correct a previously entered contribution."""
+    from members.language_utils import get_translation
+    from .contribution_edit import (
+        apply_donation_edit,
+        build_edit_form,
+        donation_edit_kind,
+        donation_list_url_name,
+        edit_page_title_key,
+    )
+
+    donation = get_object_or_404(
+        Donation.objects.select_related("donor", "category"),
+        pk=pk,
+    )
+    edit_kind = donation_edit_kind(donation)
+    list_url = donation_list_url_name(donation)
+    lang = LanguageManager.get_current_language(request)
+
+    if not _can_enter_tithe(request.user):
+        messages.error(request, get_translation("don_edit_not_allowed", lang))
+        return redirect(list_url)
+    if not edit_kind:
+        messages.error(request, get_translation("don_edit_not_allowed", lang))
+        return redirect(list_url)
+
+    donor_scope = _allowed_donor_ids(request.user)
+    if request.method == "POST":
+        form = build_edit_form(
+            edit_kind,
+            donation,
+            request.POST,
+            language=lang,
+            allowed_donor_ids=donor_scope,
+        )
+        if form.is_valid():
+            apply_donation_edit(donation, edit_kind, form.cleaned_data, request.user, language=lang)
+            messages.success(request, get_translation("don_edit_saved", lang))
+            return redirect(list_url)
+        for error in form.non_field_errors():
+            messages.error(request, error)
+        for field_name, errors in form.errors.items():
+            label = form.fields.get(field_name).label if field_name in form.fields else field_name
+            for error in errors:
+                messages.error(request, f"{label}: {error}")
+    else:
+        form = build_edit_form(
+            edit_kind,
+            donation,
+            language=lang,
+            allowed_donor_ids=donor_scope,
+        )
+
+    return render(
+        request,
+        "donations/donation_edit.html",
+        {
+            "form": form,
+            "donation": donation,
+            "edit_kind": edit_kind,
+            "page_title_key": edit_page_title_key(edit_kind),
+            "list_url": list_url,
+        },
+    )

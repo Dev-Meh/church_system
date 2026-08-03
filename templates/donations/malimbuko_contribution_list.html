@@ -133,6 +133,10 @@
         font-size: 12px;
         margin-bottom: 10px;
     }
+    .contrib-edit-link {
+        color: #c8a84b; font-size: 12px; font-weight: 700; text-decoration: none;
+    }
+    .contrib-edit-link:hover { text-decoration: underline; color: #f2d27a; }
 
     @media (max-width: 992px) {
         table { font-size: 12px; }
@@ -213,6 +217,7 @@
                     <th>{% church_t 'malimbuko_col_miladi' %}</th>
                     <th>{% church_t 'malimbuko_col_amount' %}</th>
                     <th>{% church_t 'malimbuko_col_harvest' %}</th>
+                    {% if can_enter_malimbuko %}<th>{% church_t 'don_col_actions' %}</th>{% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -241,10 +246,11 @@
                             <span class="muted">—</span>
                         {% endif %}
                     </td>
+                    {% if can_enter_malimbuko %}{% include 'donations/includes/contribution_edit_cell.html' with donation=d show_edit=True %}{% endif %}
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="muted">{% church_t 'malimbuko_no_records' %}</td>
+                    <td colspan="{% if can_enter_malimbuko %}6{% else %}5{% endif %}" class="muted">{% church_t 'malimbuko_no_records' %}</td>
                 </tr>
                 {% endfor %}
             </tbody>

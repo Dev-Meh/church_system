@@ -205,8 +205,16 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     
     def get_object(self):
         return self.request.user
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['language'] = LanguageManager.get_current_language(self.request)
+        return kwargs
     
     def form_valid(self, form):
+        from .language_utils import get_translation as t
+
+        lang = LanguageManager.get_current_language(self.request)
         user = self.get_object()
         uploaded = self.request.FILES.get('profile_picture')
         old_picture = user.profile_picture if user.profile_picture else None
@@ -214,9 +222,9 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
         if uploaded:
             if old_picture and old_picture.name != form.instance.profile_picture.name:
                 old_picture.delete(save=False)
-            messages.success(self.request, 'Profile photo saved successfully.')
+            messages.success(self.request, t('prof_photo_saved', lang))
         else:
-            messages.success(self.request, 'Profile updated successfully!')
+            messages.success(self.request, t('prof_updated', lang))
         return response
 
 @login_required

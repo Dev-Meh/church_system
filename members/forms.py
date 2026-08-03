@@ -437,6 +437,9 @@ class ChurchUserUpdateForm(forms.ModelForm):
         }
 
     def clean_profile_picture(self):
+        from .language_utils import get_translation as t
+
+        lang = getattr(self, '_language', 'en')
         picture = self.cleaned_data.get('profile_picture')
         if not picture:
             return picture
@@ -444,7 +447,7 @@ class ChurchUserUpdateForm(forms.ModelForm):
         if not hasattr(picture, 'read'):
             return picture
         if picture.size > self.MAX_PROFILE_IMAGE_BYTES:
-            raise ValidationError('Picha ni kubwa sana. Lazima iwe chini ya 5MB.')
+            raise ValidationError(t('prof_photo_too_large', lang))
         try:
             from PIL import Image
 
@@ -453,13 +456,34 @@ class ChurchUserUpdateForm(forms.ModelForm):
                 img.load()
             picture.seek(0)
         except Exception:
-            raise ValidationError('Faili hii si picha. Chagua picha halisi kutoka simu.')
+            raise ValidationError(t('prof_photo_invalid', lang))
         return picture
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, language='en', **kwargs):
+        from .language_utils import get_translation as t
+
+        self._language = language or 'en'
+        lang = self._language
         super().__init__(*args, **kwargs)
+
+        dob_initial = None
         if self.instance.pk and self.instance.date_of_birth:
-            self.fields['date_of_birth'].initial = self.instance.date_of_birth
+            dob_initial = self.instance.date_of_birth
+        self.fields['date_of_birth'] = MobileBirthDateField(
+            required=False,
+            language=lang,
+            label=t('prof_date_of_birth', lang),
+        )
+        if dob_initial:
+            self.fields['date_of_birth'].initial = dob_initial
+
+        self.fields['first_name'].label = t('first_name', lang)
+        self.fields['last_name'].label = t('last_name', lang)
+        self.fields['email'].label = t('email_address', lang)
+        self.fields['phone_number'].label = t('phone_number', lang)
+        self.fields['gender'].label = t('gender', lang)
+        self.fields['address'].label = t('address', lang)
+        self.fields['profile_picture'].label = t('prof_photo_label', lang)
 
     def save(self, commit=True):
         """Keep existing photo when the user saves other fields without re-uploading."""

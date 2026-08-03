@@ -196,6 +196,10 @@
         .field-span2, .btn-save-sunday { grid-column: span 1; }
         .sunday-amount-input { font-size: 1.6rem !important; }
     }
+    .contrib-edit-link {
+        color: #c8a84b; font-size: 12px; font-weight: 700; text-decoration: none;
+    }
+    .contrib-edit-link:hover { text-decoration: underline; color: #f2d27a; }
 </style>
 {% endblock %}
 
@@ -284,6 +288,7 @@
                         <th>{% church_t 'don_col_amount' %}</th>
                         <th>{% church_t 'payment_method' %}</th>
                         <th>{% church_t 'don_col_details' %}</th>
+                        {% if can_enter %}<th>{% church_t 'don_col_actions' %}</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -294,9 +299,10 @@
                         <td class="amount-cell">TZS {{ d.amount|floatformat:0 }}</td>
                         <td>{% church_pmethod d.payment_method %}</td>
                         <td>{% if d.notes %}{{ d.notes|truncatewords:10 }}{% else %}<span class="muted">—</span>{% endif %}</td>
+                        {% if can_enter %}{% include 'donations/includes/contribution_edit_cell.html' with donation=d show_edit=True %}{% endif %}
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" class="muted" style="padding:16px;">{% church_t 'sunday_no_records' %}</td></tr>
+                    <tr><td colspan="{% if can_enter %}6{% else %}5{% endif %}" class="muted" style="padding:16px;">{% church_t 'sunday_no_records' %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

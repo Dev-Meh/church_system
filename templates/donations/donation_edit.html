@@ -1,0 +1,113 @@
+{% extends 'church_layout/app_shell.html' %}
+{% load i18n_church %}
+
+{% block title %}{% church_t page_title_key %} - PHM-ARCC{% endblock %}
+{% block page_title %}{% church_t page_title_key %}{% endblock %}
+{% block page_subtitle %}<p class="topnav-subtitle">{{ donation.contribution_date }} · #{{ donation.pk }}</p>{% endblock %}
+
+{% block page_header_actions %}
+<a href="{% url list_url %}" class="btn-back">← {% church_t 'back' %}</a>
+{% endblock %}
+
+{% block page_extra_css %}
+<style>
+.btn-back {
+    display: inline-flex; align-items: center; text-decoration: none; color: #fff;
+    font-size: 12px; padding: 7px 11px; border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.08);
+}
+.panel {
+    background: #152333; border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; padding: 1.25rem 1.5rem; max-width: 820px;
+}
+.panel h4 {
+    margin: 0 0 1rem; font-size: 13px; color: #f2d27a;
+    text-transform: uppercase; letter-spacing: 0.6px;
+}
+.entry-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px; align-items: end;
+}
+.entry-field label {
+    display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.6px;
+    text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 4px;
+}
+.entry-field .form-control, .entry-field .form-select {
+    width: 100%; background: #0f1e2e; border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px; padding: 10px 12px; color: #fff; font-size: 15px;
+}
+.entry-field-span2 { grid-column: span 2; }
+.date-help { margin: 4px 0 0; font-size: 11px; color: rgba(255,255,255,0.55); }
+.btn-save-edit {
+    background: linear-gradient(135deg, #c8a84b, #a07820); border: none; border-radius: 8px;
+    padding: 11px 18px; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.btn-cancel-edit {
+    display: inline-flex; align-items: center; padding: 11px 18px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.22); color: rgba(255,255,255,0.75);
+    text-decoration: none; font-size: 12px; font-weight: 700;
+}
+.form-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+@media (max-width: 576px) {
+    .entry-grid { grid-template-columns: 1fr; }
+    .entry-field-span2 { grid-column: span 1; }
+}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="panel">
+    <h4>{% church_t page_title_key %}</h4>
+    <form method="post">
+        {% csrf_token %}
+        <div class="entry-grid">
+            {% for field in form %}
+            <div class="entry-field{% if field.name == 'notes' or field.name == 'asset_description' or field.name == 'donor' %} entry-field-span2{% endif %}"{% if edit_kind == 'tithe' and field.name == 'amount' %} id="edit-tithe-money-wrap"{% endif %}{% if edit_kind == 'tithe' and field.name == 'asset_description' %} id="edit-tithe-asset-wrap" style="display:none;"{% endif %}{% if edit_kind == 'malimbuko' and field.name == 'amount' %} id="edit-malimbuko-money-wrap"{% endif %}{% if edit_kind == 'malimbuko' and field.name == 'asset_description' %} id="edit-malimbuko-asset-wrap" style="display:none;"{% endif %}>
+                <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                {{ field }}
+                {% if field.name == 'contribution_date' %}
+                <p class="date-help">{% church_t 'contrib_date_past_ok' %}</p>
+                {% endif %}
+                {% if field.errors %}<p style="color:#ff8787;font-size:12px;margin:4px 0 0;">{{ field.errors.0 }}</p>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn-save-edit">{% church_t 'save' %}</button>
+            <a href="{% url list_url %}" class="btn-cancel-edit">{% church_t 'cancel' %}</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block page_extra_js %}
+{% if edit_kind == 'tithe' %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var zakaType = document.querySelector('[name="zaka_type"]');
+    var moneyWrap = document.getElementById('edit-tithe-money-wrap');
+    var assetWrap = document.getElementById('edit-tithe-asset-wrap');
+    function toggle() {
+        var isAsset = zakaType && zakaType.value === 'asset';
+        if (moneyWrap) moneyWrap.style.display = isAsset ? 'none' : 'block';
+        if (assetWrap) assetWrap.style.display = isAsset ? 'block' : 'none';
+    }
+    if (zakaType) { zakaType.addEventListener('change', toggle); toggle(); }
+});
+</script>
+{% elif edit_kind == 'malimbuko' %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var giftType = document.querySelector('[name="gift_type"]');
+    var moneyWrap = document.getElementById('edit-malimbuko-money-wrap');
+    var assetWrap = document.getElementById('edit-malimbuko-asset-wrap');
+    function toggle() {
+        var isAsset = giftType && giftType.value === 'asset';
+        if (moneyWrap) moneyWrap.style.display = isAsset ? 'none' : 'block';
+        if (assetWrap) assetWrap.style.display = isAsset ? 'block' : 'none';
+    }
+    if (giftType) { giftType.addEventListener('change', toggle); toggle(); }
+});
+</script>
+{% endif %}
+{% endblock %}

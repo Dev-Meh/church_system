@@ -1,0 +1,6 @@
+{% load i18n_church %}
+{% if show_edit %}
+<td>
+  <a href="{% url 'donations:donation_edit' donation.pk %}" class="contrib-edit-link">{% church_t 'edit' %}</a>
+</td>
+{% endif %}

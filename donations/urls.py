@@ -8,6 +8,7 @@ urlpatterns = [
     path('donate/', views.make_donation, name='donate'),
     path('donate/<int:campaign_id>/', views.make_donation, name='donate_to_campaign'),
     path('history/', views.DonationHistoryView.as_view(), name='history'),
+    path('contribution/<int:pk>/edit/', views.donation_edit, name='donation_edit'),
     path('history/export/', views.export_donation_history_csv, name='export_history_csv'),
     path('tithe-list/', views.TitheContributionListView.as_view(), name='tithe_list'),
     path('tithe-list/print/', views.tithe_list_print, name='tithe_list_print'),
